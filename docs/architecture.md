@@ -1,6 +1,6 @@
 # System architecture
 
-Status: proposed architecture. No runtime services have been implemented or provisioned.
+Status: target production architecture. The first local fixture implements `apps/web`, `apps/server`, `packages/contracts`, and `packages/sim`. It uses a local file store instead of PostgreSQL and an SVG renderer instead of WebGL; no production services are provisioned. See ADR 013–014 in [decisions](decisions.md).
 
 ## Architectural principle
 

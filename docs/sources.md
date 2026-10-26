@@ -12,6 +12,8 @@ The deadline agrees across the checked pages. Judging dates differ: schedule Nov
 
 ## Twitch
 
+- [API getting started](https://dev.twitch.tv/docs/api/get-started): the official registration example permits HTTP localhost.
+- [Localhost redirect validation discussion](https://discuss.dev.twitch.com/t/unable-to-use-localhost-are-redirect-url-for-oauth-implicit-grant-flow/61951): the reported HTTPS error can be caused by an extra blank redirect row; Add creates another field rather than saving.
 - [Chat overview](https://dev.twitch.tv/docs/chat/): EventSub/API chat integration direction.
 - [Chat authentication](https://dev.twitch.tv/docs/chat/authenticating/): user-token and app-token contexts differ.
 - [Chat message subscription](https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/#channelchatmessage): exact authorization and condition fields.

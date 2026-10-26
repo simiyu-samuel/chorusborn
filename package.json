@@ -1,0 +1,38 @@
+{
+  "name": "chorusborn",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24.0.0",
+    "npm": ">=9.0.0"
+  },
+  "packageManager": "npm@9.2.0",
+  "scripts": {
+    "dev": "concurrently --kill-others --names server,web --prefix-colors cyan,magenta \"npm run dev -w @chorusborn/server\" \"npm run dev -w @chorusborn/web\"",
+    "build": "npm run typecheck && npm run build -w @chorusborn/web",
+    "start": "npm run start -w @chorusborn/server",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:browser": "playwright test",
+    "check": "npm run format:check && npm run typecheck && npm test && npm run build -w @chorusborn/web",
+    "format": "prettier --write \"apps/**/*.{ts,tsx,css,json,html,svg}\" \"packages/**/*.{ts,json}\" \"tests/**/*.ts\" \"*.{ts,json}\"",
+    "format:check": "prettier --check \"apps/**/*.{ts,tsx,css,json,html,svg}\" \"packages/**/*.{ts,json}\" \"tests/**/*.ts\" \"*.{ts,json}\""
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "concurrently": "10.0.6",
+    "prettier": "3.9.10",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vitest": "5.0.5"
+  }
+}

@@ -1,6 +1,6 @@
 # Data model and API contracts
 
-Status: logical design, not database migrations or implemented endpoints. IDs below are opaque UUIDs except Twitch IDs, which remain strings. Timestamps are UTC `timestamptz`; display dates in the user's locale. The API and event protocol start at version `v1`.
+Status: production logical design. PostgreSQL migrations and the `/api/v1` surface below are not implemented. The local fixture uses separately scoped `/api/demo` and `/ws/demo` endpoints, a loopback-only coach cookie, separate overlay keys, and an atomic JSON playbook store; see the [README](../README.md). IDs below are opaque UUIDs except Twitch IDs, which remain strings. Timestamps are UTC `timestamptz`; display dates in the user's locale. The production API and event protocol start at version `v1`.
 
 ## Persistence model
 

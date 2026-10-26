@@ -1,6 +1,6 @@
 # UX and broadcast experience
 
-Status: design specification. No screens or visual assets have been implemented.
+Status: release design specification. The local fixture implements a responsive coach studio at `/`, a replay dialog, playbook/receipt panels, and a read-only `/overlay` route with original SVG champions and arena. The routes and onboarding below describe the fuller release target; Twitch connection, public profiles, rivalry, and production role management remain pending.
 
 ## Experience hierarchy
 

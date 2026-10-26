@@ -18,6 +18,8 @@ Baseline date: October 26, 2026. "Accepted" below means selected in the plan, no
 | 010 | Accepted | Two real communities in the release, fixtures for reproducibility | Scope changes must be explicitly recorded, not hidden |
 | 011 | Open | Model ID/provider configuration pinned after correctness/latency/cost evaluation | M0/M3 compiler spike and operator spend cap |
 | 012 | Open | License, final assets, public repository and hosting choices | Before public release or provisioning |
+| 013 | Accepted for first fixture | Use a native SVG isometric renderer so the replay/coach slice works without a WebGL dependency; Three.js remains an option for later visual depth | Broadcast measurements and audience playtest |
+| 014 | Accepted for first fixture | Save local playbooks atomically to ignored `.local/studios.json`; keep trials/rounds ephemeral; do not claim production database durability | PostgreSQL integration milestone |
 
 ## Product risks
 
@@ -50,7 +52,7 @@ Baseline date: October 26, 2026. "Accepted" below means selected in the plan, no
 
 The hackathon requires a newly created project, Twitch connection, and Codex use. Four judging criteria carry equal weight. Official pages disagree on judging dates; preserve access through the later period and recheck updates. Sources are recorded in [sources](sources.md). These statements do not establish the entrant's individual eligibility or promise a prize.
 
-Only a preliminary name collision search has been done. Domain/trademark clearance has not. No domain, remote, paid service, or submission has been created. Do not automatically publish or incur charges to resolve an open question.
+Only a preliminary name collision search has been done. Domain/trademark clearance has not. The owner authorized and supplied the GitHub remote, which is now connected. No domain, paid service, deployment, or submission has been created. Do not automatically provision paid resources to resolve an open question.
 
 ## Decision procedure
 

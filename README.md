@@ -8,7 +8,36 @@ The defining interaction is **teach → prove → adopt → compete**. A viewer'
 
 ## Repository status
 
-Planning baseline created October 26, 2026 for the Codex x TwitchCon Hackathon. This repository currently contains product and engineering documentation and example contracts. **The application has not been scaffolded or implemented.** Commands, services, budgets, and performance figures in the plans are proposed unless explicitly marked verified.
+The first local fixture build is implemented: a React coach studio, server-owned Core Run arena, bounded sample lesson contracts, exact two-branch replay, coach adoption, local playbook persistence, and a separately authorized read-only overlay. The planning baseline was created October 26, 2026 for the Codex x TwitchCon Hackathon.
+
+**Twitch OAuth/EventSub, the model-backed language compiler, PostgreSQL, rival channels, and the full evaluation suite are not connected yet.** The UI labels sample tactics and fixture scenarios explicitly. Production architecture and release gates remain targets unless the build log records verification.
+
+## Run locally
+
+Requires Node **24.22.1** (see `.nvmrc`) and npm 9 or newer. From this repository:
+
+```sh
+npm ci
+npm run dev
+```
+
+Open **http://127.0.0.1:5173**. The API runs at **http://127.0.0.1:3001**. Choose a sample tactic, select **Prove this lesson**, inspect the replay, then **Adopt for next round**. Reset the arena to load the new playbook and start the round to see actual rule-use receipts.
+
+The fixture requires no Twitch or model credentials. Playbooks are saved in ignored `.local/studios.json`; active rounds and trial history are held in memory. The server binds to loopback and is not ready for public deployment. Overlay links contain a separate read-only key and work without a coach cookie.
+
+```sh
+npm run check            # formatting, types, engine/API tests, production frontend build
+npx playwright install chromium
+npm run test:browser     # desktop and mobile end-to-end checks
+npm run build
+npm start               # serve the built frontend and API at http://127.0.0.1:3001
+```
+
+If Chromium is already installed, set `CHROMIUM_PATH` to its executable for browser checks. CI installs its own matching browser. Font assets are bundled locally; no external font request is needed.
+
+## Twitch application registration
+
+First channel: **developersimiyu**. Register **`http://localhost:3001/auth/twitch/callback`** as the exact redirect URI for a confidential client. This callback is reserved for the next integration milestone, not implemented in the fixture build. Copy `.env.example` to an ignored `.env` for future credentials. During OAuth use `localhost` consistently rather than mixing it with `127.0.0.1`. See [Twitch integration](docs/twitch-integration.md) for the form's blank-row validation issue and setup boundaries.
 
 ## Start here
 
@@ -35,4 +64,4 @@ Planning baseline created October 26, 2026 for the Codex x TwitchCon Hackathon. 
 
 Keep completed work committed in this repository. Use small, coherent commits; update the relevant plans when decisions change; never commit credentials, private session transcripts, or generated bulk artifacts. Read [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md) before implementation.
 
-No remote repository, deployed service, paid resource, domain registration, or public submission has been created. A repository license is intentionally undecided until the owner selects one; see [decisions](docs/decisions.md).
+Remote repository: [simiyu-samuel/chorusborn](https://github.com/simiyu-samuel/chorusborn). No deployment, paid resource, domain registration, or hackathon submission has been created. A repository license is intentionally undecided until the owner selects one; see [decisions](docs/decisions.md). Third-party asset and dependency notices are recorded in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

@@ -1,6 +1,6 @@
 # Arena game design
 
-Status: initial design and tuning targets; not implemented or playtested.
+Status: an initial fixture implementation exists, with no independent audience playtest yet. Current movement is one integer grid cell per four ticks (5 cells/second). Timed hazard tiles deal 10 damage every 10 ticks during their active phase. Three seeded wall-offset variants support the opening carrier-dilemma fixture; three distinct authored layouts and the 12-scenario evaluation suite remain planned. Other values below describe the intended ruleset and must be reconciled with code/evidence before release.
 
 ## Core sport: Core Run
 

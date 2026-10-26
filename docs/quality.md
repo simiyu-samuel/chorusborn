@@ -1,6 +1,6 @@
 # Quality, evaluation, and release evidence
 
-Status: verification plan. No application checks have run because no application exists yet. A target below is not a measured result.
+Status: release verification plan. The first fixture build passes 14 contract/simulation/API checks and two desktop/mobile browser flows; see the [build log](build-log.md) for scope. Twitch, compiler, PostgreSQL, full-suite evaluation, production recovery, and OBS performance gates remain open. A target below is not a measured result.
 
 ## Verification layers
 

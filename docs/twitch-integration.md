@@ -2,6 +2,14 @@
 
 Status: documentation verified October 26, 2026; no developer application, credentials, or live connection has been created.
 
+## Current local registration
+
+The owner identified `developersimiyu` as the first channel and is registering the Twitch developer application. Register the exact OAuth redirect URL **`http://localhost:3001/auth/twitch/callback`** with no trailing slash. Choose a confidential client for the planned server-side authorization-code flow. The backend listens on port 3001; the studio uses port 5173. Use `localhost` consistently during OAuth so browser cookies stay on the same hostname.
+
+The callback path is reserved for the next integration milestone; the first fixture build does not yet implement OAuth. `.env.example` records the intended local settings. Actual credentials belong only in the ignored `.env` file. The live app can add an HTTPS callback once a deployment URL exists.
+
+If the console displays **Redirect URIs must use HTTPS protocol**, first remove every empty redirect row. For a single URL, enter it in the existing field and use **Create/Save** rather than clicking **Add** again. Developer forum reports identify blank additional rows as a cause of this exact error, including an April 2026 report. HTTP localhost remains shown in Twitch's official local setup guide; do not switch the backend to a nonfunctional HTTPS URL merely to satisfy the form. [Forum explanation](https://discuss.dev.twitch.com/t/unable-to-use-localhost-are-redirect-url-for-oauth-implicit-grant-flow/61951), [recent report](https://discuss.dev.twitch.com/t/unable-to-create-an-application/64678).
+
 ## Initial authorization topology
 
 Use broadcaster-authorized user tokens: each connected channel's broadcaster is the reader identity for their own channel. A separate global bot account is unnecessary for the initial release. This is a deliberate user-token topology; do not mix its conditions with the additional app-token/cloud-bot grants.

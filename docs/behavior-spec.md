@@ -1,6 +1,6 @@
 # Teaching, policy, and replay specification
 
-Status: design contract v1. The checked-in [JSON schema](examples/lesson-candidate.schema.json) and [example](examples/lesson-candidate.json) illustrate a supported candidate; runtime enforcement remains to be implemented.
+Status: contract v1. Runtime enforcement is implemented in `packages/contracts`, and a basic interpreter/branch simulation runs in `packages/sim`. The checked-in [JSON schema](examples/lesson-candidate.schema.json) and [example](examples/lesson-candidate.json) match the bounded candidate format. The model compiler, conflict analysis, and full release evidence remain planned.
 
 ## Meaning of learning
 

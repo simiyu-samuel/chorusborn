@@ -1,0 +1,336 @@
+import Fastify from 'fastify';
+import websocket from '@fastify/websocket';
+import staticFiles from '@fastify/static';
+import { Worker } from 'node:worker_threads';
+import { randomUUID, timingSafeEqual } from 'node:crypto';
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import type { WebSocket } from 'ws';
+import {
+  SAMPLE_LESSONS,
+  adoptRequestSchema,
+  controlSchema,
+  trialRequestSchema,
+  type StudioState,
+  type Trial,
+  type World,
+} from '@chorusborn/contracts';
+import { addLesson, createPlaybook, createWorld, snapshot, step } from '@chorusborn/sim';
+import { LocalStore, type StoredStudio } from './store.js';
+
+type Studio = StoredStudio & {
+  world: World;
+  trial: Trial | null;
+  busy: boolean;
+  adopting: boolean;
+  clients: Set<WebSocket>;
+};
+type AppOptions = { storePath?: string | null; clock?: boolean; logger?: boolean };
+const projectRoot = fileURLToPath(new URL('../../../', import.meta.url));
+const cookies = (value: string | undefined) =>
+  Object.fromEntries(
+    (value ?? '')
+      .split(';')
+      .map((part) => part.trim().split('='))
+      .filter((part) => part.length === 2),
+  );
+const safeEqual = (a: string, b: string) => {
+  const left = Buffer.from(a),
+    right = Buffer.from(b);
+  return left.length === right.length && timingSafeEqual(left, right);
+};
+const trustedOrigin = (value: string | undefined) => {
+  if (!value) return true; // Non-browser local tools are allowed; browser mutations still require JSON.
+  try {
+    const url = new URL(value);
+    return (
+      ['http:', 'https:'].includes(url.protocol) &&
+      ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname) &&
+      ['3001', '5173'].includes(url.port)
+    );
+  } catch {
+    return false;
+  }
+};
+
+export async function createApp(options: AppOptions = {}) {
+  const app = Fastify({
+    logger: options.logger
+      ? { serializers: { req: (req) => ({ method: req.method, url: req.url?.split('?')[0] }) } }
+      : false,
+    bodyLimit: 8192,
+  });
+  const store = new LocalStore(
+    options.storePath === undefined ? `${projectRoot}.local/studios.json` : options.storePath,
+  );
+  await store.load();
+  const studios = new Map<string, Studio>();
+  const workers = new Set<Worker>();
+  const hydrate = (record: StoredStudio): Studio => ({
+    ...record,
+    world: createWorld(record.playbook),
+    trial: null,
+    busy: false,
+    adopting: false,
+    clients: new Set(),
+  });
+  for (const record of store.records) studios.set(record.token, hydrate(record));
+  const toState = (studio: Studio): StudioState => {
+    const {
+      baseline: _baseline,
+      candidateBranch: _candidate,
+      ...trial
+    } = studio.trial ?? ({} as Trial);
+    return {
+      mode: 'local-fixture',
+      connected: false,
+      world: studio.world,
+      playbook: studio.playbook,
+      samples: SAMPLE_LESSONS,
+      latestTrial: studio.trial ? trial : null,
+      overlayPath: `/overlay?studio=${studio.id}&key=${studio.overlayKey}`,
+    };
+  };
+  const publish = (studio: Studio) => {
+    for (const client of studio.clients) {
+      if (client.readyState !== 1) continue;
+      if (client.bufferedAmount > 1_000_000) {
+        client.close(1013, 'Consumer too slow; reconnect for fresh state.');
+        continue;
+      }
+      const readOnly = (client as WebSocket & { readOnly?: boolean }).readOnly;
+      client.send(
+        JSON.stringify(
+          readOnly
+            ? { type: 'overlay', world: studio.world }
+            : { type: 'state', state: toState(studio) },
+        ),
+      );
+    }
+  };
+  const ownerStudio = (cookie: string | undefined) => studios.get(cookies(cookie).cb_session ?? '');
+  const overlayStudio = (id: string, key: string) =>
+    [...studios.values()].find((studio) => studio.id === id && safeEqual(studio.overlayKey, key));
+
+  app.addHook('onRequest', async (request, reply) => {
+    const host = request.headers.host?.split(':')[0];
+    if (
+      !host ||
+      !['localhost', '127.0.0.1'].includes(host) ||
+      !trustedOrigin(request.headers.origin)
+    )
+      return reply.code(403).send({ message: 'This fixture lab accepts loopback requests only.' });
+    reply.header('X-Content-Type-Options', 'nosniff').header('Referrer-Policy', 'no-referrer');
+    if (request.url.startsWith('/api/')) reply.header('Cache-Control', 'no-store');
+    if (
+      ['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method) &&
+      !request.headers['content-type']?.startsWith('application/json')
+    )
+      return reply.code(415).send({ message: 'JSON requests are required.' });
+  });
+  await app.register(websocket);
+  app.get('/health/live', async () => ({ status: 'ok', mode: 'local-fixture' }));
+  app.get('/health/ready', async () => ({
+    status: 'ok',
+    twitch: 'not-connected',
+    compiler: 'fixture-only',
+    persistence: options.storePath === null ? 'memory' : 'local-file',
+  }));
+  app.get('/api/demo/state', async (request, reply) => {
+    let studio = ownerStudio(request.headers.cookie);
+    if (!studio) {
+      if (studios.size >= 20)
+        return reply.code(429).send({
+          message:
+            'Local studio capacity reached. Restart with a fresh local store to clear sessions.',
+        });
+      const record: StoredStudio = {
+        id: randomUUID(),
+        token: randomUUID(),
+        overlayKey: randomUUID(),
+        playbook: createPlaybook(),
+      };
+      await store.put(record);
+      studio = hydrate(record);
+      studios.set(record.token, studio);
+      reply.header(
+        'Set-Cookie',
+        `cb_session=${record.token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=604800`,
+      );
+    }
+    return toState(studio);
+  });
+  app.get<{ Querystring: { studio?: string; key?: string } }>(
+    '/api/demo/overlay',
+    async (request, reply) => {
+      const studio = overlayStudio(request.query.studio ?? '', request.query.key ?? '');
+      if (!studio) return reply.code(404).send({ message: 'Overlay link is unavailable.' });
+      return { mode: 'local-fixture', world: studio.world };
+    },
+  );
+  app.get<{ Querystring: { studio?: string; key?: string } }>(
+    '/ws/demo',
+    { websocket: true },
+    (socket, request) => {
+      const readOnly = request.query.studio !== undefined;
+      const studio = readOnly
+        ? overlayStudio(request.query.studio ?? '', request.query.key ?? '')
+        : ownerStudio(request.headers.cookie);
+      if (!studio) {
+        socket.close(1008, 'Open a studio first.');
+        return;
+      }
+      (socket as WebSocket & { readOnly?: boolean }).readOnly = readOnly;
+      studio.clients.add(socket);
+      socket.on('error', () => studio.clients.delete(socket));
+      socket.on('close', () => studio.clients.delete(socket));
+      socket.on('message', () => socket.close(1008, 'This stream is read-only.'));
+      publish(studio);
+    },
+  );
+  app.post('/api/demo/controls', async (request, reply) => {
+    const studio = ownerStudio(request.headers.cookie);
+    if (!studio) return reply.code(401).send({ message: 'Open your local studio first.' });
+    const parsed = controlSchema.safeParse(request.body);
+    if (!parsed.success) return reply.code(422).send({ message: 'Unknown arena control.' });
+    if (parsed.data.action === 'reset')
+      studio.world = createWorld(studio.playbook, studio.world.seed);
+    else if (studio.world.status !== 'finished')
+      studio.world.status = parsed.data.action === 'pause' ? 'paused' : 'running';
+    publish(studio);
+    return toState(studio);
+  });
+  app.post('/api/demo/trials', async (request, reply) => {
+    const studio = ownerStudio(request.headers.cookie);
+    if (!studio) return reply.code(401).send({ message: 'Open your local studio first.' });
+    const parsed = trialRequestSchema.safeParse(request.body);
+    const sample = parsed.success
+      ? SAMPLE_LESSONS.find((item) => item.id === parsed.data.sampleId)
+      : undefined;
+    if (!sample)
+      return reply.code(422).send({
+        message: 'Select a supported sample lesson. A live language compiler is not connected.',
+      });
+    if (studio.busy || workers.size >= 2)
+      return reply.code(429).send({ message: 'A trial is already running. Please wait.' });
+    if (studio.playbook.rules.length + sample.candidate.rules.length > 24)
+      return reply.code(422).send({ message: 'Playbook limit reached.' });
+    const source = snapshot(createWorld(studio.playbook, studio.world.seed));
+    studio.busy = true;
+    try {
+      const result = await new Promise<Pick<Trial, 'baseline' | 'candidateBranch'>>(
+        (resolve, reject) => {
+          const worker = new Worker(new URL('./trial-worker.ts', import.meta.url), {
+            workerData: { source, candidate: sample.candidate },
+            // Node 24 strips our erasable TypeScript directly. Do not inherit a
+            // dev watcher/loader or test-runner flags inside the simulation worker.
+            execArgv: [],
+            resourceLimits: { maxOldGenerationSizeMb: 128 },
+          });
+          workers.add(worker);
+          const timeout = setTimeout(() => {
+            void worker.terminate();
+            reject(new Error('Trial exceeded its time limit.'));
+          }, 20_000);
+          worker.once('message', resolve);
+          worker.once('error', reject);
+          worker.once('exit', (code) => {
+            workers.delete(worker);
+            clearTimeout(timeout);
+            if (code !== 0) reject(new Error('Trial worker stopped.'));
+          });
+        },
+      );
+      studio.trial = {
+        id: randomUUID(),
+        sampleId: sample.id,
+        candidate: sample.candidate,
+        baseVersion: source.state.champions[0].playbook.version,
+        sourceHash: source.hash,
+        sourceTick: source.state.tick,
+        seed: source.state.seed,
+        createdAt: new Date().toISOString(),
+        adopted: false,
+        ...result,
+      };
+      publish(studio);
+      return studio.trial;
+    } finally {
+      studio.busy = false;
+    }
+  });
+  app.get<{ Params: { id: string } }>('/api/demo/trials/:id', async (request, reply) => {
+    const studio = ownerStudio(request.headers.cookie);
+    if (!studio) return reply.code(401).send({ message: 'Open your local studio first.' });
+    if (studio.trial?.id !== request.params.id)
+      return reply.code(404).send({ message: 'This trial is no longer in the local session.' });
+    return studio.trial;
+  });
+  app.post('/api/demo/adoptions', async (request, reply) => {
+    const studio = ownerStudio(request.headers.cookie);
+    if (!studio) return reply.code(401).send({ message: 'Open your local studio first.' });
+    const parsed = adoptRequestSchema.safeParse(request.body);
+    if (!parsed.success) return reply.code(422).send({ message: 'Invalid adoption request.' });
+    const trial = studio.trial;
+    if (
+      studio.adopting ||
+      !trial ||
+      trial.id !== parsed.data.trialId ||
+      trial.adopted ||
+      parsed.data.expectedVersion !== studio.playbook.version ||
+      trial.baseVersion !== studio.playbook.version
+    )
+      return reply.code(409).send({
+        message:
+          'This evidence is stale or already adopted. Run a new trial against the current playbook.',
+      });
+    studio.adopting = true;
+    try {
+      const playbook = addLesson(studio.playbook, trial.candidate);
+      await store.put({
+        id: studio.id,
+        token: studio.token,
+        overlayKey: studio.overlayKey,
+        playbook,
+      });
+      studio.playbook = playbook;
+      trial.adopted = true;
+      publish(studio);
+      return toState(studio);
+    } finally {
+      studio.adopting = false;
+    }
+  });
+
+  const webRoot = `${projectRoot}apps/web/dist`;
+  if (existsSync(webRoot)) {
+    await app.register(staticFiles, { root: webRoot });
+    app.setNotFoundHandler((request, reply) => {
+      if (
+        request.method !== 'GET' ||
+        request.url.startsWith('/api/') ||
+        request.url.startsWith('/ws/')
+      )
+        return reply.code(404).send({ message: 'Not found.' });
+      return reply.sendFile('index.html');
+    });
+  }
+  const clock =
+    options.clock === false
+      ? null
+      : setInterval(() => {
+          for (const studio of studios.values())
+            if (studio.world.status === 'running') {
+              studio.world = step(studio.world);
+              if (studio.world.tick % 2 === 0 || studio.world.status === 'finished')
+                publish(studio);
+            }
+        }, 50);
+  clock?.unref();
+  app.addHook('onClose', async () => {
+    if (clock) clearInterval(clock);
+    for (const studio of studios.values()) for (const client of studio.clients) client.close();
+    await Promise.all([...workers].map((worker) => worker.terminate()));
+  });
+  return app;
+}

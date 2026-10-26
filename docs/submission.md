@@ -1,6 +1,6 @@
 # Hackathon submission and demo plan
 
-Status: **draft planning material**. The application is not implemented. Rewrite the description into verified present tense only after release checks; do not submit planned features as completed work.
+Status: **draft submission material**. A working local fixture exists; Twitch, the language compiler, and rivalry are pending. Rewrite the description into verified present tense only after release checks; do not submit planned features as completed work.
 
 ## Intended title and short description
 
@@ -26,7 +26,7 @@ The planned stack shares a deterministic TypeScript simulation between live matc
 
 ### How we are using Codex
 
-Completed so far: naming exploration, product analysis, official documentation research, product/architecture/contract planning, and local Git initialization.
+Completed so far: naming exploration, product analysis, official documentation research, product/architecture/contract planning, Git/GitHub setup, the deterministic fixture engine and contract validator, replay workers, atomic local adoption, responsive coach/overlay UI, and automated contract/API/browser verification. See the build log and Git history for evidence.
 
 Planned development contributions to record as they happen: implementation of deterministic game rules, Twitch authentication/EventSub, compiler constraints, branching replay, concurrency/recovery checks, and broadcast UI iteration. Replace this list with actual examples and evidence before submission. A prompt screenshot alone does not prove the system works.
 
@@ -70,11 +70,11 @@ Published submission deadline: November 2, 2026 at 14:00 PST = November 3 at 01:
 | Artifact | Value / status |
 | --- | --- |
 | Local repository | `chorusborn/` in the current workspace |
-| Remote repository URL | Pending |
+| Remote repository URL | [simiyu-samuel/chorusborn](https://github.com/simiyu-samuel/chorusborn) |
 | Live application URL | Pending |
 | Public demo video URL | Pending |
 | Main build session ID | Pending verification |
 | Release commit/tag | Pending implementation |
 | Final submission URL | Pending |
 
-No external publication or registration has been performed as part of the planning baseline.
+The owner authorized connecting and pushing this repository. No application deployment, demo publication, or hackathon submission has been performed.
