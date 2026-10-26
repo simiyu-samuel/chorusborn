@@ -135,9 +135,18 @@ export type Trial = {
   createdAt: string;
   adopted: boolean;
 };
+export type TwitchConnection = {
+  configured: boolean;
+  status: 'disconnected' | 'authenticated' | 'reconnect-required' | 'validation-unavailable';
+  channel: { id: string; login: string } | null;
+  expectedChannel: string;
+  connectUrl: string | null;
+  chat: 'not-connected';
+};
 export type StudioState = {
   mode: 'local-fixture';
   connected: false;
+  twitch: TwitchConnection;
   world: World;
   playbook: Playbook;
   overlayPath: string;

@@ -17,6 +17,7 @@ import {
 } from '@chorusborn/contracts';
 import { addLesson, createPlaybook, createWorld, snapshot, step } from '@chorusborn/sim';
 import { LocalStore, type StoredStudio } from './store.js';
+import { TwitchOAuth, TwitchFailure } from './twitch.js';
 
 type Studio = StoredStudio & {
   world: World;
@@ -25,7 +26,12 @@ type Studio = StoredStudio & {
   adopting: boolean;
   clients: Set<WebSocket>;
 };
-type AppOptions = { storePath?: string | null; clock?: boolean; logger?: boolean };
+type AppOptions = {
+  storePath?: string | null;
+  clock?: boolean;
+  logger?: boolean;
+  twitch?: TwitchOAuth;
+};
 const projectRoot = fileURLToPath(new URL('../../../', import.meta.url));
 const cookies = (value: string | undefined) =>
   Object.fromEntries(
@@ -65,6 +71,7 @@ export async function createApp(options: AppOptions = {}) {
   );
   await store.load();
   const studios = new Map<string, Studio>();
+  const twitch = options.twitch ?? new TwitchOAuth(null);
   const workers = new Set<Worker>();
   const hydrate = (record: StoredStudio): Studio => ({
     ...record,
@@ -84,6 +91,7 @@ export async function createApp(options: AppOptions = {}) {
     return {
       mode: 'local-fixture',
       connected: false,
+      twitch: twitch.publicState(studio.id),
       world: studio.world,
       playbook: studio.playbook,
       samples: SAMPLE_LESSONS,
@@ -121,7 +129,8 @@ export async function createApp(options: AppOptions = {}) {
     )
       return reply.code(403).send({ message: 'This fixture lab accepts loopback requests only.' });
     reply.header('X-Content-Type-Options', 'nosniff').header('Referrer-Policy', 'no-referrer');
-    if (request.url.startsWith('/api/')) reply.header('Cache-Control', 'no-store');
+    if (request.url.startsWith('/api/') || request.url.startsWith('/auth/'))
+      reply.header('Cache-Control', 'no-store');
     if (
       ['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method) &&
       !request.headers['content-type']?.startsWith('application/json')
@@ -132,7 +141,7 @@ export async function createApp(options: AppOptions = {}) {
   app.get('/health/live', async () => ({ status: 'ok', mode: 'local-fixture' }));
   app.get('/health/ready', async () => ({
     status: 'ok',
-    twitch: 'not-connected',
+    twitch: twitch.config ? 'oauth-configured-chat-pending' : 'not-configured',
     compiler: 'fixture-only',
     persistence: options.storePath === null ? 'memory' : 'local-file',
   }));
@@ -153,12 +162,70 @@ export async function createApp(options: AppOptions = {}) {
       await store.put(record);
       studio = hydrate(record);
       studios.set(record.token, studio);
-      reply.header(
-        'Set-Cookie',
-        `cb_session=${record.token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=604800`,
-      );
     }
+    // Lax permits Twitch's top-level GET callback; mutation origin/JSON checks remain enforced.
+    reply.header(
+      'Set-Cookie',
+      `cb_session=${studio.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800`,
+    );
     return toState(studio);
+  });
+  app.get('/auth/twitch/start', async (request, reply) => {
+    const studio = ownerStudio(request.headers.cookie);
+    if (!studio)
+      return reply
+        .code(401)
+        .send({ message: 'Open the studio on localhost before connecting Twitch.' });
+    if (!twitch.config)
+      return reply.code(503).send({
+        message: 'Add Twitch client credentials to the local .env and restart the server.',
+      });
+    if (
+      request.headers.host?.split(':')[0] !== 'localhost' ||
+      request.headers['sec-fetch-site'] === 'cross-site'
+    )
+      return reply.code(403).send({ message: 'Start Twitch sign-in from your localhost studio.' });
+    return reply.redirect(twitch.begin(studio.id));
+  });
+  app.get<{ Querystring: { state?: string; code?: string; error?: string } }>(
+    '/auth/twitch/callback',
+    async (request, reply) => {
+      const studio = ownerStudio(request.headers.cookie);
+      if (!studio || !twitch.config || request.headers.host?.split(':')[0] !== 'localhost')
+        return reply.code(400).send({
+          message:
+            'This sign-in has no matching localhost studio. Reopen the studio and connect again.',
+        });
+      const pending = twitch.consume(studio.id, request.query.state);
+      if (!pending)
+        return reply.code(400).send({
+          message:
+            'Sign-in state is invalid, expired, or already used. Connect again from the studio.',
+        });
+      const finish = (result: string) =>
+        reply.redirect(`${twitch.config!.webOrigin}/?twitch=${result}`);
+      if (request.query.error) return finish('denied');
+      const code = request.query.code;
+      if (typeof code !== 'string' || !code.length || code.length > 2048) return finish('failed');
+      try {
+        await twitch.complete(pending, code);
+        publish(studio);
+        return finish('connected');
+      } catch (error) {
+        return finish(
+          error instanceof TwitchFailure && error.reason === 'wrong-channel'
+            ? 'wrong-channel'
+            : 'failed',
+        );
+      }
+    },
+  );
+  app.post('/api/twitch/disconnect', async (request, reply) => {
+    const studio = ownerStudio(request.headers.cookie);
+    if (!studio) return reply.code(401).send({ message: 'Open your local studio first.' });
+    const { revoked } = await twitch.disconnect(studio.id);
+    publish(studio);
+    return { state: toState(studio), revoked };
   });
   app.get<{ Querystring: { studio?: string; key?: string } }>(
     '/api/demo/overlay',
@@ -309,6 +376,7 @@ export async function createApp(options: AppOptions = {}) {
       if (
         request.method !== 'GET' ||
         request.url.startsWith('/api/') ||
+        request.url.startsWith('/auth/') ||
         request.url.startsWith('/ws/')
       )
         return reply.code(404).send({ message: 'Not found.' });
@@ -327,8 +395,16 @@ export async function createApp(options: AppOptions = {}) {
             }
         }, 50);
   clock?.unref();
+  const tokenChecks = setInterval(() => {
+    for (const studio of studios.values()) {
+      void twitch.validateDue(studio.id).then(() => publish(studio));
+    }
+  }, 60_000);
+  tokenChecks.unref();
   app.addHook('onClose', async () => {
     if (clock) clearInterval(clock);
+    clearInterval(tokenChecks);
+    twitch.close();
     for (const studio of studios.values()) for (const client of studio.clients) client.close();
     await Promise.all([...workers].map((worker) => worker.terminate()));
   });

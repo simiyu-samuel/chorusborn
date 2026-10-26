@@ -1323,6 +1323,29 @@ nav button.active:hover {
 .build-status .pending svg {
   color: #7e8f76;
 }
+.twitch-connection {
+  padding: 20px 0 6px;
+}
+.twitch-connection .detail-heading {
+  align-items: flex-start;
+}
+.twitch-connection .detail-heading h2 {
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+.twitch-connection .detail-heading p {
+  margin-top: 8px;
+  line-height: 1.7;
+}
+.connection-notice {
+  padding: 12px;
+  margin: 16px 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--lime);
+  font-size: 12px;
+  line-height: 1.8;
+}
 .settings-note {
   font-size: 11px;
   line-height: 1.9;

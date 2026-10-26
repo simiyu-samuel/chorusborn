@@ -10,7 +10,7 @@ The defining interaction is **teach → prove → adopt → compete**. A viewer'
 
 The first local fixture build is implemented: a React coach studio, server-owned Core Run arena, bounded sample lesson contracts, exact two-branch replay, coach adoption, local playbook persistence, and a separately authorized read-only overlay. The planning baseline was created October 26, 2026 for the Codex x TwitchCon Hackathon.
 
-**Twitch OAuth/EventSub, the model-backed language compiler, PostgreSQL, rival channels, and the full evaluation suite are not connected yet.** The UI labels sample tactics and fixture scenarios explicitly. Production architecture and release gates remain targets unless the build log records verification.
+Twitch sign-in is implemented with state-bound OAuth, verified broadcaster identity, periodic validation, serialized refresh, and disconnect. **EventSub/chat intake, the model-backed language compiler, PostgreSQL, rival channels, and the full evaluation suite are not connected yet.** Account authorization does not mean chat intake is live. The UI labels sample tactics and fixture scenarios explicitly. Production architecture and release gates remain targets unless the build log records verification.
 
 ## Run locally
 
@@ -33,11 +33,15 @@ npm run build
 npm start               # serve the built frontend and API at http://127.0.0.1:3001
 ```
 
-If Chromium is already installed, set `CHROMIUM_PATH` to its executable for browser checks. CI installs its own matching browser. Font assets are bundled locally; no external font request is needed.
+If Chromium is already installed, set `CHROMIUM_PATH` to its executable for browser checks. CI installs its own matching browser. Stop any dev server before browser checks: they launch isolated in-memory studios and a mocked Twitch provider, never load `.env`, and do not authorize or disconnect a real account. Font assets are bundled locally; no external font request is needed.
 
 ## Twitch application registration
 
-First channel: **developersimiyu**. Register **`http://localhost:3001/auth/twitch/callback`** as the exact redirect URI for a confidential client. This callback is reserved for the next integration milestone, not implemented in the fixture build. Copy `.env.example` to an ignored `.env` for future credentials. During OAuth use `localhost` consistently rather than mixing it with `127.0.0.1`. See [Twitch integration](docs/twitch-integration.md) for the form's blank-row validation issue and setup boundaries.
+First channel: **developersimiyu**. The owner has created the developer app. Register **`http://localhost:3001/auth/twitch/callback`** as the exact redirect URI, choose **Game Integration** and **Confidential**, and put the Client ID/secret into the ignored `.env` using `.env.example` as a template. The server loads it on startup; restart after editing credentials.
+
+Open **http://localhost:5173**, choose **Connections & setup → Connect Twitch**, and authorize while signed in as `developersimiyu`. The app requests only `user:read:chat`; it never sends chat messages. An attempted sign-in from `127.0.0.1` first moves to the canonical localhost studio, which can have a separate local fixture playbook because browser cookies belong to a hostname.
+
+Tokens remain only in server memory and never enter the local JSON store or public state. Restart requires connecting again. Disconnect clears local authority before attempting Twitch revocation; if Twitch is unavailable, the UI explains how to remove the connection there. The loopback coach session is still fixture authority, not production role management. See [Twitch integration](docs/twitch-integration.md) for validation behavior and the console's blank-row issue.
 
 ## Start here
 

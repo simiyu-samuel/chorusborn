@@ -1,6 +1,6 @@
 # Quality, evaluation, and release evidence
 
-Status: release verification plan. The first fixture build passes 14 contract/simulation/API checks and two desktop/mobile browser flows; see the [build log](build-log.md) for scope. Twitch, compiler, PostgreSQL, full-suite evaluation, production recovery, and OBS performance gates remain open. A target below is not a measured result.
+Status: release verification plan. Contract/simulation/API/OAuth checks and browser flows are recorded in the [build log](build-log.md). Live broadcaster/chat evidence, compiler, PostgreSQL, full-suite evaluation, production recovery, and OBS performance gates remain open. A target below is not a measured result. Browser OAuth checks use an isolated provider fixture; they do not establish a real Twitch authorization.
 
 ## Verification layers
 

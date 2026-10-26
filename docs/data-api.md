@@ -4,6 +4,8 @@ Status: production logical design. PostgreSQL migrations and the `/api/v1` surfa
 
 ## Persistence model
 
+The local build additionally implements `GET /auth/twitch/start`, `GET /auth/twitch/callback`, and `POST /api/twitch/disconnect`. OAuth status is a redacted `twitch` field in the coach state. Tokens are memory-only and are never included in this field or the overlay. The `/api/v1` contracts below remain the production target.
+
 | Entity | Essential fields and constraints |
 | --- | --- |
 | `users` | Internal ID, unique Twitch user ID, current display name, attribution preference |

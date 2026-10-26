@@ -20,6 +20,7 @@ Baseline date: October 26, 2026. "Accepted" below means selected in the plan, no
 | 012 | Open | License, final assets, public repository and hosting choices | Before public release or provisioning |
 | 013 | Accepted for first fixture | Use a native SVG isometric renderer so the replay/coach slice works without a WebGL dependency; Three.js remains an option for later visual depth | Broadcast measurements and audience playtest |
 | 014 | Accepted for first fixture | Save local playbooks atomically to ignored `.local/studios.json`; keep trials/rounds ephemeral; do not claim production database durability | PostgreSQL integration milestone |
+| 015 | Implemented local OAuth step | Keep Twitch access/refresh tokens in server memory until encrypted production persistence exists; validate identity/scope/client, revalidate within an hour, serialize reactive refresh, and require sign-in after restart | Encrypted durable token storage and EventSub integration |
 
 ## Product risks
 

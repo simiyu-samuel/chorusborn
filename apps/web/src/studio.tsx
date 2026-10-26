@@ -343,6 +343,53 @@ export function App() {
   const [trial, setTrial] = useState<Trial | null>(null);
   const [settings, setSettings] = useState(false);
   const [controlBusy, setControlBusy] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
+  const [connectionNotice, setConnectionNotice] = useState<string | null>(null);
+  const connectHandled = useRef(false);
+  useEffect(() => {
+    if (!state || connectHandled.current) return;
+    const query = new URLSearchParams(location.search);
+    const result = query.get('twitch');
+    const connect = query.get('connect') === 'twitch';
+    if (!result && !connect) return;
+    connectHandled.current = true;
+    history.replaceState(null, '', location.pathname);
+    setSettings(true);
+    if (connect) {
+      if (state.twitch.configured) location.assign('/auth/twitch/start');
+      else
+        setConnectionNotice('Add the Twitch app credentials to .env and restart the server first.');
+    } else {
+      setConnectionNotice(
+        result === 'connected' && state.twitch.status === 'authenticated'
+          ? 'Twitch account verified. Live chat intake is the next integration.'
+          : result === 'denied'
+            ? 'Twitch sign-in was cancelled. Your local champion is still available.'
+            : result === 'wrong-channel'
+              ? `Sign in with the ${state.twitch.expectedChannel} Twitch account.`
+              : 'Twitch sign-in did not complete. Try connecting again from this studio.',
+      );
+    }
+  }, [state]);
+  const disconnectTwitch = async () => {
+    setDisconnecting(true);
+    try {
+      const result = await request<{ state: StudioState; revoked: boolean }>(
+        '/api/twitch/disconnect',
+        {},
+      );
+      setState(result.state);
+      setConnectionNotice(
+        result.revoked
+          ? 'Twitch disconnected.'
+          : 'Disconnected locally. Twitch could not confirm revocation; remove Chorusborn in Twitch Settings → Connections if needed.',
+      );
+    } catch (cause) {
+      setConnectionNotice((cause as Error).message);
+    } finally {
+      setDisconnecting(false);
+    }
+  };
   const perform = useCallback(
     async (action: 'pause' | 'resume' | 'reset') => {
       setControlBusy(true);
@@ -456,7 +503,12 @@ export function App() {
           <div className="profile">
             <span>LC</span>
             <div>
-              Local coach<small>Fixture workspace</small>
+              {state?.twitch.channel?.login ?? 'Local coach'}
+              <small>
+                {state?.twitch.status === 'authenticated'
+                  ? 'Twitch account verified'
+                  : 'Fixture workspace'}
+              </small>
             </div>
             <span className="online-dot" />
           </div>
@@ -532,8 +584,10 @@ export function App() {
           <div className="fixture-banner">
             <FlaskConical size={15} />
             <span>
-              <strong>Local replay lab</strong> · Sample tactics and a fixture arena. Twitch and the
-              language compiler are not connected.
+              <strong>Local replay lab</strong> · Sample tactics and a fixture arena.{' '}
+              {state?.twitch.status === 'authenticated'
+                ? 'Twitch account verified; live chat and the language compiler are not connected.'
+                : 'Twitch and the language compiler are not connected.'}
             </span>
             <button onClick={() => setSettings(true)}>
               Build status
@@ -881,6 +935,60 @@ export function App() {
       {settings ? (
         <Modal title="A clear view of the build." close={() => setSettings(false)}>
           <p className="modal-intro">This is the first working local slice of Chorusborn.</p>
+          <section className="twitch-connection" aria-label="Twitch connection">
+            <div className="detail-heading">
+              <Radio size={22} />
+              <div>
+                <h2>
+                  {state?.twitch.status === 'authenticated'
+                    ? `Connected as ${state.twitch.channel?.login}`
+                    : state?.twitch.status === 'reconnect-required'
+                      ? 'Reconnect Twitch'
+                      : state?.twitch.status === 'validation-unavailable'
+                        ? 'Twitch verification unavailable'
+                        : 'Bring your community in'}
+                </h2>
+                <p>
+                  {state?.twitch.channel
+                    ? 'Account authorization is separate from live chat intake.'
+                    : `Connect the ${state?.twitch.expectedChannel ?? 'developersimiyu'} broadcaster account.`}
+                </p>
+              </div>
+            </div>
+            {connectionNotice ? (
+              <p className="connection-notice" role="status">
+                {connectionNotice}
+              </p>
+            ) : null}
+            {!state?.twitch.configured ? (
+              <p className="settings-note">
+                Enter TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET in the local .env file, then restart
+                the server. Credentials stay on this machine.
+              </p>
+            ) : null}
+            {state?.twitch.channel ? (
+              <button
+                className="secondary-button"
+                disabled={disconnecting}
+                onClick={() => void disconnectTwitch()}
+              >
+                {disconnecting ? 'Disconnecting…' : 'Disconnect Twitch'}
+              </button>
+            ) : state?.twitch.connectUrl ? (
+              <a className="primary-button" href={state.twitch.connectUrl}>
+                Connect Twitch
+                <ArrowUpRight size={16} />
+              </a>
+            ) : (
+              <button className="primary-button" disabled>
+                Connect Twitch
+              </button>
+            )}
+            <p className="settings-note">
+              Requests chat-read access only. No chat messages are sent. This local build keeps
+              Twitch tokens in server memory; restart requires sign-in again.
+            </p>
+          </section>
           <div className="build-status">
             <p>
               <Check size={16} />
@@ -896,7 +1004,7 @@ export function App() {
             </p>
             <p className="pending">
               <Radio size={16} />
-              <span>Twitch OAuth and real viewer intake — upcoming</span>
+              <span>Twitch sign-in available · real viewer intake upcoming</span>
             </p>
             <p className="pending">
               <Sparkles size={16} />

@@ -50,7 +50,7 @@ Deadline: Nov 3 at 01:00 Nairobi, equivalent to Nov 2 at 14:00 PST. Confirm the 
 
 ## Ordered implementation backlog
 
-Progress: B01 and B03 are implemented locally. Initial B07–B13 foundations exist, including an integer arena, policy interpreter, authoritative server, SVG presentation, complete-state checkpoint comparison and trial workers. They are not equivalent to finished production milestones: PostgreSQL, real Twitch intake, the language compiler, full scenario evaluation, and two-channel rivalry remain outstanding. See [build log](build-log.md) for exact checks; all other work is pending unless that log says otherwise.
+Progress: B01 and B03 are implemented locally. B05 has an implemented local OAuth flow, verified app credentials, and an owner-confirmed real broadcaster connection. Initial B07–B13 foundations exist, including an integer arena, policy interpreter, authoritative server, SVG presentation, complete-state checkpoint comparison and trial workers. They are not equivalent to finished production milestones: PostgreSQL, real Twitch intake, the language compiler, full scenario evaluation, and two-channel rivalry remain outstanding. See [build log](build-log.md) for exact checks; all other work is pending unless that log says otherwise.
 
 | ID | Task | Depends on | Done when |
 | --- | --- | --- | --- |
@@ -91,7 +91,7 @@ Deliver one vertical technical slice: fixed arena state → baseline policy → 
 
 | Dependency | Needed by | Current status |
 | --- | --- | --- |
-| Twitch developer application and approved redirect configuration | B05 | Not created/verified |
+| Twitch developer application and approved redirect configuration | B05 | Owner created app; local credentials verified; real developersimiyu authorization confirmed by owner |
 | First broadcaster account and cooperating rival broadcaster | B06 / B19 / B24 | First channel: developersimiyu; rival not yet identified |
 | Runtime model access and explicit spend cap | B04 / B15 | Not configured |
 | Deployment host/DB choice and hosting budget | B21 / B26 | Not selected or provisioned |

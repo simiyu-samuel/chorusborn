@@ -14,9 +14,9 @@ export default defineConfig({
     launchOptions: { executablePath: process.env.CHROMIUM_PATH || undefined },
   },
   webServer: {
-    command: 'npm run dev',
+    command: 'npm run test:serve',
     url: 'http://127.0.0.1:5173',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 30_000,
   },
 });

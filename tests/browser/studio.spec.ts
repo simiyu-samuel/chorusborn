@@ -65,3 +65,48 @@ test('mobile studio fits the viewport and remains usable', async ({ page }) => {
   await page.getByRole('button', { name: 'Close dialog' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
+
+test('coach connects through a cross-site OAuth callback and disconnects with a mocked provider', async ({
+  page,
+}) => {
+  // Playwright routes match the first request in a redirect chain. Inspect the real
+  // start response without following it, then make the provider navigation a new request.
+  await page.route('**/auth/twitch/start', async (route) => {
+    const response = await route.fetch({ maxRedirects: 0 });
+    expect(response.status()).toBe(302);
+    const destination = response.headers().location!;
+    expect(new URL(destination).origin).toBe('https://id.twitch.tv');
+    await route.fulfill({
+      status: 200,
+      contentType: 'text/html',
+      body: `<html><body><a href="${destination.replaceAll('&', '&amp;')}">Continue to mocked Twitch</a></body></html>`,
+    });
+  });
+  await page.route('https://id.twitch.tv/oauth2/authorize?**', async (route) => {
+    const authorization = new URL(route.request().url());
+    expect(authorization.searchParams.get('scope')).toBe('user:read:chat');
+    const callback = new URL('http://localhost:3001/auth/twitch/callback');
+    callback.searchParams.set('state', authorization.searchParams.get('state')!);
+    callback.searchParams.set('code', 'browser-test-code');
+    await route.fulfill({
+      contentType: 'text/html',
+      body: `<html><body><h1>Mock Twitch authorization</h1><a href="${callback.toString().replaceAll('&', '&amp;')}">Allow test connection</a></body></html>`,
+    });
+  });
+  // Begin on the alternate loopback hostname to verify canonical localhost onboarding.
+  await page.goto('/');
+  await expect(page.getByText('Engine connected', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Connections & setup' }).click();
+  await page.getByRole('link', { name: 'Connect Twitch', exact: true }).click();
+  await page.getByRole('link', { name: 'Continue to mocked Twitch', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Mock Twitch authorization' })).toBeVisible();
+  await page.getByRole('link', { name: 'Allow test connection' }).click();
+  await expect(page).toHaveURL('http://localhost:5173/');
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByRole('heading', { name: 'Connected as developersimiyu' })).toBeVisible();
+  await expect(dialog.getByRole('status')).toContainText('Twitch account verified');
+  await page.screenshot({ path: '.local/screenshots/twitch-connection-mock.png', fullPage: true });
+  await dialog.getByRole('button', { name: 'Disconnect Twitch', exact: true }).click();
+  await expect(dialog.getByRole('link', { name: 'Connect Twitch', exact: true })).toBeVisible();
+  await expect(dialog.getByRole('status')).toHaveText('Twitch disconnected.');
+});

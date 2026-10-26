@@ -1,6 +1,6 @@
 # System architecture
 
-Status: target production architecture. The first local fixture implements `apps/web`, `apps/server`, `packages/contracts`, and `packages/sim`. It uses a local file store instead of PostgreSQL and an SVG renderer instead of WebGL; no production services are provisioned. See ADR 013–014 in [decisions](decisions.md).
+Status: target production architecture. The local build implements `apps/web`, `apps/server`, `packages/contracts`, and `packages/sim`, plus state-bound Twitch OAuth with memory-only tokens. It uses a local file store instead of PostgreSQL and an SVG renderer instead of WebGL; EventSub and production services remain pending. See ADR 013–015 in [decisions](decisions.md).
 
 ## Architectural principle
 
@@ -21,7 +21,7 @@ Status: target production architecture. The first local fixture implements `apps
 | Verification | Vitest, Playwright, schema validation, CI | Semantic engine checks and real browser flows |
 | Packaging | Docker Compose for local services; containers for a persistent host | Long-lived Twitch connection and server-owned match loop |
 
-Versions will be pinned with a lockfile in M0. The AI model ID, hosting vendor/region, and database vendor remain open until an implementation spike confirms availability and measured performance. No exact price or provider limit is assumed. Follow installed eve documentation at scaffold time; this design does not prescribe unverified SDK signatures.
+Workspace/runtime dependencies are pinned in the lockfile. The AI model ID, hosting vendor/region, and database vendor remain open until an implementation spike confirms availability and measured performance. No exact price or provider limit is assumed. Follow installed eve documentation at scaffold time; this design does not prescribe unverified SDK signatures.
 
 ## Component diagram
 

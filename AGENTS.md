@@ -8,8 +8,9 @@
   transcripts, dependency folders, local databases, or generated recordings.
 - Do not rewrite existing commits, discard unrelated changes, or push without
   authorization. Local commits are authorized.
-- The first local fixture build exists. Twitch, the language compiler, PostgreSQL,
-  rival channels, and full-suite evaluation remain unimplemented. Keep status honest.
+- The local fixture and Twitch OAuth flow exist. EventSub/chat intake, the language
+  compiler, PostgreSQL, rival channels, and full-suite evaluation remain unimplemented.
+  Twitch tokens are memory-only for now; restart requires reconnecting. Keep status honest.
 - Keep the ambitious core: Twitch teaching, evidence-backed lessons, deterministic
   branching replay, persistent playbooks, real attribution, and rival matches.
 - AI proposes bounded behavior data. It cannot directly publish a playbook,
