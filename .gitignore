@@ -1,0 +1,36 @@
+# Credentials and machine-local configuration
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+credentials*.json
+.vercel/
+.eve/
+
+# Dependencies and generated application output
+node_modules/
+dist/
+build/
+coverage/
+.turbo/
+.cache/
+playwright-report/
+test-results/
+*.tsbuildinfo
+
+# Local databases, recordings, and logs
+.local/
+data/
+recordings/
+*.sqlite
+*.sqlite-*
+*.db
+*.log
+
+# Editor/OS files
+.DS_Store
+Thumbs.db
+*.swp
+.idea/

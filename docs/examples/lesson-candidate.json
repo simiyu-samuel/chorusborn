@@ -1,0 +1,23 @@
+{
+  "contractVersion": "1",
+  "summary": "While carrying the core, prioritize returning home along a cautious route.",
+  "rules": [
+    {
+      "label": "Bring the core home",
+      "when": {
+        "all": [
+          {
+            "fact": "self.carryingCore",
+            "op": "eq",
+            "value": true
+          }
+        ]
+      },
+      "intent": {
+        "goal": "return_home",
+        "route": "cautious",
+        "ability": "none"
+      }
+    }
+  ]
+}

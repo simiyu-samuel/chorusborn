@@ -1,0 +1,13 @@
+---
+description: Commit every completed Chorusborn work increment as requested by the owner
+alwaysApply: true
+---
+
+# Commit completed work
+
+- Follow the owner's instruction to keep everything we do committed.
+- Commit each completed, coherent increment after appropriate checks and diff review.
+- Include related documentation; exclude secrets, private transcripts, and generated bulk files.
+- Preserve unrelated edits and never rewrite history or push without authorization.
+- Report the resulting commit and whether the working tree is clean.
+- See `CONTRIBUTING.md` for the complete workflow.

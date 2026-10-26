@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:chorusborn:lesson-candidate:v1",
+  "title": "Chorusborn lesson candidate v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contractVersion", "summary", "rules"],
+  "properties": {
+    "contractVersion": { "const": "1" },
+    "summary": { "type": "string", "minLength": 1, "maxLength": 240 },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/rule" }
+    }
+  },
+  "$defs": {
+    "booleanCondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fact", "op", "value"],
+      "properties": {
+        "fact": {
+          "enum": [
+            "self.carryingCore",
+            "enemy.carryingCore",
+            "core.available",
+            "self.shieldReady",
+            "self.decoyReady"
+          ]
+        },
+        "op": { "enum": ["eq", "neq"] },
+        "value": { "type": "boolean" }
+      }
+    },
+    "healthCondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fact", "op", "value"],
+      "properties": {
+        "fact": { "const": "self.healthBps" },
+        "op": { "enum": ["eq", "lt", "lte", "gt", "gte"] },
+        "value": { "type": "integer", "minimum": 0, "maximum": 10000 }
+      }
+    },
+    "distanceCondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fact", "op", "value"],
+      "properties": {
+        "fact": { "const": "enemy.distanceUnits" },
+        "op": { "enum": ["eq", "lt", "lte", "gt", "gte"] },
+        "value": { "type": "integer", "minimum": 0, "maximum": 50000 }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "when", "intent"],
+      "properties": {
+        "label": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "when": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["all"],
+          "properties": {
+            "all": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 4,
+              "items": {
+                "oneOf": [
+                  { "$ref": "#/$defs/booleanCondition" },
+                  { "$ref": "#/$defs/healthCondition" },
+                  { "$ref": "#/$defs/distanceCondition" }
+                ]
+              }
+            }
+          }
+        },
+        "intent": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["goal", "route", "ability"],
+          "properties": {
+            "goal": {
+              "enum": [
+                "collect_core",
+                "return_home",
+                "attack_enemy",
+                "retreat_home",
+                "guard_home",
+                "idle"
+              ]
+            },
+            "route": { "enum": ["direct", "balanced", "cautious"] },
+            "ability": { "enum": ["none", "shield", "decoy"] }
+          }
+        }
+      }
+    }
+  }
+}
