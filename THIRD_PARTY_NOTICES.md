@@ -2,6 +2,11 @@
 
 Original arena geometry, champion glyphs, favicon, and application source were authored for Chorusborn. Dependency packages retain their own licenses. This file does not grant a license to the original project code.
 
+The proposed art-direction image at `docs/concepts/core-run-direction-v1.png` was generated
+with the built-in Imagegen tool on October 27, 2026, without external image references.
+Its exact prompt and design-only status are recorded alongside it. It is not bundled into
+the running game, a third-party franchise asset, or a finished production character kit.
+
 The browser build includes the following dependencies and font assets. Additional server/build/test dependency licenses are distributed inside their installed packages and restored by npm ci.
 
 ## react 19.3.1

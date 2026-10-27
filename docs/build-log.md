@@ -144,6 +144,15 @@ This completes the local natural-language teach/prove/adopt path, not the entire
 
 Codex implemented the adapter and lifecycle, diagnosed Groq's constrained-decoder union ambiguity, retained strict local typed validation, implemented source-bound replay/adoption and attribution, tested failure paths and UI, fixed test-port interference, and verified the real saved Twitch lesson end to end. The feature commit containing this entry identifies the revision; the main build session ID remains pending verification.
 
+## 2026-10-27 — Proposed game art direction
+
+- The owner asked for a distinctive game presentation, character identity and game feel beyond the functional studio prototype.
+- Created a proposed 2.5D Core Run direction using the built-in Imagegen tool, with Mica/Rook character references, a tactile relay arena, compact HUD and explicit concept-art labeling. No external character image was used as an input.
+- Saved the selected image, exact prompt and generation record under `docs/concepts/`, and added `docs/art-direction.md` covering silhouettes, character performance, state/event-driven effects, scene/console separation, renderer approach, build sequence and measurable review gates.
+- Inspected the generated image inline. It is a visual reference, not a final wordmark, production turnaround, model/sprite sheet or runtime screenshot. The brief calls out decorative/non-mechanical elements and the need to rebuild exact branding/HUD text in code.
+- Updated brand/UX/index references. No application behavior, dependencies, simulation state or runtime graphics changed; no runtime test rerun was needed for this design-only increment. Reviewed local Markdown/image references and `git diff --check` before committing.
+- Rendering, rigs/animations, audio, broadcast comparison and measured visual/performance evidence remain implementation work. Codex shaped the brief, generated/inspected the concept and recorded the production boundary.
+
 ## Future entry template
 
 For each completed milestone, record date, feature/acceptance IDs, commit reference, meaningful checks and outcomes, screenshots/replay/evaluation references where appropriate, remaining limitations, and how Codex contributed. Never include secrets or full private session transcripts. Store bulky recordings outside Git and link final authorized artifacts when available.

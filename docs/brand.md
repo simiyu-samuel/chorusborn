@@ -26,4 +26,4 @@ An energetic broadcast sports identity with a warm, creature-like champion. Deep
 
 The champion has a recognizable silhouette, expressive idle/win/loss reactions, and a small set of cosmetics. Keep collision boxes identical across cosmetics. Avoid a dashboard dominating the broadcast: the arena and visible consequences are the hero.
 
-Use short lesson cards, clear replay timelines, directional intent cues, and restrained particle effects. Protect OBS frame rate. No final logo, font license choice, character assets, or visual mockups have been produced yet; select owned or properly licensed assets and record them before shipping.
+Use short lesson cards, clear replay timelines, directional intent cues, and restrained particle effects. Protect OBS frame rate. A proposed arena/character concept and production brief now exist in [art direction](art-direction.md). Runtime character assets and the new renderer remain unimplemented. The current app has self-hosted fonts and original SVG art; see third-party notices. Final logo, production art consistency, and runtime asset licensing/provenance checks remain release work.

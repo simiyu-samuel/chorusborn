@@ -1,6 +1,6 @@
 # UX and broadcast experience
 
-Status: release design specification. The local build implements a responsive coach studio at `/`, a replay dialog, playbook/receipt panels, and a read-only `/overlay` route with original SVG champions and arena. Connections & setup supports Twitch OAuth and disconnect. The community queue distinguishes chat readiness, pauses, gaps, actual received lessons awaiting compilation, and removed/rejected proposals. The routes and onboarding below describe the fuller release target; language compilation, public profiles, rivalry, and production role management remain pending.
+Status: release design specification. The local build implements a responsive coach studio at `/`, a replay dialog, playbook/receipt panels, and a read-only `/overlay` route with original SVG champions and arena. Connections & setup supports Twitch OAuth and disconnect. The community queue distinguishes chat readiness, pauses, gaps, actual received lessons awaiting compilation, and removed/rejected proposals. The routes and onboarding below describe the fuller release target; public profiles, rivalry, and production role management remain pending. The local Groq compiler and source-bound adoption now work; the proposed graphical upgrade is described in [art direction](art-direction.md).
 
 ## Experience hierarchy
 

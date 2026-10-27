@@ -95,6 +95,7 @@ requests. It is not the planned broad compiler evaluation or scenario holdout su
 | --- | --- |
 | [Documentation index](docs/README.md) | Reading order and source of truth |
 | [Brand and name](docs/brand.md) | Name rationale, voice, visual direction |
+| [Game art direction](docs/art-direction.md) | Proposed arena, champion designs, animation and broadcast production brief |
 | [Product brief](docs/product.md) | Audience, value proposition, features, hypotheses |
 | [Scope and acceptance](docs/scope.md) | What the prize submission must actually do |
 | [Game design](docs/game-design.md) | Arena rules and meaningful strategy |
