@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from './app.js';
 import { readTwitchConfig, TwitchOAuth, type TwitchConfig } from './twitch.js';
+import { MockEventSocket } from '../../../tests/support/twitch-fixtures.js';
 
 const config: TwitchConfig = {
   clientId: 'test-client',
@@ -32,7 +33,12 @@ afterEach(async () => {
 });
 async function boot(fetcher = provider(), now?: () => number) {
   const oauth = new TwitchOAuth(config, { fetch: fetcher, now });
-  const app = await createApp({ storePath: null, clock: false, twitch: oauth });
+  const app = await createApp({
+    storePath: null,
+    clock: false,
+    twitch: oauth,
+    socketFactory: (url) => new MockEventSocket(url),
+  });
   cleanups.push(() => app.close());
   return { app, oauth, fetcher };
 }
@@ -100,7 +106,7 @@ describe('Twitch OAuth HTTP flow', () => {
     const body = (await app.inject({ url: '/api/demo/state', headers: { cookie } })).json();
     expect(body.twitch.status).toBe('authenticated');
     expect(body.twitch.channel).toEqual({ id: identity.user_id, login: config.channel });
-    expect(body.twitch.chat).toBe('not-connected');
+    expect(body.twitch.chat).toBe('connecting');
     expect(JSON.stringify(body)).not.toMatch(/test-access|test-secret|refresh_token/);
     const request = fetcher.mock.calls[0]![1]!;
     const params = new URLSearchParams(request.body as URLSearchParams);

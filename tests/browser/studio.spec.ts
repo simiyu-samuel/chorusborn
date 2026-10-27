@@ -106,6 +106,58 @@ test('coach connects through a cross-site OAuth callback and disconnects with a 
   await expect(dialog.getByRole('heading', { name: 'Connected as developersimiyu' })).toBeVisible();
   await expect(dialog.getByRole('status')).toContainText('Twitch account verified');
   await page.screenshot({ path: '.local/screenshots/twitch-connection-mock.png', fullPage: true });
+  await dialog.getByRole('button', { name: 'Close dialog' }).click();
+  const queue = page.getByRole('region', { name: 'Live lesson queue' });
+  await expect(queue.getByText('Chat live', { exact: true })).toBeVisible();
+  const emit = async (data: unknown) => {
+    const response = await page.request.post('http://localhost:3001/__test__/event', { data });
+    expect(response.ok()).toBe(true);
+  };
+  await emit({
+    event: {
+      message_id: 'browser-lesson-one',
+      chatter_user_name: '<b>Viewer One</b>',
+      message: { text: '!teach Return home while carrying the core.' },
+    },
+    duplicate: true,
+  });
+  await expect(queue.getByRole('article')).toHaveCount(1);
+  await expect(queue.getByText('<b>Viewer One</b>', { exact: true })).toBeVisible();
+  await expect(
+    queue.getByText('Return home while carrying the core.', { exact: true }),
+  ).toBeVisible();
+  await expect(
+    queue.getByText('Received from Twitch · awaiting compiler', { exact: true }),
+  ).toBeVisible();
+  await page.screenshot({ path: '.local/screenshots/chat-queue-mock.png', fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(
+    false,
+  );
+  await page.screenshot({ path: '.local/screenshots/chat-queue-mobile-mock.png', fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await queue.getByRole('button', { name: 'Pause intake', exact: true }).click();
+  await expect(queue.getByText('Intake paused', { exact: true })).toBeVisible();
+  await emit({ event: { message_id: 'browser-paused', chatter_user_id: '790' } });
+  await expect(
+    queue.getByText('A teaching command arrived while intake was paused.'),
+  ).toBeVisible();
+  await expect(queue.getByRole('article')).toHaveCount(1);
+  await queue.getByRole('button', { name: 'Resume intake', exact: true }).click();
+  await emit({
+    event: {
+      message_id: 'browser-lesson-two',
+      chatter_user_id: '790',
+      chatter_user_name: 'Viewer Two',
+    },
+  });
+  await expect(queue.getByRole('article')).toHaveCount(2);
+  await emit({ type: 'channel.chat.message_delete', event: { message_id: 'browser-lesson-one' } });
+  await expect(queue.getByText('This lesson was removed from Twitch chat.')).toBeVisible();
+  await expect(queue.getByText('<b>Viewer One</b>', { exact: true })).toHaveCount(0);
+  await queue.getByRole('button', { name: 'Reject lesson from Viewer Two', exact: true }).click();
+  await expect(queue.getByText('Rejected by coach', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Connections & setup', exact: true }).click();
   await dialog.getByRole('button', { name: 'Disconnect Twitch', exact: true }).click();
   await expect(dialog.getByRole('link', { name: 'Connect Twitch', exact: true })).toBeVisible();
   await expect(dialog.getByRole('status')).toHaveText('Twitch disconnected.');

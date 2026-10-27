@@ -1,6 +1,6 @@
 # System architecture
 
-Status: target production architecture. The local build implements `apps/web`, `apps/server`, `packages/contracts`, and `packages/sim`, plus state-bound Twitch OAuth with memory-only tokens. It uses a local file store instead of PostgreSQL and an SVG renderer instead of WebGL; EventSub and production services remain pending. See ADR 013–015 in [decisions](decisions.md).
+Status: target production architecture. The local build implements `apps/web`, `apps/server`, `packages/contracts`, and `packages/sim`, plus Twitch OAuth, EventSub lifecycle, and a durable local teaching queue. Tokens remain memory-only. It uses local file stores instead of PostgreSQL and an SVG renderer instead of WebGL; the compiler and production services remain pending. See ADR 013–016 in [decisions](decisions.md).
 
 ## Architectural principle
 

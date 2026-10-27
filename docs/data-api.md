@@ -4,7 +4,7 @@ Status: production logical design. PostgreSQL migrations and the `/api/v1` surfa
 
 ## Persistence model
 
-The local build additionally implements `GET /auth/twitch/start`, `GET /auth/twitch/callback`, and `POST /api/twitch/disconnect`. OAuth status is a redacted `twitch` field in the coach state. Tokens are memory-only and are never included in this field or the overlay. The `/api/v1` contracts below remain the production target.
+The local build additionally implements `GET /auth/twitch/start`, `GET /auth/twitch/callback`, `POST /api/twitch/disconnect`, `POST /api/twitch/intake` (pause/resume/retry), and `POST /api/twitch/proposals/:id` (reject). The last two require verified OAuth for the bound channel. Real proposals enter only through the server's EventSub adapter, never an anonymous HTTP write route. Redacted `twitch`/`intake` fields in the private coach state carry status and the authorized queue. Tokens are memory-only and excluded from state; the overlay receives no queue. `.local/chat.json` holds the local durable proposals/ingress records. The `/api/v1` contracts below remain the production target.
 
 | Entity | Essential fields and constraints |
 | --- | --- |

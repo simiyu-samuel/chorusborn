@@ -1,6 +1,6 @@
 # UX and broadcast experience
 
-Status: release design specification. The local fixture implements a responsive coach studio at `/`, a replay dialog, playbook/receipt panels, and a read-only `/overlay` route with original SVG champions and arena. Connections & setup supports Twitch OAuth and disconnect, distinguishing account verification from pending chat intake. The routes and onboarding below describe the fuller release target; live chat, public profiles, rivalry, and production role management remain pending.
+Status: release design specification. The local build implements a responsive coach studio at `/`, a replay dialog, playbook/receipt panels, and a read-only `/overlay` route with original SVG champions and arena. Connections & setup supports Twitch OAuth and disconnect. The community queue distinguishes chat readiness, pauses, gaps, actual received lessons awaiting compilation, and removed/rejected proposals. The routes and onboarding below describe the fuller release target; language compilation, public profiles, rivalry, and production role management remain pending.
 
 ## Experience hierarchy
 

@@ -1,6 +1,6 @@
 # Hackathon submission and demo plan
 
-Status: **draft submission material**. A working local fixture exists; Twitch, the language compiler, and rivalry are pending. Rewrite the description into verified present tense only after release checks; do not submit planned features as completed work.
+Status: **draft submission material**. A working local fixture, Twitch OAuth, EventSub intake, and local teaching queue exist; the language compiler and rivalry are pending. Rewrite the description into verified present tense only after release checks; do not submit planned features as completed work.
 
 ## Intended title and short description
 

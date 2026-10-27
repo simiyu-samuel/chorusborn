@@ -86,6 +86,34 @@ OAuth account authorization is separate from EventSub connection and a real view
 
 Codex implemented the OAuth boundary and UI, wrote the adversarial/lifecycle checks, diagnosed the proxy-host issue through browser evidence, and verified the saved app credentials without exposing them. The feature commit containing this entry identifies the revision; the main build session ID remains pending verification.
 
+## 2026-10-27 — EventSub and durable teaching intake
+
+**Completed**
+
+- Added a receive-only EventSub transport with welcome/subscription setup, watchdog, exact directed reconnect, unexpected-disconnect backoff, revocation handling, bounded frames/buffering, and visible gap/error states.
+- Shared one connection per verified reader. Bound message/deletion/user-clear/room-clear subscriptions to the verified broadcaster identity, client token, subscription IDs, and WebSocket session; handle a notification racing setup without publishing it early.
+- Added a durable local `!teach` queue with trusted Twitch attribution, Unicode/text bounds, envelope/message dedupe, cooldowns, queue caps, pause/resume, and coach rejection. Ordinary chat and foreign-source Shared Chat are ignored.
+- Persisted command receipts and moderation tombstones atomically before displaying accepted changes. Removed text and attribution on received deletion/clear events, including during teaching pause and out-of-order delivery.
+- Added a responsive community queue showing actual chat readiness, admission outcomes, pending compiler status, and moderation. Real lessons do not yet change the playbook; the authored sample trial flow remains separate.
+- Added isolated socket/event fixtures for tests. Fake HTTP event injection exists only in the test server; the application has no equivalent ingestion route or runtime flag.
+
+**Verification**
+
+- `npm run check` passes formatting, TypeScript, all **49** contract/simulation/API/OAuth/EventSub/storage tests, and the production frontend build.
+- New checks cover exact reconnect migration without duplicate subscriptions, including migration racing initial setup; lost-connection resubscription and keepalive timeout; subscription identity/rate-limit/revocation boundaries; notification/setup races; overload/storage failure; atomic queue persistence and dedupe across restart; pause/cooldown/capacity; and deletion-before-message/earlier-clear ordering.
+- All **three Chromium browser tests** pass. The OAuth flow now additionally verifies attributed teaching receipt, duplicate suppression, escaped author text, pause/resume, deletion, coach rejection, disconnect, and live-queue layout at 390px width. Existing prove/adopt/play/overlay flows remain passing.
+- Inspected desktop/mobile queue screenshots. These use explicit provider fixtures and remain ignored local artifacts; they are not real Twitch delivery evidence.
+- The real local server accepted broadcaster authorization and reports **authenticated / live**, meaning all four validated EventSub subscriptions are ready. At the owner's request, Codex used the existing logged-in Twitch browser tab to post `!teach When carrying the core, take a cautious route home.` in the owner's channel. Twitch displayed the sent command; the separate Chorusborn tab then showed **1 waiting**, the exact lesson text, trusted **developersimiyu** attribution, and **Received from Twitch · awaiting compiler**.
+- A separate local persistence check confirmed one waiting proposal with attribution present. Saved the real browser screenshot to ignored `.local/screenshots/live-twitch-lesson.jpg`; no cookie, token, private source ID, or complete raw provider payload was copied into Git. This was a broadcaster-authored live test; an independent second viewer still needs its own release evidence.
+
+**Boundaries and next work**
+
+This is the local B06/B16 intake foundation with atomic files (ADR 016), not PostgreSQL or the full release workflow. Only `!teach` is handled. Model compilation, voting, job leases, production roles, encrypted durable token storage, complete history/retention controls, rivalry, and full-suite evaluation remain pending. OAuth tokens are still memory-only; proposals and dedupe receipts survive restart but reading them requires reconnecting the verified channel. Messages and moderation events missed during a connection gap cannot be recovered.
+
+**Codex contribution**
+
+Codex implemented and tested the transport, queue, authorization boundaries, persistence, moderation ordering, and UI. It also ran the real connection readiness check without printing tokens, cookies, author IDs, or message text. The feature commit containing this entry identifies the revision; the main build session ID remains pending verification.
+
 ## Future entry template
 
 For each completed milestone, record date, feature/acceptance IDs, commit reference, meaningful checks and outcomes, screenshots/replay/evaluation references where appropriate, remaining limitations, and how Codex contributed. Never include secrets or full private session transcripts. Store bulky recordings outside Git and link final authorized artifacts when available.

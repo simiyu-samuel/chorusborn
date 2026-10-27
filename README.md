@@ -10,7 +10,7 @@ The defining interaction is **teach → prove → adopt → compete**. A viewer'
 
 The first local fixture build is implemented: a React coach studio, server-owned Core Run arena, bounded sample lesson contracts, exact two-branch replay, coach adoption, local playbook persistence, and a separately authorized read-only overlay. The planning baseline was created October 26, 2026 for the Codex x TwitchCon Hackathon.
 
-Twitch sign-in is implemented with state-bound OAuth, verified broadcaster identity, periodic validation, serialized refresh, and disconnect. **EventSub/chat intake, the model-backed language compiler, PostgreSQL, rival channels, and the full evaluation suite are not connected yet.** Account authorization does not mean chat intake is live. The UI labels sample tactics and fixture scenarios explicitly. Production architecture and release gates remain targets unless the build log records verification.
+Twitch sign-in and EventSub intake are implemented: state-bound OAuth, verified broadcaster identity, periodic validation, serialized refresh, a durable local teaching queue, duplicate protection, and deletion/clear handling. **The model-backed language compiler, PostgreSQL, rival channels, and the full evaluation suite are not connected yet.** Real viewer lessons remain **awaiting compiler**; they cannot change a champion's playbook. The UI labels sample tactics and fixture scenarios explicitly. Production architecture and release gates remain targets unless the build log records verification.
 
 ## Run locally
 
@@ -23,7 +23,7 @@ npm run dev
 
 Open **http://127.0.0.1:5173**. The API runs at **http://127.0.0.1:3001**. Choose a sample tactic, select **Prove this lesson**, inspect the replay, then **Adopt for next round**. Reset the arena to load the new playbook and start the round to see actual rule-use receipts.
 
-The fixture requires no Twitch or model credentials. Playbooks are saved in ignored `.local/studios.json`; active rounds and trial history are held in memory. The server binds to loopback and is not ready for public deployment. Overlay links contain a separate read-only key and work without a coach cookie.
+The fixture requires no Twitch or model credentials. Playbooks are saved in ignored `.local/studios.json`; teaching proposals and ingress receipts use `.local/chat.json`. Active rounds and trial history are held in memory. The server binds to loopback and is not ready for public deployment. Overlay links contain a separate read-only key and work without a coach cookie; they expose no private proposal queue.
 
 ```sh
 npm run check            # formatting, types, engine/API tests, production frontend build
@@ -42,6 +42,18 @@ First channel: **developersimiyu**. The owner has created the developer app. Reg
 Open **http://localhost:5173**, choose **Connections & setup → Connect Twitch**, and authorize while signed in as `developersimiyu`. The app requests only `user:read:chat`; it never sends chat messages. An attempted sign-in from `127.0.0.1` first moves to the canonical localhost studio, which can have a separate local fixture playbook because browser cookies belong to a hostname.
 
 Tokens remain only in server memory and never enter the local JSON store or public state. Restart requires connecting again. Disconnect clears local authority before attempting Twitch revocation; if Twitch is unavailable, the UI explains how to remove the connection there. The loopback coach session is still fixture authority, not production role management. See [Twitch integration](docs/twitch-integration.md) for validation behavior and the console's blank-row issue.
+
+## Receive real Twitch lessons
+
+After connecting, wait for **Chat live**, then post in the connected channel:
+
+```text
+!teach When carrying the core, take a cautious route home.
+```
+
+The **From your community** queue shows the lesson and Twitch-provided author. Broadcasters can test their own commands too. Only `!teach` is implemented; ordinary chat is not stored. The queue accepts 280 characters, one lesson per user per 30 seconds, and 50 waiting proposals. Links, code fences, HTML, and line breaks are rejected. Pause/resume intake and reject proposals from the studio. Deletion and room/user clear events remove matching source text and attribution, including when intake is paused.
+
+One EventSub connection is shared per verified reader. Account sign-in and chat readiness are separate states. Unexpected disconnects show a gap and resubscribe; Twitch cannot replay missed messages. A directed reconnect preserves the old connection until its replacement is ready. Storage failure or the bounded ingress buffer stops intake visibly. Proposals return after restarting and reconnecting the same channel. See the integration guide for retention and local limits.
 
 ## Start here
 

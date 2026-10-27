@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import type { StudioState, Trial, World } from '@chorusborn/contracts';
 import { Arena, ChampionPortrait } from './arena.js';
+import { ChatQueue } from './chat-queue.js';
 
 async function request<T>(path: string, body?: unknown): Promise<T> {
   const response = await fetch(
@@ -362,7 +363,7 @@ export function App() {
     } else {
       setConnectionNotice(
         result === 'connected' && state.twitch.status === 'authenticated'
-          ? 'Twitch account verified. Live chat intake is the next integration.'
+          ? 'Twitch account verified. Chat intake is connecting; check its live status in the studio.'
           : result === 'denied'
             ? 'Twitch sign-in was cancelled. Your local champion is still available.'
             : result === 'wrong-channel'
@@ -388,6 +389,14 @@ export function App() {
       setConnectionNotice((cause as Error).message);
     } finally {
       setDisconnecting(false);
+    }
+  };
+  const chatCommand = async (path: string, body: unknown) => {
+    try {
+      setState(await request<StudioState>(path, body));
+      setError(null);
+    } catch (cause) {
+      setError((cause as Error).message);
     }
   };
   const perform = useCallback(
@@ -586,7 +595,9 @@ export function App() {
             <span>
               <strong>Local replay lab</strong> · Sample tactics and a fixture arena.{' '}
               {state?.twitch.status === 'authenticated'
-                ? 'Twitch account verified; live chat and the language compiler are not connected.'
+                ? state.intake.status === 'live'
+                  ? 'Live Twitch lessons are collected below. The language compiler is not connected.'
+                  : 'Twitch account verified. Check the lesson queue for chat connection status; the language compiler is not connected.'
                 : 'Twitch and the language compiler are not connected.'}
             </span>
             <button onClick={() => setSettings(true)}>
@@ -596,6 +607,9 @@ export function App() {
           </div>
           {tab === 'studio' ? (
             <>
+              {state ? (
+                <ChatQueue state={state} connect={() => setSettings(true)} command={chatCommand} />
+              ) : null}
               <div className="studio-grid">
                 <section className="arena-card">
                   <div className="card-heading">
@@ -950,7 +964,7 @@ export function App() {
                 </h2>
                 <p>
                   {state?.twitch.channel
-                    ? 'Account authorization is separate from live chat intake.'
+                    ? state.intake.message
                     : `Connect the ${state?.twitch.expectedChannel ?? 'developersimiyu'} broadcaster account.`}
                 </p>
               </div>
@@ -1002,9 +1016,9 @@ export function App() {
               <Check size={16} />
               <span>Coach adoption, pinned rounds, local playbook storage</span>
             </p>
-            <p className="pending">
+            <p>
               <Radio size={16} />
-              <span>Twitch sign-in available · real viewer intake upcoming</span>
+              <span>Twitch sign-in, EventSub lesson intake, and chat moderation</span>
             </p>
             <p className="pending">
               <Sparkles size={16} />

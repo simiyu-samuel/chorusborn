@@ -1,6 +1,6 @@
 # Sources and verification boundaries
 
-Checked October 26, 2026. External pages can change; recheck authorization, runtime APIs, model availability, and submission requirements when implementing or publishing. Do not infer SDK signatures or platform capabilities from a search snippet.
+Baseline checked October 26, 2026; Twitch EventSub, chat authorization, and subscription creation references checked again for the intake implementation. External pages can change; recheck authorization, runtime APIs, model availability, and submission requirements when implementing or publishing. Do not infer SDK signatures or platform capabilities from a search snippet.
 
 ## Hackathon
 
@@ -18,6 +18,8 @@ The deadline agrees across the checked pages. Judging dates differ: schedule Nov
 - [Chat authentication](https://dev.twitch.tv/docs/chat/authenticating/): user-token and app-token contexts differ.
 - [Chat message subscription](https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/#channelchatmessage): exact authorization and condition fields.
 - [EventSub WebSockets](https://dev.twitch.tv/docs/eventsub/handling-websocket-events/): welcome, keepalive, reconnect, revocation, unexpected gaps.
+- [Create EventSub Subscription](https://dev.twitch.tv/docs/api/reference/#create-eventsub-subscription): user-token WebSocket request and enabled subscription response.
+- [Deletion and clear subscription types](https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/): chat read grant and channel/reader conditions for message removal, user clear, and room clear.
 - [OAuth token flows](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/): server-side authorization-code flow.
 - [Token validation](https://dev.twitch.tv/docs/authentication/validate-tokens/): maintaining verified OAuth sessions.
 - [Send Chat Message](https://dev.twitch.tv/docs/api/reference/#send-chat-message): optional acknowledgement authorization and response behavior.

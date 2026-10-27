@@ -1,6 +1,6 @@
 # Twitch integration plan
 
-Status: documentation verified October 26, 2026. The owner created the developer application and saved local credentials. OAuth, identity validation, refresh, and disconnect are implemented; EventSub and chat intake remain pending. A temporary real app-token check verified the credentials and revoked that token. The owner completed the real broadcaster flow and reported the returned studio showing **Connected as developersimiyu** and **Twitch account verified**.
+Status: updated October 27, 2026. OAuth, identity validation/refresh, EventSub lifecycle, and a durable local teaching queue are implemented. A real broadcaster OAuth flow and a real `!teach` command from `developersimiyu` were verified across Twitch, the studio queue, and local persistence; see the build log. The model compiler and production database/role management remain pending.
 
 ## Current local registration
 
@@ -20,7 +20,7 @@ Use broadcaster-authorized user tokens: each connected channel's broadcaster is 
 
 The initial OAuth scopes are `user:read:chat` for intake and optional `user:write:chat` for coach-enabled acknowledgements. Read-only operation must work without the write scope. The setup UI must explain that enabled replies appear as the broadcaster account. No automatic promotional messages or cross-channel messages are part of the product.
 
-For `channel.chat.message` version `1`, bind both `condition.broadcaster_user_id` and `condition.user_id` to that verified broadcaster ID. Use EventSub WebSocket transport with that user's access token. Confirm the exact request in an early real-channel spike. [Chat authentication](https://dev.twitch.tv/docs/chat/authenticating/), [subscription authorization](https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/#channelchatmessage).
+The adapter subscribes to `channel.chat.message`, `channel.chat.message_delete`, `channel.chat.clear_user_messages`, and `channel.chat.clear`, all version `1`. Both `condition.broadcaster_user_id` and `condition.user_id` use the verified broadcaster ID. Subscription creation uses that user's access token and checks the returned enabled subscription's type, version, conditions, and WebSocket session ID. [Chat authentication](https://dev.twitch.tv/docs/chat/authenticating/), [subscription authorization](https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/#channelchatmessage).
 
 ## OAuth and connection lifecycle
 
@@ -38,7 +38,11 @@ Validate tokens on connection and periodically while maintaining OAuth sessions;
 
 Use a bounded connection registry keyed by reader identity, reconnect backoff with jitter, timeout monitoring, and a visible host health state. Do not send application messages on the EventSub socket. [WebSocket lifecycle](https://dev.twitch.tv/docs/eventsub/handling-websocket-events/).
 
+This lifecycle is implemented in `apps/server/src/eventsub.ts`. Multiple studios authenticated as the same reader share one connection. The transport accepts only known subscription IDs bound to the reader/channel, limits frames to 64 KiB and pending handlers to 100, waits for subscription setup if notifications race HTTP responses, and follows only an unmodified official Twitch WSS reconnect URL. Rate-limited subscriptions back off at least a minute and honor the reset time. Storage/buffer failure stops intake visibly. A failed validation or revoked OAuth session detaches its reader; disconnecting the final reader closes the socket.
+
 ## Chat command design
+
+**Implemented now: `!teach` only.** Voting, public-link requests, acknowledgements, and compilation below remain release targets. A received lesson is labeled **awaiting compiler** and cannot yet be adopted as a real viewer tactic. Sample tactics remain separately labeled fixtures.
 
 | Command | Actor | Effect |
 | --- | --- | --- |
@@ -50,9 +54,17 @@ Use a bounded connection registry keyed by reader identity, reconnect backoff wi
 
 All adoption, rollback, match, and membership controls remain in the authenticated host console. Votes shortlist ideas; they do not grant adoption authority. Initial product limits: 280 lesson characters, one proposal per user per 30 seconds, bounded pending queue, and operator-configured channel/model quotas. These are our admission policies, not Twitch platform limits.
 
-Deduplicate before counting quotas or creating jobs. Store EventSub envelope identity and the underlying chat message ID with channel binding; retries must not duplicate proposals or votes. Ignore messages from the configured sender account to avoid reply loops. Validate channel/source provenance; reject commands originating from another source channel in Shared Chat for v1.
+Deduplicate before counting quotas or creating jobs. Store EventSub envelope identity and the underlying chat message ID with channel binding; retries must not duplicate proposals or votes. The current read-only topology has no sender account and permits the broadcaster to teach too. If optional bot replies are introduced, ignore that bot's own messages to avoid loops. Validate channel/source provenance; reject commands originating from another source channel in Shared Chat for v1.
 
-Normalize Unicode for command parsing, preserve bounded original text for review, render all text as text, and reject links/code when outside supported lesson content. A normal chat line cannot invoke the teaching agent. A malicious `!teach` line cannot change system instructions, credentials, authorization, or another channel's policy.
+Current parsing NFKC-normalizes the command and lesson, bounds the lesson to 280 Unicode code points, and rejects empty text, control characters, links, HTML, and code fences. Render all text and author names as text. The local queue stores this normalized lesson rather than ordinary chat or a complete raw event. Semantic interpretation and model prompt defenses are future compiler work; no chat text is executed or sent to a model in this build.
+
+## Current local persistence and limits
+
+- `.local/chat.json` atomically stores per-channel proposals, paused state, 30-second user cooldowns, envelope/chat-message receipts, and moderation tombstones. Public/OBS state excludes the queue; reading or managing it requires current verified OAuth.
+- A channel can have 50 proposals awaiting compilation and at most 100 retained proposal rows. History trimming preserves still-waiting lessons. Rejection frees a pending slot.
+- Receipt retention is 24 hours with a hard cap of 5,000 per channel; reaching it stops intake instead of evicting live dedupe records. Incoming notifications older than ten minutes or more than one minute in the future are ignored. These limits are application policies, not Twitch limits.
+- Proposal visibility is bounded to 30 days and aged records are pruned on subsequent queue writes. Background retention jobs and production account deletion remain pending.
+- Received deletion/user-clear/room-clear events redact matching source text and author fields. Tombstones prevent an earlier lesson from arriving late and reappearing. Pausing teaching does not pause moderation handling. Missed events during a connection gap cannot be reconstructed; this remains a release consideration before exposing shared public history.
 
 ## Sending acknowledgements
 
@@ -62,7 +74,7 @@ If the coach explicitly enables replies and grants the write scope, use Helix **
 
 Coach/reviewer controls can hide text, reject proposals, pause intake, or block a contributor from this application's queue. Do not assume this grants Twitch moderation powers. A designated reviewer role is managed by the verified channel owner; a badge string supplied by a web client is not authority.
 
-Subscribe to relevant chat deletion/clear events where the same supported authorization permits; verify those exact grants in the integration spike. Deletion cancels pending work and hides source text/credit. An already adopted tactic remains versioned for replay integrity, but its public source text and identity can be removed; a coach can disable its behavior for the next round. Explicit attribution removal must work even if a deletion event was missed during a gap.
+Deletion/clear subscriptions and source redaction are implemented for the local pending queue. Production reviewer roles, blocking, compiler-job cancellation, attribution removal controls, and history redaction for adopted tactics remain pending. An adopted tactic will need to stay versioned for replay integrity while permitting source identity/text removal; a coach can disable its behavior for the next round.
 
 ## Two-channel rivalry
 

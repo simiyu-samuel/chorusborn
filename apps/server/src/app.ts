@@ -5,12 +5,15 @@ import { Worker } from 'node:worker_threads';
 import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
 import type { WebSocket } from 'ws';
 import {
   SAMPLE_LESSONS,
   adoptRequestSchema,
   controlSchema,
   trialRequestSchema,
+  intakeControlSchema,
+  proposalControlSchema,
   type StudioState,
   type Trial,
   type World,
@@ -18,6 +21,9 @@ import {
 import { addLesson, createPlaybook, createWorld, snapshot, step } from '@chorusborn/sim';
 import { LocalStore, type StoredStudio } from './store.js';
 import { TwitchOAuth, TwitchFailure } from './twitch.js';
+import { ChatStore } from './chat-store.js';
+import { TwitchIntake } from './intake.js';
+import type { SocketFactory } from './eventsub.js';
 
 type Studio = StoredStudio & {
   world: World;
@@ -31,6 +37,8 @@ type AppOptions = {
   clock?: boolean;
   logger?: boolean;
   twitch?: TwitchOAuth;
+  chatStorePath?: string | null;
+  socketFactory?: SocketFactory;
 };
 const projectRoot = fileURLToPath(new URL('../../../', import.meta.url));
 const cookies = (value: string | undefined) =>
@@ -70,6 +78,17 @@ export async function createApp(options: AppOptions = {}) {
     options.storePath === undefined ? `${projectRoot}.local/studios.json` : options.storePath,
   );
   await store.load();
+  const chatStore = new ChatStore(
+    options.chatStorePath !== undefined
+      ? options.chatStorePath
+      : options.storePath === null
+        ? null
+        : options.storePath
+          ? `${dirname(options.storePath)}/chat.json`
+          : `${projectRoot}.local/chat.json`,
+  );
+  await chatStore.load();
+  let intake: TwitchIntake;
   const studios = new Map<string, Studio>();
   const twitch = options.twitch ?? new TwitchOAuth(null);
   const workers = new Set<Worker>();
@@ -88,10 +107,12 @@ export async function createApp(options: AppOptions = {}) {
       candidateBranch: _candidate,
       ...trial
     } = studio.trial ?? ({} as Trial);
+    const chat = intake.view(studio.id);
     return {
       mode: 'local-fixture',
-      connected: false,
-      twitch: twitch.publicState(studio.id),
+      connected: chat.status === 'live',
+      twitch: { ...twitch.publicState(studio.id), chat: chat.status },
+      intake: chat,
       world: studio.world,
       playbook: studio.playbook,
       samples: SAMPLE_LESSONS,
@@ -119,6 +140,16 @@ export async function createApp(options: AppOptions = {}) {
   const ownerStudio = (cookie: string | undefined) => studios.get(cookies(cookie).cb_session ?? '');
   const overlayStudio = (id: string, key: string) =>
     [...studios.values()].find((studio) => studio.id === id && safeEqual(studio.overlayKey, key));
+  intake = new TwitchIntake(
+    twitch,
+    chatStore,
+    (owner) => {
+      const studio = [...studios.values()].find((candidate) => candidate.id === owner);
+      if (studio) publish(studio);
+    },
+    options.socketFactory,
+  );
+  for (const owner of twitch.owners()) intake.sync(owner);
 
   app.addHook('onRequest', async (request, reply) => {
     const host = request.headers.host?.split(':')[0];
@@ -141,7 +172,7 @@ export async function createApp(options: AppOptions = {}) {
   app.get('/health/live', async () => ({ status: 'ok', mode: 'local-fixture' }));
   app.get('/health/ready', async () => ({
     status: 'ok',
-    twitch: twitch.config ? 'oauth-configured-chat-pending' : 'not-configured',
+    twitch: twitch.config ? 'oauth-and-eventsub-configured' : 'not-configured',
     compiler: 'fixture-only',
     persistence: options.storePath === null ? 'memory' : 'local-file',
   }));
@@ -226,6 +257,31 @@ export async function createApp(options: AppOptions = {}) {
     const { revoked } = await twitch.disconnect(studio.id);
     publish(studio);
     return { state: toState(studio), revoked };
+  });
+  app.post('/api/twitch/intake', async (request, reply) => {
+    const studio = ownerStudio(request.headers.cookie);
+    if (!studio) return reply.code(401).send({ message: 'Open your local studio first.' });
+    if (twitch.publicState(studio.id).status !== 'authenticated')
+      return reply
+        .code(403)
+        .send({ message: 'Connect and verify Twitch before managing its lesson queue.' });
+    const parsed = intakeControlSchema.safeParse(request.body);
+    if (!parsed.success) return reply.code(422).send({ message: 'Unknown intake control.' });
+    await intake.control(studio.id, parsed.data.action);
+    return toState(studio);
+  });
+  app.post<{ Params: { id: string } }>('/api/twitch/proposals/:id', async (request, reply) => {
+    const studio = ownerStudio(request.headers.cookie);
+    if (!studio) return reply.code(401).send({ message: 'Open your local studio first.' });
+    if (twitch.publicState(studio.id).status !== 'authenticated')
+      return reply
+        .code(403)
+        .send({ message: 'Connect and verify Twitch before managing its lesson queue.' });
+    if (!proposalControlSchema.safeParse(request.body).success)
+      return reply.code(422).send({ message: 'Unknown proposal control.' });
+    if (!(await intake.reject(studio.id, request.params.id)))
+      return reply.code(404).send({ message: 'This proposal is unavailable in your channel.' });
+    return toState(studio);
   });
   app.get<{ Querystring: { studio?: string; key?: string } }>(
     '/api/demo/overlay',
@@ -404,6 +460,7 @@ export async function createApp(options: AppOptions = {}) {
   app.addHook('onClose', async () => {
     if (clock) clearInterval(clock);
     clearInterval(tokenChecks);
+    await intake.close();
     twitch.close();
     for (const studio of studios.values()) for (const client of studio.clients) client.close();
     await Promise.all([...workers].map((worker) => worker.terminate()));

@@ -1,6 +1,6 @@
 # Quality, evaluation, and release evidence
 
-Status: release verification plan. Contract/simulation/API/OAuth checks and browser flows are recorded in the [build log](build-log.md). Live broadcaster/chat evidence, compiler, PostgreSQL, full-suite evaluation, production recovery, and OBS performance gates remain open. A target below is not a measured result. Browser OAuth checks use an isolated provider fixture; they do not establish a real Twitch authorization.
+Status: release verification plan. Contract/simulation/API/OAuth/EventSub/storage checks and browser flows are recorded in the [build log](build-log.md). Real broadcaster sign-in and one broadcaster-authored teaching command have been verified; independent-viewer evidence remains open. Compiler, PostgreSQL, full-suite evaluation, production recovery, and OBS performance gates remain open. A target below is not a measured result. Automated browser OAuth/chat checks use an isolated provider fixture; the separate live browser check establishes actual Twitch delivery.
 
 ## Verification layers
 

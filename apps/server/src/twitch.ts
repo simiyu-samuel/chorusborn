@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
-import type { TwitchConnection } from '@chorusborn/contracts';
+import { CHAT_EVENT_TYPES, type TwitchConnection } from '@chorusborn/contracts';
+import type { Subscription } from './eventsub.js';
 
 export type TwitchConfig = {
   clientId: string;
@@ -14,7 +15,10 @@ type Session = { tokens: Tokens; identity: Identity; checkedAt: number; uncertai
 type Pending = { owner: string; expiresAt: number; revision: number };
 type Dependencies = { fetch?: typeof fetch; now?: () => number };
 export class TwitchFailure extends Error {
-  constructor(public readonly reason: 'unavailable' | 'reconnect' | 'wrong-channel') {
+  constructor(
+    public readonly reason: 'unavailable' | 'reconnect' | 'wrong-channel',
+    public readonly retryAfterMs = 0,
+  ) {
     super(reason);
   }
 }
@@ -72,6 +76,19 @@ export class TwitchOAuth {
   private readonly fetcher: typeof fetch;
   private readonly now: () => number;
   private closed = false;
+  private readonly listeners = new Set<(owner: string) => void>();
+  onChange(listener: (owner: string) => void) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+  private changed(owner: string) {
+    for (const listener of this.listeners) listener(owner);
+  }
+  invalidate(owner: string) {
+    this.sessions.delete(owner);
+    this.notices.set(owner, 'reconnect');
+    this.changed(owner);
+  }
   constructor(
     readonly config: TwitchConfig | null,
     dependencies: Dependencies = {},
@@ -212,6 +229,7 @@ export class TwitchOAuth {
         uncertain: false,
       });
       this.notices.delete(pending.owner);
+      this.changed(pending.owner);
     } catch (error) {
       await this.revoke(tokens.access);
       throw error;
@@ -263,7 +281,71 @@ export class TwitchOAuth {
       await operation;
     } finally {
       this.maintenance.delete(owner);
+      this.changed(owner);
     }
+  }
+  async createChatSubscriptions(owner: string, sessionId: string): Promise<Subscription[]> {
+    return Promise.all(
+      CHAT_EVENT_TYPES.map(async (type) => {
+        for (let attempt = 0; attempt < 2; attempt++) {
+          const session = this.sessions.get(owner);
+          if (!session || session.uncertain || !this.config) throw new TwitchFailure('reconnect');
+          const response = await this.fetchResponse(
+            'https://api.twitch.tv/helix/eventsub/subscriptions',
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${session.tokens.access}`,
+                'Client-Id': this.config.clientId,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                type,
+                version: '1',
+                condition: {
+                  broadcaster_user_id: session.identity.id,
+                  user_id: session.identity.id,
+                },
+                transport: { method: 'websocket', session_id: sessionId },
+              }),
+            },
+          );
+          if (response.status === 401 && attempt === 0) {
+            await this.validateDue(owner, true);
+            continue;
+          }
+          if ([401, 403].includes(response.status)) {
+            this.invalidate(owner);
+            throw new TwitchFailure('reconnect');
+          }
+          if (response.status === 429) {
+            const reset = Number(response.headers.get('Ratelimit-Reset')) * 1000;
+            throw new TwitchFailure(
+              'unavailable',
+              Math.max(60_000, Number.isFinite(reset) ? reset - this.now() : 0),
+            );
+          }
+          if (response.status !== 202) throw transientFailure();
+          const body = await this.json(response);
+          const item = Array.isArray(body.data) ? record(body.data[0]) : null;
+          const condition = item ? record(item.condition) : null;
+          const transport = item ? record(item.transport) : null;
+          if (
+            !item ||
+            item.type !== type ||
+            item.version !== '1' ||
+            item.status !== 'enabled' ||
+            condition?.broadcaster_user_id !== session.identity.id ||
+            condition.user_id !== session.identity.id ||
+            transport?.method !== 'websocket' ||
+            transport.session_id !== sessionId
+          )
+            throw transientFailure();
+          return { id: boundedString(item.id, 128), type };
+        }
+        throw new TwitchFailure('reconnect');
+      }),
+    );
   }
   owners() {
     return [...this.sessions.keys()];
@@ -275,6 +357,7 @@ export class TwitchOAuth {
     const session = this.sessions.get(owner);
     this.sessions.delete(owner);
     this.notices.delete(owner);
+    this.changed(owner);
     // Clear local authority first; provider availability cannot keep a local session alive.
     return { revoked: session ? await this.revoke(session.tokens.access) : true };
   }
@@ -282,5 +365,6 @@ export class TwitchOAuth {
     this.closed = true;
     this.sessions.clear();
     this.pending.clear();
+    this.listeners.clear();
   }
 }

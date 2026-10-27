@@ -135,18 +135,56 @@ export type Trial = {
   createdAt: string;
   adopted: boolean;
 };
+export const chatStatusSchema = z.enum([
+  'not-connected',
+  'connecting',
+  'live',
+  'reconnecting',
+  'revoked',
+  'error',
+]);
+export type ChatStatus = z.infer<typeof chatStatusSchema>;
+export const chatProposalSchema = z.strictObject({
+  id: z.string().uuid(),
+  channelId: z.string().regex(/^\d{1,32}$/),
+  messageId: z.string().min(1).max(128),
+  author: z
+    .strictObject({
+      id: z.string().regex(/^\d{1,32}$/),
+      login: z.string().regex(/^[a-z0-9_]{1,25}$/),
+      name: z.string().min(1).max(100),
+    })
+    .nullable(),
+  text: z.string().max(560).nullable(),
+  receivedAt: z.number().int().nonnegative(),
+  status: z.enum(['awaiting-compiler', 'rejected', 'removed']),
+});
+export type ChatProposal = z.infer<typeof chatProposalSchema>;
+export type ChatIntake = {
+  status: ChatStatus;
+  message: string;
+  channelId: string | null;
+  paused: boolean;
+  gaps: number;
+  proposals: ChatProposal[];
+  lastOutcome:
+    'queued' | 'duplicate' | 'paused' | 'cooldown' | 'full' | 'invalid' | 'moderated' | null;
+};
+export const intakeControlSchema = z.strictObject({ action: z.enum(['pause', 'resume', 'retry']) });
+export const proposalControlSchema = z.strictObject({ action: z.literal('reject') });
 export type TwitchConnection = {
   configured: boolean;
   status: 'disconnected' | 'authenticated' | 'reconnect-required' | 'validation-unavailable';
   channel: { id: string; login: string } | null;
   expectedChannel: string;
   connectUrl: string | null;
-  chat: 'not-connected';
+  chat: ChatStatus;
 };
 export type StudioState = {
   mode: 'local-fixture';
-  connected: false;
+  connected: boolean;
   twitch: TwitchConnection;
+  intake: ChatIntake;
   world: World;
   playbook: Playbook;
   overlayPath: string;
@@ -213,3 +251,64 @@ export const SAMPLE_LESSONS: SampleLesson[] = [
     },
   },
 ];
+
+export const CHAT_EVENT_TYPES = [
+  'channel.chat.message',
+  'channel.chat.message_delete',
+  'channel.chat.clear_user_messages',
+  'channel.chat.clear',
+] as const;
+export type ChatEventType = (typeof CHAT_EVENT_TYPES)[number];
+const providerId = z.string().min(1).max(128);
+const twitchUserId = z.string().regex(/^\d{1,32}$/);
+export const eventSubMessageSchema = z.object({
+  metadata: z.object({
+    message_id: providerId,
+    message_type: z.enum([
+      'session_welcome',
+      'session_keepalive',
+      'session_reconnect',
+      'notification',
+      'revocation',
+    ]),
+    message_timestamp: z.string().max(64),
+    subscription_type: z.string().max(80).optional(),
+    subscription_version: z.string().max(8).optional(),
+  }),
+  payload: z.object({
+    session: z
+      .object({
+        id: providerId,
+        status: z.string().max(64),
+        keepalive_timeout_seconds: z.number().int().min(10).max(600).nullable(),
+        reconnect_url: z.string().max(2048).nullable(),
+      })
+      .optional(),
+    subscription: z
+      .object({
+        id: providerId,
+        type: z.enum(CHAT_EVENT_TYPES),
+        version: z.literal('1'),
+        status: z.string().max(64),
+        condition: z.object({ broadcaster_user_id: twitchUserId, user_id: twitchUserId }),
+        transport: z.object({ method: z.literal('websocket'), session_id: providerId }).optional(),
+      })
+      .optional(),
+    event: z.record(z.string(), z.unknown()).optional(),
+  }),
+});
+export type EventSubMessage = z.infer<typeof eventSubMessageSchema>;
+export const chatMessageEventSchema = z.object({
+  broadcaster_user_id: twitchUserId,
+  chatter_user_id: twitchUserId,
+  chatter_user_login: z.string().regex(/^[a-z0-9_]{1,25}$/),
+  chatter_user_name: z.string().min(1).max(100),
+  message_id: providerId,
+  message: z.object({ text: z.string().max(2000) }),
+  source_broadcaster_user_id: twitchUserId.nullable().optional(),
+});
+export const chatRemovalEventSchema = z.object({
+  broadcaster_user_id: twitchUserId,
+  target_user_id: twitchUserId.optional(),
+  message_id: providerId.optional(),
+});
