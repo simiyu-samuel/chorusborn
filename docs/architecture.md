@@ -1,6 +1,6 @@
 # System architecture
 
-Status: target production architecture. The local build implements `apps/web`, `apps/server`, `packages/contracts`, and `packages/sim`, plus Twitch OAuth, EventSub lifecycle, and a durable local teaching queue. Tokens remain memory-only. It uses local file stores instead of PostgreSQL and an SVG renderer instead of WebGL; a bounded Groq compiler now handles explicit coach requests. Production services remain pending. See ADR 013–017 in [decisions](decisions.md).
+Status: target production architecture. The local build implements `apps/web`, `apps/server`, `packages/contracts`, and `packages/sim`, plus Twitch OAuth, EventSub lifecycle, and a durable local teaching queue. Tokens remain memory-only. It uses local file stores instead of PostgreSQL and a shared Three.js/React Three Fiber scene with an SVG compatibility view; a bounded Groq compiler now handles explicit coach requests. Production services remain pending. See ADR 013–018 in [decisions](decisions.md).
 
 ## Architectural principle
 
@@ -135,3 +135,19 @@ rejects overlapping fact/operator unions; the full typed local schema is mandato
 Source eligibility is checked for replay and adoption. Local source operations serialize with
 moderation while the adopted playbook is saved. Cross-file crash recovery, SQL transactions,
 job leases and distributed budgets are still production work. Eve is deferred, not installed.
+
+## Local game presentation (ADR 018)
+
+`apps/web/src/game` projects immutable world snapshots through a fixed orthographic camera.
+The same scene is lazy-loaded by the coach, replay branches and read-only overlay. No physics,
+path planning, collision, random game decisions or AI calls occur in rendering. Pure presentation
+helpers bound interpolation and reject discontinuous snapshots; the server simulation stays
+unchanged. State-derived event age controls visual effects. An opt-in Web Audio hook admits only
+new events from consecutive running snapshots, excluding seek/reconnect playback.
+
+Champion meshes are merged by animated joint with vertex colors; scenery uses instanced meshes.
+Paused and reduced-motion scenes render on demand, replay uses low effects, and the covered
+coach scene unmounts while its replay dialog is open. Low effects caps DPR and disables shadows.
+Resources dispose on unmount. WebGL errors/context loss select the labeled SVG compatibility
+view, without resetting the world. UI preferences are browser-local presentation state and never
+sent as simulation commands. The scene chunk is separate from the primary studio bundle.

@@ -35,7 +35,7 @@ Subscription limits, rate limits, deletion-event grants, shared-chat handling, a
 - [PostgreSQL constraints](https://www.postgresql.org/docs/current/ddl-constraints.html): integrity mechanisms and foreign-key considerations.
 - [PostgreSQL SELECT / locking](https://www.postgresql.org/docs/current/sql-select.html#SQL-FOR-UPDATE-SHARE): job-claim row-lock pattern.
 
-No current model price, exact model ID, hosting support limit, or benchmark has been adopted from memory. Provider adapters and a model bake-off are planned; no model call has been made for the application.
+No current model price, exact model ID, hosting support limit, or benchmark has been adopted from memory. At the planning baseline no application model call had been made. The dated Groq entry below and build log record the implemented adapter/smoke evidence; broader model evaluation remains pending.
 
 ## Competitive reference points
 
@@ -56,3 +56,10 @@ OpenAI Docs, build-agents, eve, create-a-backend, create-rule, and Supabase Post
 - [Groq structured outputs](https://console.groq.com/docs/structured-outputs): supported GPT-OSS model, strict schema and limitations.
 - [Groq API reference](https://console.groq.com/docs/api-reference): chat completion endpoint, bounded output, finish reasons, usage and reasoning options.
 - [Hackathon FAQ](https://twitchcon-codex.devpost.com/resources): Codex development requirement and third-party integrations; no API credit grant advertised in the checked public resources.
+
+## Game presentation — checked October 27, 2026
+
+- [React Three Fiber introduction](https://r3f.docs.pmnd.rs/getting-started/introduction): React 19/Fiber 9 compatibility.
+- [Fiber hooks](https://r3f.docs.pmnd.rs/api/hooks) and [Canvas](https://r3f.docs.pmnd.rs/api/canvas): render-loop context, demand rendering, canvas/shadow/pixel-density settings.
+- [Three.js](https://threejs.org/docs/): geometry, instancing, materials and projections; merge utility behavior verified against installed 0.186.1 source.
+- [Fiber 9.8.2 license](https://github.com/pmndrs/react-three-fiber/blob/v9.8.2/LICENSE): runtime notice checked against the tagged upstream file; other notices copied from installed package licenses.

@@ -153,6 +153,73 @@ Codex implemented the adapter and lifecycle, diagnosed Groq's constrained-decode
 - Updated brand/UX/index references. No application behavior, dependencies, simulation state or runtime graphics changed; no runtime test rerun was needed for this design-only increment. Reviewed local Markdown/image references and `git diff --check` before committing.
 - Rendering, rigs/animations, audio, broadcast comparison and measured visual/performance evidence remain implementation work. Codex shaped the brief, generated/inspected the concept and recorded the production boundary.
 
+## 2026-10-27 — Relay Garden playable visual slice
+
+**Completed**
+
+- Replaced the primary SVG arena with a lazy-loaded Three.js/React Three Fiber scene shared
+  by training, the existing two-branch replay and the read-only overlay. Kept the original
+  SVG as a labeled compatibility view on missing/lost WebGL. No simulation/server behavior changed.
+- Built original procedural Mica/Rook rigs with distinct fins/horns, face masks, eyes, scarf
+  or mantle, animated feet/arms, breathing, carrying, recoil, capture and defeat poses. Added
+  matching original SVG portraits. These first geometry-built assets are below the concept's
+  intended final fidelity; no generated scene image is used as a fake runtime background.
+- Added instanced stone lanes/walls, edge foliage, home monuments and actual capture-pad
+  markers. Hazards, health, core possession, shields, decoys, capture rings and short author
+  cues use authoritative snapshots/events. Credits require an actual executed rule receipt.
+- Bounded visual interpolation between nearby received snapshots. Seeks, packet gaps, capture
+  resets and respawns snap; the renderer never predicts a route or mutates game state.
+- Added muted-by-default synthesized coach-preview audio, low effects and reduced motion.
+  Mounts, seeks and reconnect gaps cannot trigger historical sounds. Replay/overlay views are
+  silent. Covered live preview audio is suppressed while the replay dialog is open.
+- Reduced rendering work by baking static pieces into eight meshes per champion's moving
+  rig, instancing scenery, simplifying paving, caching WebGL capability detection, rendering
+  paused scenes on demand and unmounting the covered live canvas during replay. Browser tests
+  now use one worker to avoid concurrent graphics suites on this small development machine.
+- Updated runtime/architecture/UX/art docs, ADR 018 and third-party runtime notices. The new
+  renderer/assets are source code; screenshots and diagnostic frame samples remain ignored.
+
+**Verification**
+
+- `npm run check`: formatting, TypeScript, **64 tests in 10 files**, and frontend production
+  build pass. Four added presentation checks cover bounded immutable interpolation,
+  discontinuities, event/sound age and actual execution attribution. Existing deterministic
+  replay, compiler, authorization and adoption checks remain passing.
+- All **five Chromium browser checks** passed across the targeted graphics and studio runs:
+  actual WebGL readiness and controls without world mutation, context-loss fallback,
+  no-WebGL/reduced-motion fallback, desktop prove/adopt/run/read-only overlay, mobile fit,
+  and the existing mocked Twitch compile/prove/adopt/receipt/moderation flow. (The last three
+  flows share three tests; the two graphics cases make five total.) Provider fixtures are
+  isolated on 5273/3101 and do not access the owner's real credentials or playbooks.
+- Inspected actual 3D and 390px mobile captures. The final live API health endpoint returned
+  `{"status":"ok","mode":"local-fixture"}`. Access to the saved in-app browser tab was
+  blocked by its URL security policy; that tab was not bypassed or used as final live UI evidence.
+- A short low-effects headless sample after optimization recorded a 16.7ms median and a
+  516.6ms maximum/nearest-rank p95 over **12 animation-frame intervals** after five warmup
+  intervals. An earlier heavier renderer sampled about 883ms median over 30 intervals and
+  failed browser timeouts. Different small samples and changing host load do not establish
+  a comparable sustained benchmark. A second 12-interval run recorded 16.7ms median and
+  16.8ms p95; the variation is a further reason to require sustained profiling. Hitches
+  remain uncharacterized; no 60fps or OBS claim is made.
+- Build output keeps the studio at about 281KB minified/88KB gzip and the lazy 3D chunk at
+  936KB/249KB gzip. Vite reports its >500KB chunk warning. Sustained loading/frame-time and
+  compressed-video readability gates remain open.
+
+**Remaining boundaries**
+
+This advances the presentation portion of S10/S13. Final sculpted art/materials, broadcast
+replay comparison, result/rematch direction, reference-machine OBS profiling, viewer validation,
+full evaluation/holdout, rollback, production persistence and two-channel rivalry remain pending.
+The local server is still loopback-only; Twitch tokens remain memory-only. No deployment,
+submission, additional model calls or source-data reset was part of this graphics milestone.
+
+**Codex contribution**
+
+Codex implemented the scene, rigs, animation/state mapping, sound/preferences, fallback and
+performance fixes; wrote the negative graphics/presentation checks; reviewed captures; and
+recorded remaining fidelity/performance limits. Git identifies the exact revision. The main
+build session ID still needs verification before submission.
+
 ## Future entry template
 
 For each completed milestone, record date, feature/acceptance IDs, commit reference, meaningful checks and outcomes, screenshots/replay/evaluation references where appropriate, remaining limitations, and how Codex contributed. Never include secrets or full private session transcripts. Store bulky recordings outside Git and link final authorized artifacts when available.

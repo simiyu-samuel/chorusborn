@@ -1,9 +1,10 @@
 # Core Run: visual identity and game feel
 
-Status: **proposed visual direction, October 27, 2026**. This document and its concept image
-are design artifacts. The running app still uses the original SVG arena and character glyphs.
-No new renderer, character rig, animation, sound, camera effect or broadcast replay scene is
-implemented by this increment. Existing teaching, simulation and replay behavior remain intact.
+Status: **first playable 3D slice implemented, October 27, 2026**. Training, both replay
+branches and the read-only overlay share a Three.js/React Three Fiber scene. Original
+procedural Mica/Rook rigs, modular garden scenery, state-driven cues, optional sound,
+reduced motion and a WebGL compatibility view are implemented. The concept below remains
+the visual target; these first geometry-built characters are not final sculpted production assets.
 
 ![Proposed Core Run art direction](concepts/core-run-direction-v1.png)
 
@@ -56,7 +57,7 @@ setup, provider names and token counters stay in the private operational surface
 
 Use the same game renderer in training, live arena, overlay and both replay branches. A dedicated
 read-only broadcast comparison scene is part of the presentation work; the existing overlay
-currently shows the world only. Avoid capturing the full administrative console as the default
+shows the world only; a broadcast comparison route remains pending. Avoid capturing the full administrative console as the default
 viewer experience.
 
 ## Animation and effect language
@@ -130,3 +131,31 @@ scene or that every decorative detail should ship. The next presentation increme
 produce one coherent game scene with recognizable characters and verified interactions before
 expanding the scenery inventory. Functional release work—evaluation, persistence and rivalry—
 continues to be required alongside presentation.
+
+## Implemented slice and remaining finish
+
+- Original geometry-built Mica and Rook have separate silhouettes, masks/eyes, fins or horns,
+  scarf or mantle, stride, breathing, carry posture, damage recoil and defeat/capture poses.
+  These are shared procedural rigs, not imported franchise assets or the concept stretched
+  across the playfield. Portraits are original code-native SVGs.
+- Instanced stone paving, legal walls, edge foliage, shaped home pads/monuments and hazard
+  runes follow the existing arena dimensions. The actual capture pad is distinct from its
+  decorative gate; foliage/monuments sit outside legal routes.
+- Health, possession, shield, decoy and lesson-use cues use server snapshots. Interpolation
+  is bounded between adjacent received states; resets, seeks, captures and respawns snap.
+  Replays use the same renderer with synchronized existing timeline controls.
+- Web Audio pickup, shield, decoy, defeat and capture cues are synthesized locally, muted
+  initially and enabled by a click. Mounting, seeking and reconnect gaps do not replay old
+  sounds. Coach preview audio is optional; overlay/replay views stay silent in this slice.
+  No downloaded audio assets or model requests are used by rendering.
+- Low effects removes shadow rendering and caps pixel density at one; mobile defaults to it.
+  Paused/reduced-motion scenes render on demand. The covered live canvas unmounts while the
+  replay dialog is open. Missing/lost WebGL falls back to the original labeled SVG view.
+- Static pieces are baked into one vertex-colored mesh per moving rig part; terrain is
+  instanced. The Three.js scene loads as a separate lazy chunk. Current bundle size and
+  small local frame samples are diagnostic evidence, not the planned OBS acceptance gate.
+
+Remaining: sculpted character turnarounds/material refinement, richer venue dressing, polished
+result/rematch direction, broadcast replay scene, viewer playtests, compressed-720p readability
+and sustained frame-time measurements with OBS on a named reference machine. No 60-fps claim
+is established by this milestone. Functional release requirements remain in [scope](scope.md).

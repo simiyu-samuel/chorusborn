@@ -8,7 +8,7 @@ The defining interaction is **teach → prove → adopt → compete**. A viewer'
 
 ## Repository status
 
-The first local fixture build is implemented: a React coach studio, server-owned Core Run arena, bounded sample lesson contracts, exact two-branch replay, coach adoption, local playbook persistence, and a separately authorized read-only overlay. The planning baseline was created October 26, 2026 for the Codex x TwitchCon Hackathon.
+The first local fixture build is implemented: a React coach studio, shared 3D Core Run presentation, server-owned arena, bounded sample lesson contracts, exact two-branch replay, coach adoption, local playbook persistence, and a separately authorized read-only overlay. The planning baseline was created October 26, 2026 for the Codex x TwitchCon Hackathon.
 
 Twitch sign-in and EventSub intake are implemented: state-bound OAuth, verified broadcaster identity, periodic validation, serialized refresh, a durable local teaching queue, duplicate protection, and deletion/clear handling. **The Groq-backed lesson compiler is implemented locally.** A coach can compile a real proposal, inspect its rules, compare replay branches, and adopt it with trusted viewer credit. PostgreSQL, rival channels, and the full evaluation suite remain pending. The UI labels sample tactics and fixture scenarios explicitly. Production architecture and release gates remain targets unless the build log records verification.
 
@@ -34,6 +34,19 @@ npm start               # serve the built frontend and API at http://127.0.0.1:3
 ```
 
 If Chromium is already installed, set `CHROMIUM_PATH` to its executable for browser checks. CI installs its own matching browser. Browser checks use separate ports **5273/3101**, isolated browser contexts, in-memory studios and mocked providers. They never load `.env` or authorize/disconnect a real account, and can run alongside the normal dev server. Font assets are bundled locally; no external font request is needed.
+
+## Game presentation
+
+Core Run now uses the **Relay Garden** scene with original procedural **Mica** and **Rook**
+characters. Training, both replay branches and the read-only overlay use the same renderer.
+Core carrying, shields, hazards, decoys, captures and real lesson-use cues follow server state.
+The renderer never decides movement or match results.
+
+Use the controls below the preview for **Low effects**, **Reduced motion** and opt-in sound.
+Sound starts muted. Mobile defaults to low effects. WebGL2 is required for 3D; unsupported
+or lost graphics contexts show a labeled SVG compatibility view while game controls remain
+available. The first scene is a playable visual slice; the concept's final art fidelity and
+OBS performance/readability gates remain work. See [art direction](docs/art-direction.md).
 
 ## Twitch application registration
 

@@ -1,0 +1,433 @@
+/* Shared presentation for training, both replay branches and OBS. */
+.arena-stage {
+  align-items: stretch;
+  background: #172628;
+}
+.arena-stage::before,
+.arena-corner {
+  display: none;
+}
+.game-view {
+  width: 100%;
+  min-width: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  background: #162426;
+}
+.game-viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  min-height: 280px;
+  overflow: hidden;
+  isolation: isolate;
+}
+.game-viewport > div:first-child {
+  position: absolute !important;
+  inset: 0;
+}
+.game-viewport canvas {
+  display: block;
+  outline: none;
+}
+.graphics-loading {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: #d7d3b4;
+  font-size: 12px;
+  background: radial-gradient(ellipse, #35453d, #172628);
+}
+.graphics-fallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  align-content: center;
+}
+.graphics-fallback > span {
+  position: absolute;
+  bottom: 8px;
+  left: 12px;
+  color: #b5c1ae;
+  font-size: 9px;
+}
+.game-markers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.game-marker {
+  position: absolute;
+  left: 0;
+  top: 0;
+  min-width: 54px;
+  text-align: center;
+  transform: translate(-200px, -200px);
+  filter: drop-shadow(0 2px 3px #17201966);
+}
+.game-marker strong {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  align-items: center;
+  font-size: 9px;
+  letter-spacing: 1.1px;
+  color: #fff8e2;
+  text-shadow: 0 1px 3px #132327;
+  padding: 3px 6px;
+  background: #20272cba;
+  border-radius: 3px 3px 0 0;
+}
+.game-marker .diamond {
+  width: 6px;
+  height: 6px;
+  background: #c1a0f2;
+  transform: rotate(45deg);
+}
+.game-marker .hex {
+  width: 8px;
+  height: 7px;
+  background: #ffd088;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+}
+.carrier-mark {
+  color: #d5f393;
+  font-size: 10px;
+}
+.game-health {
+  height: 3px;
+  display: block;
+  background: #20272c;
+  border-radius: 0 0 2px 2px;
+  overflow: hidden;
+}
+.game-health > i {
+  display: block;
+  height: 100%;
+  background: #c2a0ef;
+  transition: width 100ms linear;
+}
+.team-b .game-health > i {
+  background: #f1bc69;
+}
+.game-marker small {
+  color: #d5f4ed;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-shadow: 0 1px 3px #14262a;
+}
+.garden-wordmark {
+  position: absolute;
+  bottom: 17px;
+  left: 21px;
+  pointer-events: none;
+  color: #f1e7cd;
+  text-shadow: 0 2px 6px #0b1b22;
+}
+.garden-wordmark > span {
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  display: block;
+  color: #d6bd84;
+}
+.garden-wordmark > strong {
+  display: block;
+  font-family: Georgia, serif;
+  font-weight: 400;
+  font-size: 27px;
+  letter-spacing: -0.6px;
+  margin: 2px 0;
+}
+.garden-wordmark > small {
+  font-size: 8px;
+  color: #c3c8b4;
+}
+.game-mode-tag {
+  position: absolute;
+  right: 17px;
+  top: 17px;
+  font-size: 7px;
+  letter-spacing: 1.3px;
+  color: #ece2c6;
+  padding: 7px 9px;
+  border: 1px solid #d4c19b33;
+  border-radius: 3px;
+  background: #223330a8;
+}
+.game-lower-third {
+  padding: 12px 19px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: linear-gradient(110deg, #202b2b, #162123);
+  border-top: 1px solid #d4c19b24;
+  min-height: 61px;
+}
+.game-cue {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+.core-symbol {
+  color: #c7df8c;
+  font-size: 27px;
+  text-shadow: 0 0 15px #bfdc6644;
+}
+.game-cue small {
+  display: block;
+  color: #b5b99f;
+  font-size: 6px;
+  letter-spacing: 1.8px;
+  margin-bottom: 4px;
+}
+.game-cue strong {
+  display: block;
+  color: #f0e9d3;
+  font-size: 11px;
+  font-weight: 500;
+}
+.game-lesson-credit {
+  color: #a7b69f;
+  font-size: 8px;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  text-align: right;
+}
+.game-lesson-credit i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #bedb82;
+}
+.game-lesson-credit b {
+  color: #dbe4c8;
+  font-weight: 500;
+  display: block;
+  margin-top: 2px;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.garden-rule {
+  color: #94a196;
+  font-size: 6px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+.game-preferences {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 9px 17px;
+  background: #121e20;
+  border-top: 1px solid #ffffff08;
+}
+.game-preferences button {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  color: #a4b1a5;
+  font-size: 8px;
+  padding: 2px 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.game-preferences button[aria-pressed='true'] {
+  color: #d2e7aa;
+}
+.game-preferences button:focus-visible {
+  outline: 2px solid #c7e894;
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+.arena-stage .stage-state {
+  top: 17px;
+  bottom: auto;
+  left: 18px;
+  transform: none;
+  background: #1c2b2cd9;
+  border-color: #c9b68e4d;
+  color: #e0dbc4;
+  font-size: 8px;
+  z-index: 3;
+}
+.branch .game-viewport {
+  min-height: 210px;
+  aspect-ratio: 16 / 11;
+}
+.branch .garden-wordmark {
+  bottom: 12px;
+  left: 12px;
+}
+.branch .garden-wordmark strong {
+  font-size: 20px;
+}
+.branch .garden-wordmark small {
+  font-size: 7px;
+}
+.branch .game-mode-tag {
+  font-size: 6px;
+  right: 10px;
+  top: 10px;
+  padding: 5px 6px;
+}
+.branch .game-lower-third {
+  padding: 10px 12px;
+}
+.branch .game-cue strong {
+  font-size: 9px;
+}
+.branch .garden-rule {
+  display: none;
+}
+.branch .game-lesson-credit {
+  font-size: 7px;
+}
+.branch .game-marker strong {
+  font-size: 8px;
+}
+.overlay {
+  max-width: none;
+  padding: 18px 32px;
+  background: #122124;
+}
+.overlay .scoreboard {
+  height: 86px;
+  max-width: 820px;
+}
+.overlay .game-view {
+  max-width: 1700px;
+  margin: auto;
+  border: 1px solid #c9b68e33;
+  border-radius: 9px;
+  overflow: hidden;
+}
+.overlay .game-viewport {
+  height: calc(100vh - 210px);
+  min-height: 320px;
+  aspect-ratio: auto;
+}
+.overlay .garden-wordmark strong {
+  font-size: 36px;
+}
+.overlay .game-cue strong {
+  font-size: 15px;
+}
+.overlay .game-cue small {
+  font-size: 8px;
+}
+.overlay .game-lesson-credit {
+  font-size: 12px;
+}
+.overlay .game-marker strong {
+  font-size: 11px;
+}
+.overlay .game-lower-third {
+  padding: 15px 25px;
+}
+@media (max-width: 640px) {
+  .game-viewport {
+    min-height: 250px;
+    aspect-ratio: 4 / 3;
+  }
+  .garden-wordmark {
+    left: 14px;
+    bottom: 12px;
+  }
+  .garden-wordmark strong {
+    font-size: 23px;
+  }
+  .game-mode-tag {
+    right: 12px;
+    top: 12px;
+    font-size: 6px;
+  }
+  .arena-stage .stage-state {
+    top: 12px;
+    left: 12px;
+    font-size: 7px;
+    padding: 6px;
+  }
+  .game-lower-third {
+    padding: 10px 13px;
+    gap: 8px;
+  }
+  .garden-rule {
+    display: none;
+  }
+  .game-preferences {
+    gap: 13px;
+    justify-content: center;
+  }
+  .game-marker strong {
+    font-size: 8px;
+    letter-spacing: 0.6px;
+  }
+  .overlay {
+    padding: 12px;
+  }
+  .overlay .garden-wordmark strong {
+    font-size: 25px;
+  }
+  .overlay .game-cue strong {
+    font-size: 11px;
+  }
+  .overlay .game-lesson-credit {
+    font-size: 9px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .game-health > i {
+    transition: none;
+  }
+}
+.game-object-markers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.home-marker,
+.decoy-marker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translate(-200px, -200px);
+  font-size: 6px;
+  letter-spacing: 0.7px;
+  font-weight: 700;
+  text-shadow: 0 1px 3px #102626;
+  white-space: nowrap;
+}
+.home-marker {
+  color: #f1deff;
+  padding: 3px 5px;
+  border-radius: 2px;
+  background: #4d385c8a;
+}
+.home-marker.team-b {
+  color: #ffe2b0;
+  background: #684d2e8a;
+}
+.decoy-marker {
+  color: #b8efeb;
+  border: 1px dashed #9fdbd477;
+  padding: 2px 4px;
+  background: #294d4d88;
+}
+.overlay .home-marker,
+.overlay .decoy-marker {
+  font-size: 9px;
+}
+.game-view[data-motion='reduced'] .champion-sprite {
+  transition: none;
+}

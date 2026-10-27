@@ -241,7 +241,13 @@ function TrialView({
             <span className="eyebrow">CURRENT PLAYBOOK</span>
             <span>v{trial.baseVersion}</span>
           </div>
-          <Arena world={before} label="Current playbook branch" />
+          <Arena
+            world={before}
+            label="Current playbook branch"
+            mode="replay"
+            interactive={false}
+            animate={playing}
+          />
           <div className="branch-stats">
             <span>
               <b>{trial.baseline.score}</b> captures
@@ -256,7 +262,13 @@ function TrialView({
             <span className="eyebrow">WITH YOUR LESSON</span>
             <span>Candidate</span>
           </div>
-          <Arena world={after} label="Candidate lesson branch" />
+          <Arena
+            world={after}
+            label="Candidate lesson branch"
+            mode="replay"
+            interactive={false}
+            animate={playing}
+          />
           <div className="branch-stats">
             <span>
               <b>{trial.candidateBranch.score}</b> captures
@@ -657,7 +669,7 @@ export function App() {
                           <span className="small-dot" />
                           CARRIER DILEMMA<span>SCENARIO 01</span>
                         </div>
-                        <Arena world={world} />
+                        <Arena world={world} suspended={trial !== null} />
                         {world.status === 'paused' ? (
                           <div className="stage-state">
                             <Pause size={11} />
@@ -1127,7 +1139,7 @@ export function Overlay() {
       {world ? (
         <>
           <Scoreboard world={world} />
-          <Arena world={world} />
+          <Arena world={world} interactive={false} />
         </>
       ) : (
         <p>Opening the arena…</p>

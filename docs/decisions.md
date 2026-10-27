@@ -18,7 +18,7 @@ Baseline date: October 26, 2026. "Accepted" below means selected in the plan, no
 | 010 | Accepted | Two real communities in the release, fixtures for reproducibility | Scope changes must be explicitly recorded, not hidden |
 | 011 | Local model selected; release evaluation open | GPT-OSS 120B via Groq selected with owner; model/prompt pinned in code; broader correctness/latency/cost evaluation pending | M0/M3 compiler spike and operator spend cap |
 | 012 | Open | License, final assets, public repository and hosting choices | Before public release or provisioning |
-| 013 | Accepted for first fixture | Use a native SVG isometric renderer so the replay/coach slice works without a WebGL dependency; Three.js remains an option for later visual depth | Broadcast measurements and audience playtest |
+| 013 | Superseded by 018; retained as fallback | Use a native SVG isometric renderer so the replay/coach slice works without a WebGL dependency; Three.js remains an option for later visual depth | Broadcast measurements and audience playtest |
 | 014 | Accepted for first fixture | Save local playbooks atomically to ignored `.local/studios.json`; keep trials/rounds ephemeral; do not claim production database durability | PostgreSQL integration milestone |
 | 015 | Implemented local OAuth step | Keep Twitch access/refresh tokens in server memory until encrypted production persistence exists; validate identity/scope/client, revalidate within an hour, serialize reactive refresh, and require sign-in after restart | Encrypted durable token storage and EventSub integration |
 | 016 | Implemented local intake step | Atomically persist teaching proposals, moderation tombstones, and bounded ingress receipts to ignored `.local/chat.json`; share one receive-only EventSub socket per verified reader; expose the queue only after OAuth verification | PostgreSQL ingress transactions, production roles, retention jobs, and the language compiler |
@@ -38,6 +38,21 @@ ambiguity error. Flatten that wire shape only and enforce the stricter local typ
 decoding. One supported and three boundary smoke cases returned the expected outcomes; this
 does not select a release-quality model by a broad evaluation. Affects S03/S04/S06/S07/S12.
 Local persistence remains file-based with explicit retries, request caps and no distributed leases.
+
+### ADR 018 — 2026-10-27: shared 3D presentation with compatibility fallback
+
+Implement the approved Relay Garden direction using Three.js 0.186.1 and React Three Fiber
+9.8.2 (React 19-compatible). Keep the integer-grid server simulation and existing replay data
+unchanged. Use original procedural geometry/portraits and synthesized audio for this first
+playable slice; the generated concept remains a reference, not a runtime background or a claim
+of final art quality. Reuse the renderer in training, both replay branches and the overlay.
+
+Bake character pieces by moving joint and instance terrain to reduce draw calls. Offer low
+effects, reduced motion and muted-by-default sound. Suspend the covered coach canvas during
+replay; use demand rendering when paused. Cache the WebGL support probe and fall back visibly
+on initialization failure/context loss. Keep an explicit SVG compatibility path rather than
+make unsupported hardware lose the coach workflow. This advances S10/S13; sustained OBS,
+compressed-video readability and independent viewer validation remain release gates.
 
 ## Product risks
 
