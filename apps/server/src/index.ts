@@ -1,6 +1,7 @@
 import { createApp } from './app.js';
 import { loadEnvFile } from 'node:process';
 import { fileURLToPath } from 'node:url';
+import { GroqCompiler } from './compiler.js';
 import { readTwitchConfig, TwitchOAuth } from './twitch.js';
 
 try {
@@ -10,6 +11,9 @@ try {
 }
 const app = await createApp({
   logger: true,
+  compiler: process.env.GROQ_API_KEY?.trim()
+    ? new GroqCompiler(process.env.GROQ_API_KEY.trim())
+    : undefined,
   twitch: new TwitchOAuth(readTwitchConfig(process.env)),
 });
 await app.listen({ host: '127.0.0.1', port: 3001 });

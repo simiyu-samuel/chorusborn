@@ -8,9 +8,10 @@
   transcripts, dependency folders, local databases, or generated recordings.
 - Do not rewrite existing commits, discard unrelated changes, or push without
   authorization. Local commits are authorized.
-- The local fixture, Twitch OAuth, EventSub intake, and durable local proposal queue
-  exist. The language compiler, PostgreSQL, rival channels, and full-suite evaluation
-  remain unimplemented. Real proposals await the compiler and cannot be adopted yet.
+- The local fixture, Twitch OAuth/EventSub, durable proposal queue, and bounded Groq
+  compiler exist. Real proposals can be reviewed, proved in the declared opening fixture,
+  and adopted with source attribution. PostgreSQL, rival channels, and full-suite evaluation
+  remain unimplemented. No claims of broad model accuracy or tactic superiority.
   Twitch tokens are memory-only for now; restart requires reconnecting. Keep status honest.
 - Keep the ambitious core: Twitch teaching, evidence-backed lessons, deterministic
   branching replay, persistent playbooks, real attribution, and rival matches.

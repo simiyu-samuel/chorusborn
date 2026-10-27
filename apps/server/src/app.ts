@@ -15,14 +15,17 @@ import {
   intakeControlSchema,
   proposalControlSchema,
   type StudioState,
+  type Compilation,
+  type ChatProposal,
   type Trial,
   type World,
 } from '@chorusborn/contracts';
-import { addLesson, createPlaybook, createWorld, snapshot, step } from '@chorusborn/sim';
+import { addLesson, createPlaybook, createWorld, snapshot, step, hash } from '@chorusborn/sim';
 import { LocalStore, type StoredStudio } from './store.js';
 import { TwitchOAuth, TwitchFailure } from './twitch.js';
 import { ChatStore } from './chat-store.js';
 import { TwitchIntake } from './intake.js';
+import { PROMPT_HASH, CompileFailure, type LessonCompiler } from './compiler.js';
 import type { SocketFactory } from './eventsub.js';
 
 type Studio = StoredStudio & {
@@ -39,6 +42,7 @@ type AppOptions = {
   twitch?: TwitchOAuth;
   chatStorePath?: string | null;
   socketFactory?: SocketFactory;
+  compiler?: LessonCompiler;
 };
 const projectRoot = fileURLToPath(new URL('../../../', import.meta.url));
 const cookies = (value: string | undefined) =>
@@ -53,14 +57,29 @@ const safeEqual = (a: string, b: string) => {
     right = Buffer.from(b);
   return left.length === right.length && timingSafeEqual(left, right);
 };
-const trustedOrigin = (value: string | undefined) => {
+// Spectators need visible authors and execution, not private proposal/identity joins.
+const overlayWorld = (world: World): World => ({
+  ...world,
+  champions: world.champions.map((champion) => ({
+    ...champion,
+    playbook: {
+      ...champion.playbook,
+      rules: champion.playbook.rules.map(({ source: _source, ...rule }) => rule),
+    },
+  })) as World['champions'],
+});
+const trustedOrigin = (value: string | undefined, configuredWebOrigin?: string) => {
   if (!value) return true; // Non-browser local tools are allowed; browser mutations still require JSON.
   try {
     const url = new URL(value);
     return (
       ['http:', 'https:'].includes(url.protocol) &&
       ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname) &&
-      ['3001', '5173'].includes(url.port)
+      [
+        '3001',
+        '5173',
+        ...(configuredWebOrigin ? [new URL(configuredWebOrigin).port] : []),
+      ].includes(url.port)
     );
   } catch {
     return false;
@@ -92,6 +111,11 @@ export async function createApp(options: AppOptions = {}) {
   const studios = new Map<string, Studio>();
   const twitch = options.twitch ?? new TwitchOAuth(null);
   const workers = new Set<Worker>();
+  const authorityEpoch = new Map<string, number>();
+  const unwatchAuthority = twitch.onChange((owner) => {
+    if (twitch.publicState(owner).status !== 'authenticated')
+      authorityEpoch.set(owner, (authorityEpoch.get(owner) ?? 0) + 1);
+  });
   const hydrate = (record: StoredStudio): Studio => ({
     ...record,
     world: createWorld(record.playbook),
@@ -113,6 +137,11 @@ export async function createApp(options: AppOptions = {}) {
       connected: chat.status === 'live',
       twitch: { ...twitch.publicState(studio.id), chat: chat.status },
       intake: chat,
+      compiler: {
+        configured: !!options.compiler,
+        model: options.compiler?.model ?? null,
+        remainingCalls: options.compiler?.remainingCalls ?? 0,
+      },
       world: studio.world,
       playbook: studio.playbook,
       samples: SAMPLE_LESSONS,
@@ -121,6 +150,17 @@ export async function createApp(options: AppOptions = {}) {
     };
   };
   const publish = (studio: Studio) => {
+    if (studio.trial?.source) {
+      const source = intake
+        .view(studio.id)
+        .proposals.find((item) => item.id === studio.trial!.source!.proposalId);
+      if (
+        !source ||
+        source.status !== 'compiled' ||
+        source.compilation?.id !== studio.trial.source.compilationId
+      )
+        studio.trial = null;
+    }
     for (const client of studio.clients) {
       if (client.readyState !== 1) continue;
       if (client.bufferedAmount > 1_000_000) {
@@ -131,7 +171,7 @@ export async function createApp(options: AppOptions = {}) {
       client.send(
         JSON.stringify(
           readOnly
-            ? { type: 'overlay', world: studio.world }
+            ? { type: 'overlay', world: overlayWorld(studio.world) }
             : { type: 'state', state: toState(studio) },
         ),
       );
@@ -156,7 +196,7 @@ export async function createApp(options: AppOptions = {}) {
     if (
       !host ||
       !['localhost', '127.0.0.1'].includes(host) ||
-      !trustedOrigin(request.headers.origin)
+      !trustedOrigin(request.headers.origin, twitch.config?.webOrigin)
     )
       return reply.code(403).send({ message: 'This fixture lab accepts loopback requests only.' });
     reply.header('X-Content-Type-Options', 'nosniff').header('Referrer-Policy', 'no-referrer');
@@ -173,7 +213,7 @@ export async function createApp(options: AppOptions = {}) {
   app.get('/health/ready', async () => ({
     status: 'ok',
     twitch: twitch.config ? 'oauth-and-eventsub-configured' : 'not-configured',
-    compiler: 'fixture-only',
+    compiler: options.compiler ? 'groq-configured' : 'not-configured',
     persistence: options.storePath === null ? 'memory' : 'local-file',
   }));
   app.get('/api/demo/state', async (request, reply) => {
@@ -283,12 +323,95 @@ export async function createApp(options: AppOptions = {}) {
       return reply.code(404).send({ message: 'This proposal is unavailable in your channel.' });
     return toState(studio);
   });
+  const eligibleProposal = (studio: Studio, proposalId: string): ChatProposal | undefined => {
+    const proposal = intake.view(studio.id).proposals.find((item) => item.id === proposalId);
+    return proposal?.status === 'compiled' &&
+      proposal.author &&
+      proposal.text &&
+      proposal.compilation?.status === 'complete' &&
+      proposal.compilation.result?.outcome === 'candidate' &&
+      proposal.compilation.baseVersion === studio.playbook.version &&
+      proposal.compilation.baseHash === hash(studio.playbook)
+      ? proposal
+      : undefined;
+  };
+  app.post<{ Params: { id: string } }>(
+    '/api/twitch/proposals/:id/compile',
+    async (request, reply) => {
+      const studio = ownerStudio(request.headers.cookie);
+      if (!studio) return reply.code(401).send({ message: 'Open your local studio first.' });
+      const queue = intake.view(studio.id);
+      if (!queue.channelId)
+        return reply.code(403).send({ message: 'Connect and verify Twitch first.' });
+      if (JSON.stringify(request.body) !== '{}')
+        return reply.code(422).send({ message: 'Compile accepts an empty JSON object.' });
+      const proposal = queue.proposals.find((item) => item.id === request.params.id);
+      if (!proposal?.text || !proposal.author || ['rejected', 'removed'].includes(proposal.status))
+        return reply.code(404).send({ message: 'This lesson is unavailable in your channel.' });
+      if (studio.playbook.rules.some((rule) => rule.source?.proposalId === proposal.id))
+        return reply.code(409).send({ message: 'This source lesson is already in your playbook.' });
+      if (eligibleProposal(studio, proposal.id)) return toState(studio);
+      const compiler = options.compiler;
+      if (!compiler)
+        return reply
+          .code(503)
+          .send({ message: 'Add GROQ_API_KEY to the server .env and restart.' });
+      if (!compiler.remainingCalls)
+        return reply
+          .code(429)
+          .send({ message: 'Local model call budget reached. Review usage before restarting.' });
+      const epoch = authorityEpoch.get(studio.id) ?? 0;
+      const compilation: Compilation = {
+        id: randomUUID(),
+        status: 'running',
+        baseVersion: studio.playbook.version,
+        baseHash: hash(studio.playbook),
+        model: compiler.model,
+        promptHash: PROMPT_HASH,
+        createdAt: new Date().toISOString(),
+        result: null,
+        error: null,
+        inputTokens: 0,
+        outputTokens: 0,
+      };
+      if (!(await chatStore.beginCompile(queue.channelId, proposal.id, compilation)))
+        return reply.code(409).send({
+          message: 'Compilation is running or this lesson reached its three-attempt limit.',
+        });
+      publish(studio);
+      try {
+        const output = await compiler.compile(proposal.text);
+        compilation.status = 'complete';
+        compilation.result = output.result;
+        compilation.inputTokens = output.inputTokens;
+        compilation.outputTokens = output.outputTokens;
+      } catch (error) {
+        compilation.status = 'failed';
+        compilation.error =
+          error instanceof CompileFailure
+            ? error.message
+            : 'Compilation failed. No tactic was published.';
+      }
+      // A request begun under old authority cannot publish after disconnect/reconnect.
+      if (
+        intake.view(studio.id).channelId !== queue.channelId ||
+        (authorityEpoch.get(studio.id) ?? 0) !== epoch
+      ) {
+        compilation.status = 'failed';
+        compilation.result = null;
+        compilation.error = 'Twitch connection changed during compilation. Retry after verifying.';
+      }
+      await chatStore.finishCompile(queue.channelId, proposal.id, compilation);
+      for (const owner of studios.values()) publish(owner);
+      return toState(studio);
+    },
+  );
   app.get<{ Querystring: { studio?: string; key?: string } }>(
     '/api/demo/overlay',
     async (request, reply) => {
       const studio = overlayStudio(request.query.studio ?? '', request.query.key ?? '');
       if (!studio) return reply.code(404).send({ message: 'Overlay link is unavailable.' });
-      return { mode: 'local-fixture', world: studio.world };
+      return { mode: 'local-fixture', world: overlayWorld(studio.world) };
     },
   );
   app.get<{ Querystring: { studio?: string; key?: string } }>(
@@ -327,16 +450,35 @@ export async function createApp(options: AppOptions = {}) {
     const studio = ownerStudio(request.headers.cookie);
     if (!studio) return reply.code(401).send({ message: 'Open your local studio first.' });
     const parsed = trialRequestSchema.safeParse(request.body);
-    const sample = parsed.success
-      ? SAMPLE_LESSONS.find((item) => item.id === parsed.data.sampleId)
-      : undefined;
-    if (!sample)
+    const sample =
+      parsed.success && 'sampleId' in parsed.data
+        ? SAMPLE_LESSONS.find(
+            (item) => item.id === ('sampleId' in parsed.data ? parsed.data.sampleId : ''),
+          )
+        : undefined;
+    const proposal =
+      parsed.success && 'proposalId' in parsed.data
+        ? eligibleProposal(studio, parsed.data.proposalId)
+        : undefined;
+    const candidate = sample?.candidate ?? proposal?.compilation?.result?.candidate;
+    if (!candidate)
       return reply.code(422).send({
-        message: 'Select a supported sample lesson. A live language compiler is not connected.',
+        message: 'Select a sample or compile an eligible lesson against the current playbook.',
       });
+    const attribution = proposal
+      ? {
+          author: proposal.author!.name,
+          source: {
+            proposalId: proposal.id,
+            channelId: proposal.channelId,
+            authorId: proposal.author!.id,
+            compilationId: proposal.compilation!.id,
+          },
+        }
+      : undefined;
     if (studio.busy || workers.size >= 2)
       return reply.code(429).send({ message: 'A trial is already running. Please wait.' });
-    if (studio.playbook.rules.length + sample.candidate.rules.length > 24)
+    if (studio.playbook.rules.length + candidate.rules.length > 24)
       return reply.code(422).send({ message: 'Playbook limit reached.' });
     const source = snapshot(createWorld(studio.playbook, studio.world.seed));
     studio.busy = true;
@@ -344,7 +486,7 @@ export async function createApp(options: AppOptions = {}) {
       const result = await new Promise<Pick<Trial, 'baseline' | 'candidateBranch'>>(
         (resolve, reject) => {
           const worker = new Worker(new URL('./trial-worker.ts', import.meta.url), {
-            workerData: { source, candidate: sample.candidate },
+            workerData: { source, candidate, attribution },
             // Node 24 strips our erasable TypeScript directly. Do not inherit a
             // dev watcher/loader or test-runner flags inside the simulation worker.
             execArgv: [],
@@ -364,10 +506,18 @@ export async function createApp(options: AppOptions = {}) {
           });
         },
       );
+      if (
+        proposal &&
+        eligibleProposal(studio, proposal.id)?.compilation?.id !== attribution?.source.compilationId
+      )
+        return reply.code(409).send({
+          message: 'The source lesson or playbook changed during replay. Compile and prove again.',
+        });
       studio.trial = {
         id: randomUUID(),
-        sampleId: sample.id,
-        candidate: sample.candidate,
+        sampleId: sample?.id ?? null,
+        ...(attribution ? { author: attribution.author, source: attribution.source } : {}),
+        candidate,
         baseVersion: source.state.champions[0].playbook.version,
         sourceHash: source.hash,
         sourceTick: source.state.tick,
@@ -407,15 +557,46 @@ export async function createApp(options: AppOptions = {}) {
         message:
           'This evidence is stale or already adopted. Run a new trial against the current playbook.',
       });
+    if (
+      trial.source &&
+      eligibleProposal(studio, trial.source.proposalId)?.compilation?.id !==
+        trial.source.compilationId
+    )
+      return reply
+        .code(409)
+        .send({ message: 'The source lesson was removed, rejected, recompiled, or disconnected.' });
     studio.adopting = true;
     try {
-      const playbook = addLesson(studio.playbook, trial.candidate);
-      await store.put({
-        id: studio.id,
-        token: studio.token,
-        overlayKey: studio.overlayKey,
-        playbook,
-      });
+      const playbook = addLesson(
+        studio.playbook,
+        trial.candidate,
+        trial.source ? { author: trial.author!, source: trial.source } : undefined,
+      );
+      const persist = async () =>
+        store.put({
+          id: studio.id,
+          token: studio.token,
+          overlayKey: studio.overlayKey,
+          playbook,
+        });
+      if (trial.source) {
+        try {
+          await chatStore.withCompiledSource(
+            trial.source.channelId,
+            trial.source.proposalId,
+            trial.source.compilationId,
+            async () => {
+              if (!eligibleProposal(studio, trial.source!.proposalId))
+                throw new Error('Source changed.');
+              await persist();
+            },
+          );
+        } catch {
+          return reply
+            .code(409)
+            .send({ message: 'The source changed or adoption could not be saved. Try again.' });
+        }
+      } else await persist();
       studio.playbook = playbook;
       trial.adopted = true;
       publish(studio);
@@ -460,6 +641,7 @@ export async function createApp(options: AppOptions = {}) {
   app.addHook('onClose', async () => {
     if (clock) clearInterval(clock);
     clearInterval(tokenChecks);
+    unwatchAuthority();
     await intake.close();
     twitch.close();
     for (const studio of studios.values()) for (const client of studio.clients) client.close();

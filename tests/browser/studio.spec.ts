@@ -11,7 +11,7 @@ test('coach proves, adopts, starts a pinned round and shares a read-only overlay
   await expect(page.getByRole('heading', { name: 'Great minds play together.' })).toBeVisible();
   await page.screenshot({ path: '.local/screenshots/studio-desktop.png', fullPage: true });
   await expect(
-    page.getByText('Twitch and the language compiler are not connected.', { exact: false }),
+    page.getByText('Groq compiler ready. Connect Twitch to teach from chat.', { exact: false }),
   ).toBeVisible();
   await page.getByRole('button', { name: 'Prove this lesson', exact: true }).click();
   const comparison = page.getByRole('dialog');
@@ -34,11 +34,11 @@ test('coach proves, adopts, starts a pinned round and shares a read-only overlay
   const overlayPath = await page.getByRole('link', { name: 'Open overlay' }).getAttribute('href');
   const spectator = await context.browser()!.newContext();
   const overlay = await spectator.newPage();
-  await overlay.goto(`http://127.0.0.1:5173${overlayPath}`);
+  await overlay.goto(`http://127.0.0.1:5273${overlayPath}`);
   await expect(overlay.getByText('LOCAL FIXTURE · READ-ONLY', { exact: false })).toBeVisible();
   await expect(overlay.getByRole('img', { name: /Core Run arena/ })).toBeVisible();
   await expect(overlay.getByRole('button')).toHaveCount(0);
-  const forbidden = await spectator.request.post('http://127.0.0.1:5173/api/demo/controls', {
+  const forbidden = await spectator.request.post('http://127.0.0.1:5273/api/demo/controls', {
     data: { action: 'pause' },
   });
   expect(forbidden.status()).toBe(401);
@@ -85,7 +85,7 @@ test('coach connects through a cross-site OAuth callback and disconnects with a 
   await page.route('https://id.twitch.tv/oauth2/authorize?**', async (route) => {
     const authorization = new URL(route.request().url());
     expect(authorization.searchParams.get('scope')).toBe('user:read:chat');
-    const callback = new URL('http://localhost:3001/auth/twitch/callback');
+    const callback = new URL('http://localhost:3101/auth/twitch/callback');
     callback.searchParams.set('state', authorization.searchParams.get('state')!);
     callback.searchParams.set('code', 'browser-test-code');
     await route.fulfill({
@@ -101,7 +101,7 @@ test('coach connects through a cross-site OAuth callback and disconnects with a 
   await page.getByRole('link', { name: 'Continue to mocked Twitch', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Mock Twitch authorization' })).toBeVisible();
   await page.getByRole('link', { name: 'Allow test connection' }).click();
-  await expect(page).toHaveURL('http://localhost:5173/');
+  await expect(page).toHaveURL('http://localhost:5273/');
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByRole('heading', { name: 'Connected as developersimiyu' })).toBeVisible();
   await expect(dialog.getByRole('status')).toContainText('Twitch account verified');
@@ -110,7 +110,7 @@ test('coach connects through a cross-site OAuth callback and disconnects with a 
   const queue = page.getByRole('region', { name: 'Live lesson queue' });
   await expect(queue.getByText('Chat live', { exact: true })).toBeVisible();
   const emit = async (data: unknown) => {
-    const response = await page.request.post('http://localhost:3001/__test__/event', { data });
+    const response = await page.request.post('http://localhost:3101/__test__/event', { data });
     expect(response.ok()).toBe(true);
   };
   await emit({
@@ -127,8 +127,21 @@ test('coach connects through a cross-site OAuth callback and disconnects with a 
     queue.getByText('Return home while carrying the core.', { exact: true }),
   ).toBeVisible();
   await expect(
-    queue.getByText('Received from Twitch · awaiting compiler', { exact: true }),
+    queue.getByText('Received from Twitch · awaiting review', { exact: true }),
   ).toBeVisible();
+  await queue.getByRole('button', { name: 'Compile lesson', exact: true }).click();
+  await expect(queue.getByText('MOCK compiler result for browser flow.')).toBeVisible();
+  await expect(queue.getByText('Mica is carrying the core', { exact: false })).toBeVisible();
+  await queue.getByRole('button', { name: 'Prove community lesson' }).click();
+  const proof = page.getByRole('dialog');
+  await expect(proof.getByText('Taught by <b>Viewer One</b>', { exact: false })).toBeVisible();
+  await proof.getByRole('button', { name: 'Adopt for next round' }).click();
+  await expect(proof.getByRole('button', { name: 'Lesson adopted' })).toBeDisabled();
+  await proof.getByRole('button', { name: 'Close dialog' }).click();
+  await page.getByRole('button', { name: 'Reset arena for next round' }).click();
+  await page.getByRole('button', { name: 'Start round', exact: true }).click();
+  await expect(page.getByText('<b>Viewer One</b> · tick', { exact: false }).first()).toBeVisible();
+  await page.getByRole('button', { name: 'Pause round' }).click();
   await page.screenshot({ path: '.local/screenshots/chat-queue-mock.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(

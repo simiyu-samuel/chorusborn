@@ -9,19 +9,35 @@ Baseline date: October 26, 2026. "Accepted" below means selected in the plan, no
 | 001 | Accepted | Chorusborn is the working name; community voices shaping a champion | Naming conflict or owner preference |
 | 002 | Accepted | Deterministic authoritative simulation; visual 3D is presentation | A new mechanic needs a different logical model |
 | 003 | Accepted | Bounded behavior data rather than arbitrary viewer code | A proven need for expressiveness beyond v1 |
-| 004 | Accepted | AI outside the tick; eve handles the teaching agent | Implementation spike shows the selected adapter cannot satisfy the contract |
+| 004 | Partially superseded by 017 | AI outside the tick; eve was planned for the teaching agent | Implementation spike shows the selected adapter cannot satisfy the contract |
 | 005 | Accepted | Human adoption, immutable versions, next-round activation | No planned relaxation for the submission |
 | 006 | Accepted | PostgreSQL for storage, job leases, outbox and audit | Measured scale or operation requirements justify another component |
 | 007 | Accepted | Broadcaster user tokens + EventSub for initial Twitch topology | Expansion to a dedicated cloud bot and many channels |
 | 008 | Accepted | Persistent Node server/container baseline, deployment vendor undecided | Hosting evaluation including current realtime support |
 | 009 | Accepted | Rule-use receipts and exact replay comparisons support claims | Additional evidence warrants stronger, narrowly scoped causal claims |
 | 010 | Accepted | Two real communities in the release, fixtures for reproducibility | Scope changes must be explicitly recorded, not hidden |
-| 011 | Open | Model ID/provider configuration pinned after correctness/latency/cost evaluation | M0/M3 compiler spike and operator spend cap |
+| 011 | Local model selected; release evaluation open | GPT-OSS 120B via Groq selected with owner; model/prompt pinned in code; broader correctness/latency/cost evaluation pending | M0/M3 compiler spike and operator spend cap |
 | 012 | Open | License, final assets, public repository and hosting choices | Before public release or provisioning |
 | 013 | Accepted for first fixture | Use a native SVG isometric renderer so the replay/coach slice works without a WebGL dependency; Three.js remains an option for later visual depth | Broadcast measurements and audience playtest |
 | 014 | Accepted for first fixture | Save local playbooks atomically to ignored `.local/studios.json`; keep trials/rounds ephemeral; do not claim production database durability | PostgreSQL integration milestone |
 | 015 | Implemented local OAuth step | Keep Twitch access/refresh tokens in server memory until encrypted production persistence exists; validate identity/scope/client, revalidate within an hour, serialize reactive refresh, and require sign-in after restart | Encrypted durable token storage and EventSub integration |
 | 016 | Implemented local intake step | Atomically persist teaching proposals, moderation tombstones, and bounded ingress receipts to ignored `.local/chat.json`; share one receive-only EventSub socket per verified reader; expose the queue only after OAuth verification | PostgreSQL ingress transactions, production roles, retention jobs, and the language compiler |
+
+### ADR 017 — 2026-10-27: bounded Groq compiler for the local milestone
+
+The owner offered a Groq key after checking whether hackathon API credits existed. Use
+`openai/gpt-oss-120b` through Groq's documented strict structured-output endpoint. Alternatives
+were the planned Eve/AI Gateway worker or an AI SDK provider adapter. This compiler needs one
+translation request and no tools, so implement a small native-fetch adapter inside the existing
+Fastify stack. Defer Eve and AI SDK dependencies rather than introduce an agent runtime solely
+for this one-shot translation; this is a scope/complexity choice, not a claim that Eve cannot
+restrict tools. Preserve the provider-independent compiler interface for future worker migration.
+
+An actual Groq request rejected our overlapping condition unions with a constrained-decoder
+ambiguity error. Flatten that wire shape only and enforce the stricter local typed contract after
+decoding. One supported and three boundary smoke cases returned the expected outcomes; this
+does not select a release-quality model by a broad evaluation. Affects S03/S04/S06/S07/S12.
+Local persistence remains file-based with explicit retries, request caps and no distributed leases.
 
 ## Product risks
 

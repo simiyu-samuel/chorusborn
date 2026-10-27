@@ -1,6 +1,6 @@
 # Teaching, policy, and replay specification
 
-Status: contract v1. Runtime enforcement is implemented in `packages/contracts`, and a basic interpreter/branch simulation runs in `packages/sim`. The checked-in [JSON schema](examples/lesson-candidate.schema.json) and [example](examples/lesson-candidate.json) match the bounded candidate format. The model compiler, conflict analysis, and full release evidence remain planned.
+Status: contract v1. Runtime enforcement is implemented in `packages/contracts`, and a basic interpreter/branch simulation runs in `packages/sim`. The checked-in [JSON schema](examples/lesson-candidate.schema.json) and [example](examples/lesson-candidate.json) match the bounded candidate format. A bounded Groq compiler is implemented for local coach-triggered jobs. Conflict analysis and full release evidence remain planned.
 
 ## Meaning of learning
 
@@ -92,3 +92,14 @@ Handle provider refusal, malformed/incomplete output, timeout, budget exhaustion
 Input: "When you have the core, ignore distractions and bring it home using a cautious route."
 
 The [example candidate](examples/lesson-candidate.json) makes carrying the core select `return_home` with a cautious route. It does not claim arbitrary language understanding, and "ignore distractions" is realized by objective priority rather than by adding an unsupported mechanic.
+
+## Current local compiler boundary
+
+The four-outcome envelope is runtime validated, including requiring a candidate only for the
+`candidate` outcome. Ownership is supplied from the source queue, never model output. A job
+is pinned to the exact current playbook hash/version. Attempts and outcomes survive restart;
+running work becomes visibly failed and is never silently replayed. See the root README for
+local caps, the explicit four-case live smoke command, and remaining durability limitations.
+Adoption currently prepends the candidate's rules in their displayed order; editable insertion,
+conflict analysis, disabling superseded rules and rollback remain release work. Trials use the
+fixed opening fixture, not a live historical checkpoint or the broader scenario suite.

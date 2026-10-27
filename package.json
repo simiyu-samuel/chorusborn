@@ -20,10 +20,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:browser": "playwright test",
-    "test:serve": "concurrently --kill-others --names test-server,web \"tsx tests/support/server.ts\" \"npm run dev -w @chorusborn/web\"",
+    "test:serve": "concurrently --kill-others --names test-server,web \"tsx tests/support/server.ts\" \"npm run dev -w @chorusborn/web -- --mode browser-test\"",
     "check": "npm run format:check && npm run typecheck && npm test && npm run build -w @chorusborn/web",
     "format": "prettier --write \"apps/**/*.{ts,tsx,css,json,html,svg}\" \"packages/**/*.{ts,json}\" \"tests/**/*.ts\" \"*.{ts,json}\"",
-    "format:check": "prettier --check \"apps/**/*.{ts,tsx,css,json,html,svg}\" \"packages/**/*.{ts,json}\" \"tests/**/*.ts\" \"*.{ts,json}\""
+    "format:check": "prettier --check \"apps/**/*.{ts,tsx,css,json,html,svg}\" \"packages/**/*.{ts,json}\" \"tests/**/*.ts\" \"*.{ts,json}\"",
+    "test:compiler:smoke": "node --import tsx apps/server/scripts/compiler-smoke.ts"
   },
   "devDependencies": {
     "@playwright/test": "1.64.1",

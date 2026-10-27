@@ -22,4 +22,4 @@ Baseline date: October 26, 2026. Local schedule: Africa/Nairobi (UTC+3).
 
 The first local fixture build is verified in the [build log](build-log.md). Release requirements remain **planned** unless that log records their implementation. Initial tuning, service topology, performance limits, and model choices must be tested during implementation. Resolve a specification conflict explicitly; do not silently choose different behavior in separate packages.
 
-Example contracts: [candidate](examples/lesson-candidate.json) and [candidate schema](examples/lesson-candidate.schema.json). Runtime validation exists in `packages/contracts`; these examples do not establish a model-backed compiler or production integration.
+Example contracts: [candidate](examples/lesson-candidate.json) and [candidate schema](examples/lesson-candidate.schema.json). Runtime validation exists in `packages/contracts`; a local model-backed compiler now exists (see the build log), while these examples alone do not establish production integration.

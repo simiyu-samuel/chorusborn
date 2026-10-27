@@ -1,6 +1,6 @@
 # Twitch integration plan
 
-Status: updated October 27, 2026. OAuth, identity validation/refresh, EventSub lifecycle, and a durable local teaching queue are implemented. A real broadcaster OAuth flow and a real `!teach` command from `developersimiyu` were verified across Twitch, the studio queue, and local persistence; see the build log. The model compiler and production database/role management remain pending.
+Status: updated October 27, 2026. OAuth, identity validation/refresh, EventSub lifecycle, and a durable local teaching queue are implemented. A real broadcaster OAuth flow and a real `!teach` command from `developersimiyu` were verified across Twitch, the studio queue, and local persistence; see the build log. The local Groq compiler now supports review, replay, and adoption of real proposals. Production database/role management remain pending.
 
 ## Current local registration
 
@@ -42,7 +42,7 @@ This lifecycle is implemented in `apps/server/src/eventsub.ts`. Multiple studios
 
 ## Chat command design
 
-**Implemented now: `!teach` only.** Voting, public-link requests, acknowledgements, and compilation below remain release targets. A received lesson is labeled **awaiting compiler** and cannot yet be adopted as a real viewer tactic. Sample tactics remain separately labeled fixtures.
+**Implemented now: `!teach` only.** Voting, public-link requests, and acknowledgements remain release targets. A received lesson awaits review; the coach can explicitly compile it through Groq, inspect a bounded candidate, prove it, then adopt it. Sample tactics remain separately labeled fixtures.
 
 | Command | Actor | Effect |
 | --- | --- | --- |
@@ -56,12 +56,12 @@ All adoption, rollback, match, and membership controls remain in the authenticat
 
 Deduplicate before counting quotas or creating jobs. Store EventSub envelope identity and the underlying chat message ID with channel binding; retries must not duplicate proposals or votes. The current read-only topology has no sender account and permits the broadcaster to teach too. If optional bot replies are introduced, ignore that bot's own messages to avoid loops. Validate channel/source provenance; reject commands originating from another source channel in Shared Chat for v1.
 
-Current parsing NFKC-normalizes the command and lesson, bounds the lesson to 280 Unicode code points, and rejects empty text, control characters, links, HTML, and code fences. Render all text and author names as text. The local queue stores this normalized lesson rather than ordinary chat or a complete raw event. Semantic interpretation and model prompt defenses are future compiler work; no chat text is executed or sent to a model in this build.
+Current parsing NFKC-normalizes the command and lesson, bounds the lesson to 280 Unicode code points, and rejects empty text, control characters, links, HTML, and code fences. Render all text and author names as text. The local queue stores this normalized lesson rather than ordinary chat or a complete raw event. An explicit coach compile action sends only the normalized lesson text to Groq under fixed grammar instructions. No text is executed, and the model has no tools. Typed local validation and source checks gate replay/adoption; no automatic compilation or adoption occurs.
 
 ## Current local persistence and limits
 
 - `.local/chat.json` atomically stores per-channel proposals, paused state, 30-second user cooldowns, envelope/chat-message receipts, and moderation tombstones. Public/OBS state excludes the queue; reading or managing it requires current verified OAuth.
-- A channel can have 50 proposals awaiting compilation and at most 100 retained proposal rows. History trimming preserves still-waiting lessons. Rejection frees a pending slot.
+- A channel can have 50 active proposals awaiting review or adoption and at most 100 retained proposal rows. History trimming preserves still-waiting lessons. Rejection frees a pending slot.
 - Receipt retention is 24 hours with a hard cap of 5,000 per channel; reaching it stops intake instead of evicting live dedupe records. Incoming notifications older than ten minutes or more than one minute in the future are ignored. These limits are application policies, not Twitch limits.
 - Proposal visibility is bounded to 30 days and aged records are pruned on subsequent queue writes. Background retention jobs and production account deletion remain pending.
 - Received deletion/user-clear/room-clear events redact matching source text and author fields. Tombstones prevent an earlier lesson from arriving late and reappearing. Pausing teaching does not pause moderation handling. Missed events during a connection gap cannot be reconstructed; this remains a release consideration before exposing shared public history.
@@ -74,7 +74,7 @@ If the coach explicitly enables replies and grants the write scope, use Helix **
 
 Coach/reviewer controls can hide text, reject proposals, pause intake, or block a contributor from this application's queue. Do not assume this grants Twitch moderation powers. A designated reviewer role is managed by the verified channel owner; a badge string supplied by a web client is not authority.
 
-Deletion/clear subscriptions and source redaction are implemented for the local pending queue. Production reviewer roles, blocking, compiler-job cancellation, attribution removal controls, and history redaction for adopted tactics remain pending. An adopted tactic will need to stay versioned for replay integrity while permitting source identity/text removal; a coach can disable its behavior for the next round.
+Deletion/clear subscriptions and source redaction are implemented for the local pending queue. Production reviewer roles, blocking, provider request cancellation after moderation, attribution removal controls, and history redaction for adopted tactics remain pending. An adopted tactic will need to stay versioned for replay integrity while permitting source identity/text removal; a coach can disable its behavior for the next round.
 
 ## Two-channel rivalry
 
@@ -90,3 +90,5 @@ Each broadcaster connects independently and accepts participation. Both source c
 - Two authorized broadcasters see the same match result in separate overlays.
 
 Offline fixtures are essential for reproducibility but do not replace these live checks. Do not expose access tokens in a demo, copied URL, screenshot, or repository.
+
+Pending compiler results are removed when the source is rejected or moderated. In-flight HTTP requests may finish at the provider, but their results cannot restore a removed source or become adoptable. See the README for three-attempt/request limits and the separate historical-data erasure limitation.

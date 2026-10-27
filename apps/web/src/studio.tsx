@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import type { StudioState, Trial, World } from '@chorusborn/contracts';
 import { Arena, ChampionPortrait } from './arena.js';
+import { describeCondition } from './lesson.js';
 import { ChatQueue } from './chat-queue.js';
 
 async function request<T>(path: string, body?: unknown): Promise<T> {
@@ -230,7 +231,10 @@ function TrialView({
   const stale = activeVersion !== trial.baseVersion;
   return (
     <>
-      <p className="modal-intro">{trial.candidate.summary}</p>
+      <p className="modal-intro">
+        {trial.candidate.summary}
+        {trial.author ? ` · Taught by ${trial.author}` : ' · Authored sample'}
+      </p>
       <div className="comparison-grid">
         <div className="branch">
           <div className="branch-title">
@@ -413,17 +417,32 @@ export function App() {
     },
     [setState, setError],
   );
-  const prove = async () => {
+  const prove = async (proposalId?: string) => {
     setBusy(true);
     setError(null);
     try {
-      setTrial(await request<Trial>('/api/demo/trials', { sampleId: selected }));
+      setTrial(
+        await request<Trial>(
+          '/api/demo/trials',
+          proposalId ? { proposalId } : { sampleId: selected },
+        ),
+      );
     } catch (cause) {
       setError((cause as Error).message);
     } finally {
       setBusy(false);
     }
   };
+  useEffect(() => {
+    if (!trial?.source || !state) return;
+    const source = state.intake.proposals.find((item) => item.id === trial.source!.proposalId);
+    if (
+      !source ||
+      ['removed', 'rejected'].includes(source.status) ||
+      source.compilation?.id !== trial.source.compilationId
+    )
+      setTrial(null);
+  }, [state, trial]);
   const adopt = async () => {
     if (!trial || !state) return;
     setAdopting(true);
@@ -596,9 +615,13 @@ export function App() {
               <strong>Local replay lab</strong> · Sample tactics and a fixture arena.{' '}
               {state?.twitch.status === 'authenticated'
                 ? state.intake.status === 'live'
-                  ? 'Live Twitch lessons are collected below. The language compiler is not connected.'
-                  : 'Twitch account verified. Check the lesson queue for chat connection status; the language compiler is not connected.'
-                : 'Twitch and the language compiler are not connected.'}
+                  ? state.compiler.configured
+                    ? 'Live Twitch lessons and the Groq compiler are connected.'
+                    : 'Live Twitch lessons are collected below. Configure Groq to compile them.'
+                  : 'Twitch account verified. Check the lesson queue for connection status.'
+                : state?.compiler.configured
+                  ? 'Groq compiler ready. Connect Twitch to teach from chat.'
+                  : 'Twitch and the language compiler are not connected.'}
             </span>
             <button onClick={() => setSettings(true)}>
               Build status
@@ -608,7 +631,12 @@ export function App() {
           {tab === 'studio' ? (
             <>
               {state ? (
-                <ChatQueue state={state} connect={() => setSettings(true)} command={chatCommand} />
+                <ChatQueue
+                  state={state}
+                  connect={() => setSettings(true)}
+                  command={chatCommand}
+                  prove={prove}
+                />
               ) : null}
               <div className="studio-grid">
                 <section className="arena-card">
@@ -848,13 +876,7 @@ export function App() {
                     <span className="rule-number">{String(i + 1).padStart(2, '0')}</span>
                     <div>
                       <h3>{rule.label}</h3>
-                      <p>
-                        {rule.when.all
-                          .map(
-                            (condition) => `${condition.fact} ${condition.op} ${condition.value}`,
-                          )
-                          .join(' AND ')}
-                      </p>
+                      <p>{rule.when.all.map(describeCondition).join(' AND ')}</p>
                       <span>
                         {rule.intent.goal.replaceAll('_', ' ')} · {rule.intent.route} route ·{' '}
                         {rule.intent.ability === 'none'
@@ -1022,7 +1044,7 @@ export function App() {
             </p>
             <p className="pending">
               <Sparkles size={16} />
-              <span>Language compiler and broader evaluation — upcoming</span>
+              <span>Groq lesson compiler available · broader evaluation upcoming</span>
             </p>
           </div>
           <p className="settings-note">

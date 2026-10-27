@@ -114,6 +114,36 @@ This is the local B06/B16 intake foundation with atomic files (ADR 016), not Pos
 
 Codex implemented and tested the transport, queue, authorization boundaries, persistence, moderation ordering, and UI. It also ran the real connection readiness check without printing tokens, cookies, author IDs, or message text. The feature commit containing this entry identifies the revision; the main build session ID remains pending verification.
 
+## 2026-10-27 — Groq lesson compiler and real community adoption
+
+**Completed**
+
+- Connected a one-shot Groq adapter using `openai/gpt-oss-120b`, selected with the owner after checking public hackathon resources for API credits. The ignored server `.env` supplies the key; no browser or model prompt receives it.
+- Added strict four-outcome envelopes: candidate, needs clarification, unsupported, and refused. The provider sees fixed grammar instructions and normalized lesson text, without Twitch identity/channel IDs or unrelated chat. Typed predicates, bounded rules and strict objects are validated again locally.
+- Recorded ADR 017: use a bounded native-fetch adapter in the existing Fastify service for this local milestone; defer the planned Eve/AI Gateway worker. No agent tools, shell, retrieval, autonomous adoption or model calls inside simulation ticks.
+- Persisted attempt/outcome metadata, exact base playbook hash/version, prompt hash, model, timestamp and usage. Restarted running jobs become explicitly failed. Enforced three durable attempts per proposal, two simultaneous model requests, 20 calls per server process, 25-second timeout, 2,048 output tokens, bounded response bytes, and no automatic retries. These are request limits, not a monetary budget.
+- Wired compile → inspect → fixture replay → coach adoption for real Twitch sources. Trusted author/source provenance passes through replay and stored rules. Stale policy, changed compilation, source rejection/removal and lost verification prevent adoption. Same-base successful requests reuse results; already-adopted sources cannot initiate another compilation in that playbook.
+- Redacted generated proposal results with source moderation and removed private source-join metadata from spectator world DTOs. Source eligibility serializes with queue moderation during local adoption persistence. Full SQL transactions and historical source erasure remain pending.
+- Added readable condition labels, compiler progress/errors, model/attempt metadata, a source-authored replay label and learned-state presentation. Existing authored sample tactics remain explicitly separate.
+- Found and fixed a browser-test isolation issue: using dev ports let an already-open studio tab reconnect to the mock server and replace its local session cookie. Moved the harness to **5273/3101**; normal dev remains **5173/3001**. Tested both concurrently, reconnected the real account, and reproved/adopted the persisted candidate in the active studio without another model call. Existing stored playbooks were retained.
+
+**Verification**
+
+- Final `npm run check` passes formatting, TypeScript, all **60 tests across nine files**, and the production frontend build.
+- New checks cover malformed/incomplete/oversized output, refusal/clarification/unsupported envelopes, spoofed fields and invalid fact/operator/value combinations, request caps/concurrency, timeout/rate-limit handling, job dedupe/attempt limits, restart recovery, source rejection during inference, authority loss, stale adoption, trusted rule credit, and private overlay metadata removal.
+- All **three Chromium browser flows** pass on the separate test ports while the real dev server remains running. The mocked provider flow now verifies compilation, readable rules, replay, adoption, pinned-round activation and actual viewer-authored execution receipts, plus mobile fit and existing intake/moderation/disconnect behavior.
+- Added and ran opt-in `npm run test:compiler:smoke`. All four synthetic live Groq cases returned the expected outcomes; the supported case also matched the exact carrying condition, return-home goal, cautious route and no ability. That checked-in run reported 4,241 input and 545 output tokens. This is smoke evidence, not a compiler accuracy benchmark or a billing report.
+- Real browser proof: the earlier Twitch carrying-core lesson compiled via Groq, displayed its supported rule, ran through the actual trial worker, and was adopted with `developersimiyu` credit. In seed 42's declared opening fixture, baseline/candidate captures were **0/1**, damage taken **700/710**, and candidate rule-use count **16**. This illustrates a trade-off in one fixture, not general superiority.
+- Started a real local v1 round and paused with actual source-author execution receipts visible at ticks **28, 32 and 36**. The studio remains **Chat live**, with the Groq compiler enabled. Saved ignored screenshots `.local/screenshots/live-groq-replay.jpg` and `live-groq-attribution.jpg`; no credentials, session cookies, raw provider envelopes or private source IDs are in this entry.
+
+**Remaining boundaries**
+
+This completes the local natural-language teach/prove/adopt path, not the entire release. Broad compiler corpus/evaluation, scenario development/holdout evaluation, live historical checkpoint selection, conflict analysis/rollback, PostgreSQL transactions and job leases, encrypted durable Twitch tokens, historical attribution erasure, independent-viewer evidence and two-channel rivalry remain pending. Token restart still requires reconnecting Twitch. Trials and running rounds are ephemeral; proposals, compiled results and adopted playbooks use separate atomic local files. Streamer-authored proof is not independent audience validation.
+
+**Codex contribution**
+
+Codex implemented the adapter and lifecycle, diagnosed Groq's constrained-decoder union ambiguity, retained strict local typed validation, implemented source-bound replay/adoption and attribution, tested failure paths and UI, fixed test-port interference, and verified the real saved Twitch lesson end to end. The feature commit containing this entry identifies the revision; the main build session ID remains pending verification.
+
 ## Future entry template
 
 For each completed milestone, record date, feature/acceptance IDs, commit reference, meaningful checks and outcomes, screenshots/replay/evaluation references where appropriate, remaining limitations, and how Codex contributed. Never include secrets or full private session transcripts. Store bulky recordings outside Git and link final authorized artifacts when available.

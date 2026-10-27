@@ -10,7 +10,7 @@ The defining interaction is **teach → prove → adopt → compete**. A viewer'
 
 The first local fixture build is implemented: a React coach studio, server-owned Core Run arena, bounded sample lesson contracts, exact two-branch replay, coach adoption, local playbook persistence, and a separately authorized read-only overlay. The planning baseline was created October 26, 2026 for the Codex x TwitchCon Hackathon.
 
-Twitch sign-in and EventSub intake are implemented: state-bound OAuth, verified broadcaster identity, periodic validation, serialized refresh, a durable local teaching queue, duplicate protection, and deletion/clear handling. **The model-backed language compiler, PostgreSQL, rival channels, and the full evaluation suite are not connected yet.** Real viewer lessons remain **awaiting compiler**; they cannot change a champion's playbook. The UI labels sample tactics and fixture scenarios explicitly. Production architecture and release gates remain targets unless the build log records verification.
+Twitch sign-in and EventSub intake are implemented: state-bound OAuth, verified broadcaster identity, periodic validation, serialized refresh, a durable local teaching queue, duplicate protection, and deletion/clear handling. **The Groq-backed lesson compiler is implemented locally.** A coach can compile a real proposal, inspect its rules, compare replay branches, and adopt it with trusted viewer credit. PostgreSQL, rival channels, and the full evaluation suite remain pending. The UI labels sample tactics and fixture scenarios explicitly. Production architecture and release gates remain targets unless the build log records verification.
 
 ## Run locally
 
@@ -33,7 +33,7 @@ npm run build
 npm start               # serve the built frontend and API at http://127.0.0.1:3001
 ```
 
-If Chromium is already installed, set `CHROMIUM_PATH` to its executable for browser checks. CI installs its own matching browser. Stop any dev server before browser checks: they launch isolated in-memory studios and a mocked Twitch provider, never load `.env`, and do not authorize or disconnect a real account. Font assets are bundled locally; no external font request is needed.
+If Chromium is already installed, set `CHROMIUM_PATH` to its executable for browser checks. CI installs its own matching browser. Browser checks use separate ports **5273/3101**, isolated browser contexts, in-memory studios and mocked providers. They never load `.env` or authorize/disconnect a real account, and can run alongside the normal dev server. Font assets are bundled locally; no external font request is needed.
 
 ## Twitch application registration
 
@@ -54,6 +54,40 @@ After connecting, wait for **Chat live**, then post in the connected channel:
 The **From your community** queue shows the lesson and Twitch-provided author. Broadcasters can test their own commands too. Only `!teach` is implemented; ordinary chat is not stored. The queue accepts 280 characters, one lesson per user per 30 seconds, and 50 waiting proposals. Links, code fences, HTML, and line breaks are rejected. Pause/resume intake and reject proposals from the studio. Deletion and room/user clear events remove matching source text and attribution, including when intake is paused.
 
 One EventSub connection is shared per verified reader. Account sign-in and chat readiness are separate states. Unexpected disconnects show a gap and resubscribe; Twitch cannot replay missed messages. A directed reconnect preserves the old connection until its replacement is ready. Storage failure or the bounded ingress buffer stops intake visibly. Proposals return after restarting and reconnecting the same channel. See the integration guide for retention and local limits.
+
+## Compile and prove community lessons
+
+Add `GROQ_API_KEY` to the ignored root `.env`, then restart. The server uses the pinned
+`openai/gpt-oss-120b` model through Groq. The key stays server-side. After reconnecting Twitch,
+choose **Compile lesson** on a received proposal. This explicitly sends only its lesson text
+(with the fixed grammar instructions/schema) to Groq, without Twitch user/channel IDs, tokens,
+or unrelated chat. No model call is made just because chat sends a lesson.
+
+Review the interpretation, conditions, route, goal, and ability. A clear supported lesson can
+then **Prove community lesson** using the declared carrier-dilemma opening fixture. Adopt only
+after inspecting the comparison. The current round stays pinned; reset starts the next version.
+Rules credit the Twitch-provided author, and keep a trusted source reference. Clarification,
+unsupported, refusal, validation failure, and provider errors never become fallback tactics.
+
+There are two concurrent model calls at most, 20 calls per server run, a 25-second timeout,
+2,048 output tokens per call, and three durable attempts per proposal. These are local request
+limits, **not a dollar budget**; restarting resets the process call counter. Configure account
+spend limits in Groq for a billing ceiling. No automatic retries. Successful same-base requests
+reuse their validated result. A changed playbook requires recompilation/replay. Deletion,
+rejection, recompilation or lost OAuth authority makes old source evidence ineligible. Incoming
+moderation redacts the proposal and pending generated result; previously adopted playbooks
+remain historical gameplay data and need separate retention/erasure controls before release.
+
+Compiler results and attempt counts are saved in `.local/chat.json`; jobs interrupted by a
+restart become failed on load and require an explicit retry. Trials remain ephemeral. Separate
+local files do not provide production transactions or distributed job recovery.
+
+```sh
+npm run test:compiler:smoke # OPT-IN: four real Groq calls with synthetic lessons; loads .env
+```
+
+The smoke check tests one precise supported tactic plus unclear, unsupported, and hostile
+requests. It is not the planned broad compiler evaluation or scenario holdout suite.
 
 ## Start here
 

@@ -5,7 +5,9 @@ import {
   chatMessageEventSchema,
   chatRemovalEventSchema,
   chatProposalSchema,
+  compilationSchema,
   type ChatProposal,
+  type Compilation,
   type ChatIntake,
   type EventSubMessage,
 } from '@chorusborn/contracts';
@@ -75,7 +77,15 @@ export class ChatStore {
           Array.isArray(channel.cooldowns)
         )
           throw new Error('Invalid chat channel store.');
-        channel.proposals = channel.proposals.map((proposal) => chatProposalSchema.parse(proposal));
+        channel.proposals = channel.proposals.map((proposal) => {
+          const value = chatProposalSchema.parse(proposal);
+          if (value.compilation?.status === 'running') {
+            value.compilation.status = 'failed';
+            value.compilation.error =
+              'Compilation interrupted by server restart. Retry explicitly.';
+          }
+          return value;
+        });
         if (channel.proposals.some((proposal) => proposal.channelId !== channelId))
           throw new Error('Mismatched chat channel.');
         for (const receipt of channel.receipts) {
@@ -104,7 +114,7 @@ export class ChatStore {
       if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
     }
   }
-  private mutate<T>(channelId: string, change: (channel: Channel) => T): Promise<T> {
+  private mutate<T>(channelId: string, change: (channel: Channel) => T | Promise<T>): Promise<T> {
     const operation = this.writes.then(async () => {
       if (!/^\d{1,32}$/.test(channelId)) throw new Error('Invalid channel ID.');
       const next = structuredClone(this.data);
@@ -119,7 +129,7 @@ export class ChatStore {
       channel.cooldowns = Object.fromEntries(
         Object.entries(channel.cooldowns).filter(([, until]) => until > now),
       );
-      const result = change(channel);
+      const result = await change(channel);
       // Never evict a live dedupe receipt to admit another command.
       if (channel.receipts.length > 5000) throw new Error('Local receipt capacity reached.');
       next[channelId] = channel;
@@ -157,9 +167,72 @@ export class ChatStore {
     return this.mutate(channelId, (channel) => {
       const proposal = channel.proposals.find((item) => item.id === proposalId);
       if (!proposal) return false;
-      if (proposal.status === 'awaiting-compiler') proposal.status = 'rejected';
+      if (proposal.status !== 'removed') {
+        proposal.status = 'rejected';
+        proposal.compilation = null;
+      }
       return true;
     });
+  }
+  async beginCompile(channelId: string, proposalId: string, compilation: Compilation) {
+    return this.mutate(channelId, (channel) => {
+      const proposal = channel.proposals.find((item) => item.id === proposalId);
+      if (
+        !proposal ||
+        !proposal.author ||
+        !proposal.text ||
+        ['rejected', 'removed'].includes(proposal.status) ||
+        proposal.compilation?.status === 'running' ||
+        proposal.compileAttempts >= 3
+      )
+        return false;
+      proposal.compileAttempts++;
+      proposal.compilation = compilationSchema.parse(compilation);
+      proposal.status = 'awaiting-compiler';
+      return true;
+    });
+  }
+  async finishCompile(channelId: string, proposalId: string, compilation: Compilation) {
+    return this.mutate(channelId, (channel) => {
+      const proposal = channel.proposals.find((item) => item.id === proposalId);
+      if (
+        !proposal ||
+        !proposal.author ||
+        !proposal.text ||
+        proposal.compilation?.id !== compilation.id ||
+        proposal.status !== 'awaiting-compiler'
+      )
+        return false;
+      proposal.compilation = compilationSchema.parse(compilation);
+      if (compilation.result?.outcome === 'candidate') proposal.status = 'compiled';
+      return true;
+    });
+  }
+  // Serialize source eligibility with moderation/rejection while adoption is persisted.
+  async withCompiledSource<T>(
+    channelId: string,
+    proposalId: string,
+    compilationId: string,
+    action: () => Promise<T>,
+  ) {
+    const operation = this.writes.then(async () => {
+      const proposal = this.view(channelId).proposals.find((item) => item.id === proposalId);
+      if (
+        !proposal ||
+        proposal.status !== 'compiled' ||
+        !proposal.author ||
+        !proposal.text ||
+        proposal.compilation?.id !== compilationId ||
+        proposal.compilation.status !== 'complete'
+      )
+        throw new Error('The source lesson is no longer eligible.');
+      return action();
+    });
+    this.writes = operation.then(
+      () => {},
+      () => {},
+    );
+    return operation;
   }
   async receive(channelId: string, packet: EventSubMessage) {
     const { metadata, payload } = packet;
@@ -217,8 +290,9 @@ export class ChatStore {
         if (channel.paused) return 'paused';
         if ((channel.cooldowns[event.chatter_user_id] ?? 0) > now) return 'cooldown';
         if (
-          channel.proposals.filter((proposal) => proposal.status === 'awaiting-compiler').length >=
-          50
+          channel.proposals.filter((proposal) =>
+            ['awaiting-compiler', 'compiled'].includes(proposal.status),
+          ).length >= 50
         )
           return 'full';
         channel.cooldowns[event.chatter_user_id] = now + 30_000;
@@ -234,12 +308,17 @@ export class ChatStore {
           text: teaching.text!,
           receivedAt: now,
           status: 'awaiting-compiler',
+          compilation: null,
+          compileAttempts: 0,
         });
         let historySlots =
           100 -
-          channel.proposals.filter((proposal) => proposal.status === 'awaiting-compiler').length;
+          channel.proposals.filter((proposal) =>
+            ['awaiting-compiler', 'compiled'].includes(proposal.status),
+          ).length;
         channel.proposals = channel.proposals.filter(
-          (proposal) => proposal.status === 'awaiting-compiler' || historySlots-- > 0,
+          (proposal) =>
+            ['awaiting-compiler', 'compiled'].includes(proposal.status) || historySlots-- > 0,
         );
         return 'queued';
       });
@@ -276,6 +355,7 @@ export class ChatStore {
           proposal.text = null;
           proposal.author = null;
           proposal.status = 'removed';
+          proposal.compilation = null;
         }
       }
     });

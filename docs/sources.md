@@ -50,3 +50,9 @@ These are primary product descriptions, not independent verification of each ven
 ## Local planning guidance used
 
 OpenAI Docs, build-agents, eve, create-a-backend, create-rule, and Supabase Postgres best-practices skills were consulted for relevant planning practices. The use of the Postgres guidance does not select Supabase hosting or create a Supabase project. Skills are guidance; the owner's authorized scope and project acceptance criteria govern the work.
+
+## Groq compiler integration — checked October 27, 2026
+
+- [Groq structured outputs](https://console.groq.com/docs/structured-outputs): supported GPT-OSS model, strict schema and limitations.
+- [Groq API reference](https://console.groq.com/docs/api-reference): chat completion endpoint, bounded output, finish reasons, usage and reasoning options.
+- [Hackathon FAQ](https://twitchcon-codex.devpost.com/resources): Codex development requirement and third-party integrations; no API credit grant advertised in the checked public resources.

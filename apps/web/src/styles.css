@@ -2042,3 +2042,44 @@ nav button.active:hover {
     padding: 18px;
   }
 }
+
+.proposal-actions {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.compiled-lesson {
+  grid-column: 1 / -1;
+  padding: 16px;
+  border: 1px solid var(--border, #384338);
+  border-radius: 12px;
+  min-width: 0;
+  width: 100%;
+}
+.compiled-lesson h3 {
+  font-size: 15px;
+  margin: 12px 0;
+}
+.compiled-lesson p,
+.compiled-lesson small {
+  overflow-wrap: anywhere;
+}
+.compiled-lesson ol {
+  padding-left: 20px;
+}
+.compiled-lesson li {
+  margin: 12px 0;
+}
+.compiled-lesson > small {
+  display: block;
+  margin-top: 12px;
+}
+.chat-proposal {
+  flex-wrap: wrap;
+}
+@media (max-width: 640px) {
+  .proposal-actions {
+    width: 100%;
+  }
+}

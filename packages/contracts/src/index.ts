@@ -47,10 +47,46 @@ export const candidateSchema = z.strictObject({
   summary: z.string().min(1).max(240),
   rules: z.array(ruleSchema).min(1).max(3),
 });
+// The provider supplies only this envelope; identity and job metadata are server-owned.
+export const compilerResultSchema = z
+  .strictObject({
+    outcome: z.enum(['candidate', 'needs_clarification', 'unsupported', 'refused']),
+    explanation: z.string().min(1).max(400),
+    candidate: candidateSchema.nullable(),
+  })
+  .superRefine((value, ctx) => {
+    if ((value.outcome === 'candidate') !== (value.candidate !== null))
+      ctx.addIssue({ code: 'custom', message: 'Only a candidate outcome may contain rules.' });
+  });
+export type CompilerResult = z.infer<typeof compilerResultSchema>;
+export const compilationSchema = z.strictObject({
+  id: z.string().uuid(),
+  status: z.enum(['running', 'complete', 'failed']),
+  baseVersion: z.number().int().nonnegative(),
+  baseHash: z.string().regex(/^[a-f0-9]{64}$/),
+  model: z.string().min(1).max(100),
+  promptHash: z.string().regex(/^[a-f0-9]{64}$/),
+  createdAt: z.string().datetime(),
+  result: compilerResultSchema.nullable(),
+  error: z.string().max(240).nullable(),
+  inputTokens: z.number().int().nonnegative(),
+  outputTokens: z.number().int().nonnegative(),
+});
+export type Compilation = z.infer<typeof compilationSchema>;
 export type Candidate = z.infer<typeof candidateSchema>;
 export type Condition = z.infer<typeof conditionSchema>;
 export type Intent = z.infer<typeof intentSchema>;
-export type Rule = z.infer<typeof ruleSchema> & { id: string; author: string };
+export type LessonSource = {
+  proposalId: string;
+  channelId: string;
+  authorId: string;
+  compilationId: string;
+};
+export type Rule = z.infer<typeof ruleSchema> & {
+  id: string;
+  author: string;
+  source?: LessonSource;
+};
 export type Playbook = { version: number; rules: Rule[] };
 export type ActorId = 'a' | 'b';
 export type Point = { x: number; y: number };
@@ -124,7 +160,9 @@ export type TrialBranch = {
 };
 export type Trial = {
   id: string;
-  sampleId: string;
+  sampleId: string | null;
+  source?: LessonSource;
+  author?: string;
   baseVersion: number;
   candidate: Candidate;
   sourceHash: string;
@@ -157,7 +195,9 @@ export const chatProposalSchema = z.strictObject({
     .nullable(),
   text: z.string().max(560).nullable(),
   receivedAt: z.number().int().nonnegative(),
-  status: z.enum(['awaiting-compiler', 'rejected', 'removed']),
+  status: z.enum(['awaiting-compiler', 'compiled', 'rejected', 'removed']),
+  compilation: compilationSchema.nullable().default(null),
+  compileAttempts: z.number().int().min(0).max(3).default(0),
 });
 export type ChatProposal = z.infer<typeof chatProposalSchema>;
 export type ChatIntake = {
@@ -185,6 +225,7 @@ export type StudioState = {
   connected: boolean;
   twitch: TwitchConnection;
   intake: ChatIntake;
+  compiler: { configured: boolean; model: string | null; remainingCalls: number };
   world: World;
   playbook: Playbook;
   overlayPath: string;
@@ -192,7 +233,10 @@ export type StudioState = {
   latestTrial: Omit<Trial, 'baseline' | 'candidateBranch'> | null;
 };
 export const controlSchema = z.strictObject({ action: z.enum(['pause', 'resume', 'reset']) });
-export const trialRequestSchema = z.strictObject({ sampleId: z.string().min(1).max(64) });
+export const trialRequestSchema = z.union([
+  z.strictObject({ sampleId: z.string().min(1).max(64) }),
+  z.strictObject({ proposalId: z.string().uuid() }),
+]);
 export const adoptRequestSchema = z.strictObject({
   trialId: z.string().uuid(),
   expectedVersion: z.number().int().min(0),

@@ -111,3 +111,21 @@ Visual `match.snapshot` messages use monotonic `tick` and `stateHash` and can be
 Persist explicit command content only; exclude ordinary chat. Initial operational policy: pending/rejected proposal text expires after 30 days, completed compiler payloads after 30 days, ephemeral logs after 14 days. Adopted tactics and replay data may remain for project history, with contributor identity/text removable independently. Provide deletion and moderation handling before public release. Remove credentials immediately on local disconnect.
 
 Do not delete judging evidence before the published evaluation period ends; retain deidentified engine artifacts while honoring identity/text removal. Record the actual policy in product notices and verify it against current Twitch developer terms before deployment. This is an intended product policy, not a claim that provider terms have been fully audited.
+
+## Implemented local compiler endpoints
+
+These remain loopback-only and separate from the planned production API:
+
+| Endpoint | Body / behavior |
+| --- | --- |
+| `POST /api/twitch/proposals/:id/compile` | Empty JSON object; verified channel source required; explicit one-shot Groq call or reuse of a valid same-base candidate |
+| `POST /api/demo/trials` | Exactly `{proposalId}` for an eligible compiled source, or `{sampleId}` for an authored fixture |
+| `POST /api/demo/adoptions` | Existing `{trialId,expectedVersion}`; source/compiler/base-policy checks apply before storing viewer-authored rules |
+
+Proposal DTOs now include nullable `compilation` and `compileAttempts` (old stored rows default
+to null/zero). Compilation records contain server-assigned ID, status, base policy hash/version,
+model, prompt hash, timestamp, validated four-outcome result, sanitized error and token usage.
+They never contain API keys, full provider envelopes, or reasoning. The compiler sees lesson
+text only, not these trusted identities. Source records on adopted rules bind proposal/channel/
+author/compilation IDs; the display author comes from Twitch. The overlay still exposes world
+data only; it has no queue access or mutation authority. Private source-join metadata is stripped from overlay rules; visible author names remain for execution credit.

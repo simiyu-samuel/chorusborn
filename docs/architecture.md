@@ -1,6 +1,6 @@
 # System architecture
 
-Status: target production architecture. The local build implements `apps/web`, `apps/server`, `packages/contracts`, and `packages/sim`, plus Twitch OAuth, EventSub lifecycle, and a durable local teaching queue. Tokens remain memory-only. It uses local file stores instead of PostgreSQL and an SVG renderer instead of WebGL; the compiler and production services remain pending. See ADR 013–016 in [decisions](decisions.md).
+Status: target production architecture. The local build implements `apps/web`, `apps/server`, `packages/contracts`, and `packages/sim`, plus Twitch OAuth, EventSub lifecycle, and a durable local teaching queue. Tokens remain memory-only. It uses local file stores instead of PostgreSQL and an SVG renderer instead of WebGL; a bounded Groq compiler now handles explicit coach requests. Production services remain pending. See ADR 013–017 in [decisions](decisions.md).
 
 ## Architectural principle
 
@@ -14,8 +14,8 @@ Status: target production architecture. The local build implements `apps/web`, `
 | Web client | React + Vite | Host console, public champion page, and OBS routes in one client |
 | Presentation | Three.js via React Three Fiber; semantic HTML controls | Expressive 2.5D arena on top of deterministic logical coordinates |
 | Authoritative server | Fastify + WebSocket support | One owner of match state, channel sessions, commands, and subscriptions |
-| Teaching worker | An isolated eve agent with a restricted compiler tool surface | Durable bounded teaching jobs and inspectable agent configuration |
-| Model access | Vercel AI Gateway with a configured OpenAI model | Configurable provider/model string; select and pin after compiler evaluation |
+| Teaching worker | One-shot bounded Groq compiler adapter for the local milestone | Strict behavior-data output without tools, automatic loops, or simulation access (ADR 017) |
+| Model access | `openai/gpt-oss-120b` on Groq, selected with the owner | Strict JSON output plus stricter local validation; broader evaluation pending |
 | Persistence | PostgreSQL; SQL migrations and a typed data adapter | Transactional adoption, idempotency, audit, and job recovery |
 | Trial execution | Node worker threads importing the same simulation package | CPU isolation with identical rules; no separate engine implementation |
 | Verification | Vitest, Playwright, schema validation, CI | Semantic engine checks and real browser flows |
@@ -33,8 +33,8 @@ flowchart LR
   HOST[Coach console] --> API
   API --> DB[(PostgreSQL)]
   DB --> JOB[Durable teaching job]
-  JOB --> TEACH[Restricted eve teaching worker]
-  TEACH --> MODEL[Configured OpenAI model via AI Gateway]
+  JOB --> TEACH[Bounded teaching compiler]
+  TEACH --> MODEL[GPT-OSS 120B via Groq]
   TEACH --> VALIDATE[Behavior validator]
   VALIDATE --> DB
   API --> TRIAL[Simulation trial workers]
@@ -124,3 +124,14 @@ Set explicit operator-configured daily model spend and per-channel compile quota
 Confirm eve supports the bounded structured-output job contract and local container startup; inspect its installed docs. Run a real authorization/EventSub spike in parallel with the first deterministic arena implementation where task dependencies allow. If a selected SDK cannot satisfy the contract, record an ADR before changing the adapter; the simulation and policy format must remain independent of it.
 
 References: [eve prerequisites and initialization](https://eve.dev/docs/getting-started), [OpenAI structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs). See [sources](sources.md) for integration references and verification dates.
+
+## Local compiler implementation (ADR 017)
+
+The current Fastify coordinator invokes `apps/server/src/compiler.ts` on explicit coach request,
+outside the tick. A durable proposal stores the attempt, base playbook hash/version, model ID,
+prompt hash and validated outcome. One HTTP request has no tools, retrieval, shell, or generated
+code execution. Groq's wire schema uses a flat condition object because its constrained decoder
+rejects overlapping fact/operator unions; the full typed local schema is mandatory after decoding.
+Source eligibility is checked for replay and adoption. Local source operations serialize with
+moderation while the adopted playbook is saved. Cross-file crash recovery, SQL transactions,
+job leases and distributed budgets are still production work. Eve is deferred, not installed.

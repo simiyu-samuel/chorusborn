@@ -43,7 +43,11 @@ export function hash(value: unknown): string {
 export function createPlaybook(): Playbook {
   return { version: 0, rules: [] };
 }
-export function addLesson(base: Playbook, input: Candidate): Playbook {
+export function addLesson(
+  base: Playbook,
+  input: Candidate,
+  attribution?: { author: string; source?: import('@chorusborn/contracts').LessonSource },
+): Playbook {
   const candidate = candidateSchema.parse(input);
   if (base.rules.length + candidate.rules.length > 24) throw new Error('Playbook limit reached.');
   const version = base.version + 1;
@@ -53,7 +57,8 @@ export function addLesson(base: Playbook, input: Candidate): Playbook {
       ...candidate.rules.map((rule, i) => ({
         ...copy(rule),
         id: `local-${version}-${i}-${hash(rule).slice(0, 8)}`,
-        author: 'Local coach',
+        author: attribution?.author ?? 'Local coach',
+        ...(attribution?.source ? { source: copy(attribution.source) } : {}),
       })),
       ...copy(base.rules),
     ],
