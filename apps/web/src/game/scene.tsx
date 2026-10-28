@@ -27,6 +27,8 @@ function CameraRig() {
     cam.position.set(38, 35, 42);
     cam.lookAt(16, 0, 9);
     cam.updateProjectionMatrix();
+    // HTML labels project before Three renders the first demand frame.
+    cam.updateMatrixWorld(true);
   }, [camera, size.width, size.height]);
   return null;
 }
@@ -105,7 +107,7 @@ function Actor({
       carrying: world.core.carrier === actor.id,
       defeated: actor.health <= 0,
       hit: world.tick - actor.lastDamageAt < 5 ? 1 : 0,
-      celebrating: captured,
+      celebrating: captured || (world.status === 'finished' && world.winner === actor.id),
       motion,
     };
     root.current.position.set(p.x, actor.health <= 0 ? -0.15 : 0, p.z);
@@ -328,7 +330,10 @@ function Stage({
           x={actor.home.x / 1000}
           z={actor.home.y / 1000}
           team={actor.id}
-          active={recentEvents(world).some((e) => e.type === 'capture' && e.actorId === actor.id)}
+          active={
+            (world.status === 'finished' && world.winner === actor.id) ||
+            recentEvents(world).some((e) => e.type === 'capture' && e.actorId === actor.id)
+          }
         />
       ))}
       <HazardTiles world={world} />

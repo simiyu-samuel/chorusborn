@@ -63,3 +63,50 @@ export function intentCue(world: World, actorId: ActorId) {
   if (world.core.carrier === actorId) return 'Carrying core';
   return actor.intent === 'Ready' ? 'Ready to run' : actor.intent;
 }
+
+// Presentation of the pinned core-run/0.1.0 rules; the server determines the result.
+export function roundResult(world: World) {
+  if (world.status !== 'finished' || world.winner === null) return null;
+  const winner =
+    world.winner === 'draw' ? null : world.champions.find((c) => c.id === world.winner)!;
+  return {
+    winner,
+    title: winner ? `${winner.name} wins the round` : 'Round drawn',
+    reason: world.champions.some((c) => c.score >= 3)
+      ? 'Three captures'
+      : world.tick >= 1200
+        ? 'Time called'
+        : 'Round complete',
+    seconds: Math.floor(world.tick / 20),
+    rows: world.champions.map((actor) => ({
+      id: actor.id,
+      name: actor.name,
+      score: actor.score,
+      possession: (world.metrics[actor.id].possessionTicks / 20).toFixed(1),
+      damage: world.metrics[actor.id].damageTaken,
+      lessonUses: Object.values(world.metrics[actor.id].ruleUses).reduce(
+        (sum, count) => sum + count,
+        0,
+      ),
+    })),
+  };
+}
+export function roundPressure(world: World) {
+  if (world.status !== 'running') return null;
+  const onPoint = world.champions.filter((c) => c.score === 2);
+  if (onPoint.length === 2) return 'Both on match point';
+  if (onPoint.length === 1) return `Match point · ${onPoint[0]!.name}`;
+  return world.tick >= 1000 ? 'Final 10 seconds' : null;
+}
+export function isNewRoundResult(previous: World | null, next: World) {
+  return (
+    !!previous &&
+    previous.status === 'running' &&
+    next.status === 'finished' &&
+    next.winner !== null &&
+    previous.seed === next.seed &&
+    previous.arena.id === next.arena.id &&
+    next.tick > previous.tick &&
+    next.tick - previous.tick <= 4
+  );
+}

@@ -12,6 +12,7 @@ import { Leaf, Volume2, VolumeX, Sparkles } from 'lucide-react';
 import type { World } from '@chorusborn/contracts';
 import { ArenaFallback } from './game/arena-fallback.js';
 import { intentCue, recentEvents, visibleLesson } from './game/presentation.js';
+import { RoundResult } from './game/round-result.js';
 import { useArenaSound } from './game/sound.js';
 export { ChampionPortrait } from './game/champion-portrait.js';
 const GameScene = lazy(() => import('./game/scene.js'));
@@ -111,92 +112,95 @@ export function Arena({
       data-renderer={suspended ? 'suspended' : available && ready ? 'webgl' : 'compatibility'}
       data-motion={reducedMotion ? 'reduced' : 'full'}
     >
-      <div className="game-viewport" role="img" aria-label={summary}>
-        {suspended ? (
-          <div className="graphics-loading">Replay open</div>
-        ) : available ? (
-          <GraphicsBoundary fallback={fallback} onUnavailable={unavailable}>
-            <Suspense fallback={<div className="graphics-loading">Opening Relay Garden…</div>}>
-              <GameScene
-                world={world}
-                reducedMotion={reducedMotion}
-                lowEffects={settings.lowEffects || mode === 'replay'}
-                markers={markers}
-                onReady={renderReady}
-                onUnavailable={unavailable}
-              />
-            </Suspense>
-          </GraphicsBoundary>
-        ) : (
-          fallback
-        )}
-        {available && !suspended ? (
-          <div className="game-markers" aria-hidden="true">
-            {world.champions.map((actor, index) => (
-              <div
-                key={actor.id}
-                ref={(element) => {
-                  markers.current[index] = element;
-                }}
-                className={`game-marker team-${actor.id}`}
-              >
-                <strong>
-                  <i className={actor.id === 'a' ? 'diamond' : 'hex'} />
-                  {actor.name}
-                  {world.core.carrier === actor.id ? <b className="carrier-mark">◆</b> : null}
-                </strong>
-                <span className="game-health">
-                  <i style={{ width: `${actor.health}%` }} />
-                </span>
-                {actor.shieldUntil > world.tick ? (
-                  <small>SHIELDED</small>
-                ) : actor.health <= 0 ? (
-                  <small>RESPAWNING</small>
-                ) : null}
-              </div>
-            ))}
+      <div className="arena-presentation">
+        <div className="game-viewport" role="img" aria-label={summary}>
+          {suspended ? (
+            <div className="graphics-loading">Replay open</div>
+          ) : available ? (
+            <GraphicsBoundary fallback={fallback} onUnavailable={unavailable}>
+              <Suspense fallback={<div className="graphics-loading">Opening Relay Garden…</div>}>
+                <GameScene
+                  world={world}
+                  reducedMotion={reducedMotion}
+                  lowEffects={settings.lowEffects || mode === 'replay'}
+                  markers={markers}
+                  onReady={renderReady}
+                  onUnavailable={unavailable}
+                />
+              </Suspense>
+            </GraphicsBoundary>
+          ) : (
+            fallback
+          )}
+          {available && !suspended ? (
+            <div className="game-markers" aria-hidden="true">
+              {world.champions.map((actor, index) => (
+                <div
+                  key={actor.id}
+                  ref={(element) => {
+                    markers.current[index] = element;
+                  }}
+                  className={`game-marker team-${actor.id}`}
+                >
+                  <strong>
+                    <i className={actor.id === 'a' ? 'diamond' : 'hex'} />
+                    {actor.name}
+                    {world.core.carrier === actor.id ? <b className="carrier-mark">◆</b> : null}
+                  </strong>
+                  <span className="game-health">
+                    <i style={{ width: `${actor.health}%` }} />
+                  </span>
+                  {actor.shieldUntil > world.tick ? (
+                    <small>SHIELDED</small>
+                  ) : actor.health <= 0 ? (
+                    <small>RESPAWNING</small>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : null}
+          {available && !suspended ? (
+            <div className="game-object-markers" aria-hidden="true">
+              {world.champions.map((actor, index) => (
+                <div
+                  key={`home-${actor.id}`}
+                  ref={(element) => {
+                    markers.current[index + 2] = element;
+                  }}
+                  className={`home-marker team-${actor.id}`}
+                >
+                  {actor.name.toUpperCase()} HOME
+                </div>
+              ))}
+              {world.decoys.map((decoy, index) => (
+                <div
+                  key={`${decoy.owner}-${decoy.expiresAt}-${index}`}
+                  ref={(element) => {
+                    markers.current[index + 4] = element;
+                  }}
+                  className="decoy-marker"
+                >
+                  DECOY
+                </div>
+              ))}
+            </div>
+          ) : null}
+          <div className="garden-wordmark" aria-hidden="true">
+            <span>CORE RUN</span>
+            <strong>Relay Garden</strong>
+            <small>Carrier dilemma · seed {world.seed}</small>
           </div>
-        ) : null}
-        {available && !suspended ? (
-          <div className="game-object-markers" aria-hidden="true">
-            {world.champions.map((actor, index) => (
-              <div
-                key={`home-${actor.id}`}
-                ref={(element) => {
-                  markers.current[index + 2] = element;
-                }}
-                className={`home-marker team-${actor.id}`}
-              >
-                {actor.name.toUpperCase()} HOME
-              </div>
-            ))}
-            {world.decoys.map((decoy, index) => (
-              <div
-                key={`${decoy.owner}-${decoy.expiresAt}-${index}`}
-                ref={(element) => {
-                  markers.current[index + 4] = element;
-                }}
-                className="decoy-marker"
-              >
-                DECOY
-              </div>
-            ))}
+          <div className="game-mode-tag">
+            {mode === 'replay'
+              ? `REPLAY · TICK ${world.tick}`
+              : world.status === 'finished'
+                ? 'ROUND COMPLETE'
+                : world.status === 'paused'
+                  ? 'TRAINING · PAUSED'
+                  : 'TRAINING · LIVE'}
           </div>
-        ) : null}
-        <div className="garden-wordmark" aria-hidden="true">
-          <span>CORE RUN</span>
-          <strong>Relay Garden</strong>
-          <small>Carrier dilemma · seed {world.seed}</small>
         </div>
-        <div className="game-mode-tag">
-          {mode === 'replay'
-            ? `REPLAY · TICK ${world.tick}`
-            : world.status === 'finished'
-              ? 'ROUND COMPLETE'
-              : world.status === 'paused'
-                ? 'TRAINING · PAUSED'
-                : 'TRAINING · LIVE'}
-        </div>
+        {mode !== 'replay' && !suspended ? <RoundResult world={world} /> : null}
       </div>
       <div className="game-lower-third">
         <div className={`game-cue ${world.core.carrier === null ? '' : 'has-core'}`}>

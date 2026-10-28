@@ -7,6 +7,9 @@ import {
   newSoundEvents,
   recentEvents,
   visibleLesson,
+  roundResult,
+  roundPressure,
+  isNewRoundResult,
 } from './presentation.js';
 
 describe('read-only game presentation', () => {
@@ -97,5 +100,67 @@ describe('read-only game presentation', () => {
     expect(visibleLesson(world)?.author).toBe('Viewer');
     world.tick = 80;
     expect(visibleLesson(world)).toBeUndefined();
+  });
+});
+
+describe('round presentation', () => {
+  it('uses the authoritative winner and cumulative metrics, including records no longer in the short ledger', () => {
+    const world = createWorld();
+    world.status = 'finished';
+    world.winner = 'b';
+    world.tick = 1200;
+    world.champions[1].score = 2;
+    world.metrics.a = {
+      damageTaken: 310,
+      distance: 29000,
+      possessionTicks: 147,
+      ruleUses: { olderRule: 25, recentRule: 3 },
+    };
+    const before = hash(world),
+      result = roundResult(world)!;
+    expect(result.winner?.name).toBe('Rook');
+    expect(result.reason).toBe('Time called');
+    expect(result.seconds).toBe(60);
+    expect(result.rows[0]).toMatchObject({ possession: '7.3', damage: 310, lessonUses: 28 });
+    expect(hash(world)).toBe(before);
+    world.winner = 'draw';
+    world.champions[1].score = 0;
+    expect(roundResult(world)).toMatchObject({ winner: null, title: 'Round drawn' });
+    world.winner = 'a';
+    world.champions[0].score = 3;
+    world.tick = 540;
+    expect(roundResult(world)?.reason).toBe('Three captures');
+    world.status = 'paused';
+    expect(roundResult(world)).toBeNull();
+    world.status = 'finished';
+    world.winner = null;
+    expect(roundResult(world)).toBeNull();
+  });
+  it('shows match pressure only in running rounds and never invents an extra tiebreaker', () => {
+    const world = createWorld();
+    world.champions[0].score = 2;
+    expect(roundPressure(world)).toBeNull();
+    world.status = 'running';
+    expect(roundPressure(world)).toBe('Match point · Mica');
+    world.champions[1].score = 2;
+    expect(roundPressure(world)).toBe('Both on match point');
+    world.champions.forEach((c) => (c.score = 0));
+    world.tick = 1000;
+    expect(roundPressure(world)).toBe('Final 10 seconds');
+  });
+  it('sounds a new result once, never on mount, duplicate, replay seek or reconnect gap', () => {
+    const previous = createWorld();
+    previous.tick = 1198;
+    previous.status = 'running';
+    const final = structuredClone(previous);
+    final.tick = 1200;
+    final.status = 'finished';
+    final.winner = 'draw';
+    expect(isNewRoundResult(previous, final)).toBe(true);
+    expect(isNewRoundResult(null, final)).toBe(false);
+    expect(isNewRoundResult(final, final)).toBe(false);
+    expect(isNewRoundResult({ ...previous, status: 'paused' }, final)).toBe(false);
+    expect(isNewRoundResult({ ...previous, tick: 1100 }, final)).toBe(false);
+    expect(isNewRoundResult({ ...previous, seed: 43 }, final)).toBe(false);
   });
 });

@@ -1,20 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
 import type { GameEvent, World } from '@chorusborn/contracts';
-import { newSoundEvents } from './presentation.js';
+import { isNewRoundResult, newSoundEvents } from './presentation.js';
 
 // Original, synthesized cues. Audio starts only after this view receives a user gesture.
-function tone(context: AudioContext, type: GameEvent['type']) {
+function tone(context: AudioContext, type: GameEvent['type'] | 'victory' | 'draw') {
   if (context.state !== 'running') return;
   const notes =
-    type === 'capture'
-      ? [392, 523.25, 659.25]
-      : type === 'pickup'
-        ? [523.25, 784]
-        : type === 'shield'
-          ? [330, 440]
-          : type === 'defeat'
-            ? [220, 146.83]
-            : [440];
+    type === 'victory'
+      ? [392, 493.88, 587.33, 784]
+      : type === 'draw'
+        ? [392, 440, 392]
+        : type === 'capture'
+          ? [392, 523.25, 659.25]
+          : type === 'pickup'
+            ? [523.25, 784]
+            : type === 'shield'
+              ? [330, 440]
+              : type === 'defeat'
+                ? [220, 146.83]
+                : [440];
   const start = context.currentTime;
   notes.forEach((frequency, i) => {
     const oscillator = context.createOscillator(),
@@ -41,10 +45,13 @@ export function useArenaSound(world: World, active = true) {
   const [enabled, setEnabled] = useState(false),
     [unavailable, setUnavailable] = useState(false);
   useEffect(() => {
+    const result = isNewRoundResult(previous.current, world);
     const events = newSoundEvents(previous.current, world);
     previous.current = world;
-    if (active && enabled && context.current)
-      for (const event of events.slice(-3)) tone(context.current, event.type);
+    if (active && enabled && context.current) {
+      if (result) tone(context.current, world.winner === 'draw' ? 'draw' : 'victory');
+      else for (const event of events.slice(-3)) tone(context.current, event.type);
+    }
   }, [world, enabled, active]);
   useEffect(
     () => () => {

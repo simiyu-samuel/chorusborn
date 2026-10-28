@@ -223,8 +223,9 @@ export function ChampionModel({
         : Math.sin(phase.current * 0.7) * 0.025
       : 0;
     head.current.rotation.z = animate ? Math.sin(phase.current * 0.45) * 0.035 : 0;
-    leftArm.current!.rotation.x = m.carrying ? -0.85 : stride * 0.65;
-    rightArm.current!.rotation.x = m.carrying ? -0.85 : -stride * 0.65;
+    const victory = m.celebrating && !m.defeated;
+    leftArm.current!.rotation.x = victory ? -1.7 : m.carrying ? -0.85 : stride * 0.65;
+    rightArm.current!.rotation.x = victory ? -1.4 : m.carrying ? -0.85 : -stride * 0.65;
     leftFoot.current!.rotation.x = -stride * 0.55;
     rightFoot.current!.rotation.x = stride * 0.55;
     scarf.current!.rotation.x = animate ? -0.18 - Math.abs(stride) * 0.25 : 0;

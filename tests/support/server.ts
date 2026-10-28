@@ -1,5 +1,6 @@
 // Browser-test harness only. Never loaded by the production or development server.
 // All OAuth provider responses below are fixtures; no Twitch request is made.
+import { randomUUID } from 'node:crypto';
 import { createApp } from '../../apps/server/src/app.js';
 import { TwitchOAuth } from '../../apps/server/src/twitch.js';
 import { MockEventSocket, chatNotification, subscriptionResponse } from './twitch-fixtures.js';
@@ -65,6 +66,26 @@ const app = await createApp({
     return socket;
   },
 });
+// Mirror the provider's idle traffic. Without this, long UI/graphics checks
+// incorrectly turn a healthy mock connection into a real watchdog timeout.
+// Unit transport tests retain explicit/manual timeouts; only this harness sends it.
+const keepalive = setInterval(() => {
+  for (const socket of sockets)
+    if (!socket.closed)
+      socket.emit({
+        metadata: {
+          message_id: randomUUID(),
+          message_type: 'session_keepalive',
+          message_timestamp: new Date().toISOString(),
+        },
+        payload: {},
+      });
+}, 5000);
+keepalive.unref();
+app.addHook('onClose', async () => {
+  clearInterval(keepalive);
+});
+
 // Test-process-only ingress. No equivalent route or runtime toggle exists in the app.
 app.post<{ Body: { type?: ChatEventType; event?: Record<string, unknown>; duplicate?: boolean } }>(
   '/__test__/event',

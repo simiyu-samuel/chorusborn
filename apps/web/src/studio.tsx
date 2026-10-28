@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import type { StudioState, Trial, World } from '@chorusborn/contracts';
 import { Arena, ChampionPortrait } from './arena.js';
+import { roundPressure } from './game/presentation.js';
 import { describeCondition } from './lesson.js';
 import { ChatQueue } from './chat-queue.js';
 
@@ -125,12 +126,16 @@ function Mark() {
 
 function Scoreboard({ world }: { world: World }) {
   const seconds = Math.max(0, 60 - Math.floor(world.tick / 20));
+  const pressure = roundPressure(world);
   return (
-    <div className="scoreboard">
+    <div className="scoreboard" role="group" aria-label="Round scoreboard">
       <div className="team-label violet">
-        <span className="team-icon">M</span>
+        <span className="team-icon">
+          <ChampionPortrait />
+        </span>
         <span>
-          MICA<small>Your champion</small>
+          {world.champions[0].name.toUpperCase()}
+          <small>Your champion</small>
         </span>
       </div>
       <div className="score-center">
@@ -145,11 +150,15 @@ function Scoreboard({ world }: { world: World }) {
           {world.status === 'finished' ? 'FINAL' : world.status.toUpperCase()}
         </small>
       </div>
+      {pressure ? <span className="round-pressure">{pressure}</span> : null}
       <div className="team-label amber">
         <span>
-          ROOK<small>Baseline opponent</small>
+          {world.champions[1].name.toUpperCase()}
+          <small>Baseline opponent</small>
         </span>
-        <span className="team-icon">R</span>
+        <span className="team-icon">
+          <ChampionPortrait team="b" color="#e4a348" />
+        </span>
       </div>
     </div>
   );
@@ -416,7 +425,7 @@ export function App() {
     }
   };
   const perform = useCallback(
-    async (action: 'pause' | 'resume' | 'reset') => {
+    async (action: 'pause' | 'resume' | 'reset' | 'rematch') => {
       setControlBusy(true);
       try {
         setState(await request<StudioState>('/api/demo/controls', { action }));
@@ -663,6 +672,16 @@ export function App() {
                   </div>
                   {world ? (
                     <>
+                      <p className="sr-only" role="status">
+                        {world.status === 'finished'
+                          ? world.winner === 'draw'
+                            ? 'Round drawn. Final score ' +
+                              world.champions.map((c) => c.score).join(' to ')
+                            : `${world.champions.find((c) => c.id === world.winner)?.name} wins the round.`
+                          : world.status === 'paused'
+                            ? 'Round paused.'
+                            : 'Round running.'}
+                      </p>
                       <Scoreboard world={world} />
                       <div className="arena-stage">
                         <div className="arena-corner">
@@ -694,7 +713,7 @@ export function App() {
                                 world.status === 'running'
                                   ? 'pause'
                                   : world.status === 'finished'
-                                    ? 'reset'
+                                    ? 'rematch'
                                     : 'resume',
                               )
                             }
@@ -703,12 +722,12 @@ export function App() {
                             {world.status === 'running'
                               ? 'Pause round'
                               : world.status === 'finished'
-                                ? 'New round'
+                                ? 'Play again'
                                 : 'Start round'}
                           </button>
                           <button
                             className="icon-button reset-button"
-                            disabled={controlBusy}
+                            disabled={controlBusy || connection !== 'online'}
                             onClick={() => void perform('reset')}
                             aria-label="Reset arena for next round"
                           >
@@ -1136,10 +1155,15 @@ export function Overlay() {
         <span>LOCAL FIXTURE · READ-ONLY {online ? '' : '· RECONNECTING'}</span>
       </div>
       {error ? <p role="alert">{error}</p> : null}
+      {!online && world ? (
+        <div className="broadcast-stale" role="status">
+          <Radio size={14} /> Signal interrupted · showing last received state
+        </div>
+      ) : null}
       {world ? (
         <>
           <Scoreboard world={world} />
-          <Arena world={world} interactive={false} />
+          <Arena world={world} interactive={false} animate={online} />
         </>
       ) : (
         <p>Opening the arena…</p>

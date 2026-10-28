@@ -431,3 +431,351 @@
 .game-view[data-motion='reduced'] .champion-sprite {
   transition: none;
 }
+
+/* Results are semantic HTML outside the canvas's image role. */
+.arena-presentation {
+  position: relative;
+}
+.round-result {
+  --result-accent: #c6afea;
+  position: absolute;
+  z-index: 4;
+  left: 20px;
+  right: 20px;
+  bottom: 20px;
+  color: #f5ecd5;
+  border: 1px solid #d0b5ef77;
+  border-radius: 10px;
+  background: linear-gradient(130deg, #242635f5, #142427f7 75%);
+  box-shadow: 0 14px 50px #07121466;
+  overflow: hidden;
+  animation: result-arrive 350ms ease-out both;
+}
+.round-result.winner-b {
+  --result-accent: #f2c378;
+  border-color: #e9bd7777;
+  background: linear-gradient(130deg, #3b3025f5, #142427f7 75%);
+}
+.round-result.is-draw {
+  --result-accent: #c9dfb1;
+  border-color: #c9dfb177;
+}
+.result-banner {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 22px 12px 14px;
+}
+.result-portrait {
+  width: 78px;
+  height: 83px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  color: var(--result-accent);
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #e3d3a522, transparent 72%);
+}
+.result-portrait .portrait {
+  width: 100%;
+  height: 100%;
+}
+.result-copy {
+  min-width: 0;
+  flex: 1;
+}
+.result-kicker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 8px;
+  letter-spacing: 1.7px;
+  color: var(--result-accent);
+}
+.result-copy h3 {
+  font-family: Georgia, serif;
+  font-size: clamp(19px, 2.2vw, 29px);
+  line-height: 1.15;
+  font-weight: 400;
+  margin: 7px 0;
+  letter-spacing: -0.4px;
+}
+.result-copy p {
+  font-size: 8px;
+  line-height: 1.5;
+  color: #b5c3b4;
+  margin: 0;
+}
+.result-score {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+  font-size: 32px;
+}
+.result-score b:first-child {
+  color: #cdb1f1;
+}
+.result-score b:last-child {
+  color: #edc080;
+}
+.result-score span {
+  font-size: 19px;
+  color: #718278;
+}
+.result-detail {
+  border-top: 1px solid #d5e0bc1c;
+  padding: 10px 24px 12px;
+  background: #111c2059;
+}
+.result-detail table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.result-detail th,
+.result-detail td {
+  text-align: right;
+  padding: 4px 0;
+}
+.result-detail th:first-child {
+  text-align: left;
+}
+.result-detail thead th {
+  color: #a8b7a7;
+  font-size: 7px;
+  font-weight: 400;
+  padding-bottom: 6px;
+}
+.result-detail tbody th {
+  font-weight: 500;
+}
+.result-team {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 7px;
+  background: #c2a0ef;
+  transform: rotate(45deg);
+}
+.result-team.team-b {
+  background: #f1bc69;
+  transform: none;
+}
+.result-detail > p {
+  margin: 8px 0 0;
+  font-size: 7px;
+  line-height: 1.5;
+  color: #9fac9c;
+}
+.scoreboard {
+  position: relative;
+}
+.team-icon .portrait {
+  width: 38px;
+  height: 40px;
+}
+.round-pressure {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  color: #ead39c;
+  font-size: 7px;
+  letter-spacing: 0.7px;
+}
+.broadcast-stale {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 9px;
+  border: 1px solid #dfbd7555;
+  color: #edcf9b;
+  background: #393327;
+  font-size: 12px;
+}
+.overlay .round-result {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  width: min(800px, calc(100% - 64px));
+  bottom: 32px;
+  animation-name: broadcast-result-arrive;
+}
+.overlay .result-portrait {
+  width: 110px;
+  height: 117px;
+}
+.overlay .result-copy h3 {
+  font-size: 38px;
+}
+.overlay .result-copy p,
+.overlay .result-kicker {
+  font-size: 11px;
+}
+.overlay .result-score {
+  font-size: 48px;
+}
+.overlay .result-detail table {
+  font-size: 14px;
+}
+.overlay .result-detail thead th,
+.overlay .result-detail > p {
+  font-size: 10px;
+}
+@keyframes result-arrive {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@keyframes broadcast-result-arrive {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@media (max-width: 640px) {
+  .round-result,
+  .overlay .round-result {
+    left: 8px;
+    right: 8px;
+    bottom: 9px;
+    width: auto;
+    transform: none;
+    border-radius: 7px;
+  }
+  .result-banner {
+    gap: 8px;
+    padding: 11px 10px 8px 5px;
+  }
+  .result-portrait,
+  .overlay .result-portrait {
+    width: 43px;
+    height: 50px;
+  }
+  .result-kicker,
+  .overlay .result-kicker {
+    font-size: 6px;
+    gap: 4px;
+    letter-spacing: 0.5px;
+  }
+  .result-copy h3,
+  .overlay .result-copy h3 {
+    font-size: 19px;
+    margin: 5px 0;
+  }
+  .result-copy p,
+  .overlay .result-copy p {
+    font-size: 7px;
+  }
+  .result-score,
+  .overlay .result-score {
+    font-size: 25px;
+    gap: 5px;
+  }
+  .result-detail {
+    padding: 7px 12px;
+  }
+  .result-detail table,
+  .overlay .result-detail table {
+    font-size: 9px;
+  }
+  .result-detail thead th,
+  .overlay .result-detail thead th {
+    font-size: 6px;
+  }
+  .result-detail > p,
+  .overlay .result-detail > p {
+    font-size: 6px;
+    margin-top: 5px;
+  }
+  .team-icon .portrait {
+    width: 29px;
+    height: 31px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .round-result {
+    animation: none;
+  }
+}
+.game-view[data-motion='reduced'] .round-result {
+  animation: none;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Keep tall fins and low horns intact in the scoreboard portraits. */
+.team-icon {
+  width: 38px;
+  height: 40px;
+  clip-path: none;
+  background: transparent;
+}
+.amber .team-icon {
+  background: transparent;
+}
+
+.overlay .score-center > div {
+  font-size: 42px;
+  gap: 22px;
+}
+.overlay .score-center small {
+  font-size: 11px;
+}
+.overlay .team-label {
+  font-size: 14px;
+  gap: 12px;
+}
+.overlay .team-label small {
+  font-size: 11px;
+}
+.overlay .team-icon,
+.overlay .team-icon .portrait {
+  width: 45px;
+  height: 48px;
+}
+.overlay .round-pressure {
+  font-size: 10px;
+  bottom: 2px;
+}
+@media (max-width: 640px) {
+  .overlay .score-center > div {
+    font-size: 28px;
+    gap: 14px;
+  }
+  .overlay .score-center small {
+    font-size: 8px;
+  }
+  .overlay .team-label {
+    font-size: 10px;
+    gap: 7px;
+  }
+  .overlay .team-label small {
+    font-size: 8px;
+  }
+  .overlay .round-pressure {
+    font-size: 7px;
+  }
+}

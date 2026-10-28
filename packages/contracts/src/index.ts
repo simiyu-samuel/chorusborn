@@ -232,7 +232,9 @@ export type StudioState = {
   samples: SampleLesson[];
   latestTrial: Omit<Trial, 'baseline' | 'candidateBranch'> | null;
 };
-export const controlSchema = z.strictObject({ action: z.enum(['pause', 'resume', 'reset']) });
+export const controlSchema = z.strictObject({
+  action: z.enum(['pause', 'resume', 'reset', 'rematch']),
+});
 export const trialRequestSchema = z.union([
   z.strictObject({ sampleId: z.string().min(1).max(64) }),
   z.strictObject({ proposalId: z.string().uuid() }),

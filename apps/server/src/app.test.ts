@@ -1,12 +1,13 @@
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from './app.js';
 
 const cleanups: (() => Promise<unknown>)[] = [];
 afterEach(async () => {
   for (const close of cleanups.splice(0).reverse()) await close();
+  vi.useRealTimers();
 });
 const boot = async (path: string | null = null) => {
   const app = await createApp({ storePath: path, clock: false });
@@ -110,5 +111,65 @@ describe('local studio boundaries', () => {
       (await reopened.inject({ url: '/api/demo/state', headers: { cookie } })).json().playbook
         .version,
     ).toBe(1);
+  }, 30_000);
+});
+
+describe('atomic rematch', () => {
+  it('requires a finished round, starts once, pins the adopted book and keeps spectator authority read-only', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+    const app = await createApp({ storePath: null });
+    cleanups.push(() => app.close());
+    const initial = await app.inject('/api/demo/state');
+    const cookie = initial.headers['set-cookie']!.toString().split(';')[0]!;
+    const command = (action: string, authority = cookie) =>
+      app.inject({
+        method: 'POST',
+        url: '/api/demo/controls',
+        headers: { cookie: authority },
+        payload: { action },
+      });
+    expect((await command('rematch')).statusCode).toBe(409);
+    const trial = (
+      await app.inject({
+        method: 'POST',
+        url: '/api/demo/trials',
+        headers: { cookie },
+        payload: { sampleId: 'core-discipline' },
+      })
+    ).json();
+    expect(
+      (
+        await app.inject({
+          method: 'POST',
+          url: '/api/demo/adoptions',
+          headers: { cookie },
+          payload: { trialId: trial.id, expectedVersion: 0 },
+        })
+      ).statusCode,
+    ).toBe(200);
+    await command('resume');
+    expect((await command('rematch')).statusCode).toBe(409);
+    vi.advanceTimersByTime(60_000);
+    const final = (await app.inject({ url: '/api/demo/state', headers: { cookie } })).json();
+    expect(final.world.status).toBe('finished');
+    expect(final.world.champions[0].playbook.version).toBe(0);
+    const overlayURL = final.overlayPath.replace('/overlay?', '/api/demo/overlay?');
+    expect((await app.inject(overlayURL)).json().world).toEqual(final.world);
+    expect((await command('rematch', '')).statusCode).toBe(401);
+    const key = new URL(final.overlayPath, 'http://localhost').searchParams.get('key')!;
+    expect((await command('rematch', `cb_session=${key}`)).statusCode).toBe(401);
+    const responses = await Promise.all([command('rematch'), command('rematch')]);
+    expect(responses.map((r) => r.statusCode).sort()).toEqual([200, 409]);
+    const restarted = responses.find((r) => r.statusCode === 200)!.json().world;
+    expect(restarted).toMatchObject({
+      tick: 0,
+      status: 'running',
+      winner: null,
+      seed: final.world.seed,
+    });
+    expect(restarted.champions[0].playbook.version).toBe(1);
+    expect(restarted.champions.map((c: { score: number }) => c.score)).toEqual([0, 0]);
+    expect(restarted.metrics.a.ruleUses).toEqual({});
+    expect((await app.inject(overlayURL)).json().world).toEqual(restarted);
   }, 30_000);
 });

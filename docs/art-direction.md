@@ -155,7 +155,15 @@ continues to be required alongside presentation.
   instanced. The Three.js scene loads as a separate lazy chunk. Current bundle size and
   small local frame samples are diagnostic evidence, not the planned OBS acceptance gate.
 
-Remaining: sculpted character turnarounds/material refinement, richer venue dressing, polished
-result/rematch direction, broadcast replay scene, viewer playtests, compressed-720p readability
+Remaining: sculpted character turnarounds/material refinement, richer venue dressing, further
+result art refinement, broadcast replay scene, viewer playtests, compressed-720p readability
 and sustained frame-time measurements with OBS on a named reference machine. No 60-fps claim
 is established by this milestone. Functional release requirements remain in [scope](scope.md).
+
+### Round-ending presentation
+
+Implemented after the first slice: shared winner/draw banner with original portraits, final score,
+pinned book and actual cumulative round stats; guarded one-click rematch; match-point/final-ten-
+seconds cues; opt-in new-result sound; and a labeled, cosmetically frozen spectator frame on
+connection loss. The same banner appears in the read-only overlay without coach controls.
+Final art and measured OBS composition remain review gates rather than completed claims.

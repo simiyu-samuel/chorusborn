@@ -129,3 +129,14 @@ They never contain API keys, full provider envelopes, or reasoning. The compiler
 text only, not these trusted identities. Source records on adopted rules bind proposal/channel/
 author/compilation IDs; the display author comes from Twitch. The overlay still exposes world
 data only; it has no queue access or mutation authority. Private source-join metadata is stripped from overlay rules; visible author names remain for execution credit.
+
+## Local fixture controls (implemented)
+
+`POST /api/demo/controls` requires the coach's HttpOnly session and the existing trusted-origin/
+JSON boundary. The strict body is `{ "action": "…" }`, with one of `pause`, `resume`, `reset`, or `rematch`.
+Reset creates a paused tick-zero fixture with the currently adopted book. Rematch is legal only
+from a finished world; it synchronously creates the same-seed tick-zero world with the latest
+adopted book and sets it running before publishing. Concurrent rematches produce one accepted
+start and one 409; unfinished worlds receive 409 unchanged. It does not store match history,
+create rivalry, alter an existing match's book, or grant overlay keys coach authority. The world
+and metrics remain ephemeral; this is not the future durable match API described above.

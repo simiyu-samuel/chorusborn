@@ -40,7 +40,11 @@ If Chromium is already installed, set `CHROMIUM_PATH` to its executable for brow
 Core Run now uses the **Relay Garden** scene with original procedural **Mica** and **Rook**
 characters. Training, both replay branches and the read-only overlay use the same renderer.
 Core carrying, shields, hazards, decoys, captures and real lesson-use cues follow server state.
-The renderer never decides movement or match results.
+The renderer never decides movement or match results. Finished rounds show a winner/draw card
+with the final score and recorded possession, damage and lesson-use counts. **Play again**
+starts the next round in one action using the latest adopted playbook; an active round stays
+pinned. The same result appears in the read-only overlay. A lost spectator connection freezes
+cosmetic motion and labels the last received state.
 
 Use the controls below the preview for **Low effects**, **Reduced motion** and opt-in sound.
 Sound starts muted. Mobile defaults to low effects. WebGL2 is required for 3D; unsupported

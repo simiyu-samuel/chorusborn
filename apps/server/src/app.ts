@@ -439,7 +439,14 @@ export async function createApp(options: AppOptions = {}) {
     if (!studio) return reply.code(401).send({ message: 'Open your local studio first.' });
     const parsed = controlSchema.safeParse(request.body);
     if (!parsed.success) return reply.code(422).send({ message: 'Unknown arena control.' });
-    if (parsed.data.action === 'reset')
+    if (parsed.data.action === 'rematch') {
+      if (studio.world.status !== 'finished')
+        return reply.code(409).send({ message: 'Finish this round before starting a rematch.' });
+      // Reset and start in one synchronous operation; concurrent duplicate clicks cannot
+      // reset a running round. The latest adopted playbook is pinned by createWorld.
+      studio.world = createWorld(studio.playbook, studio.world.seed);
+      studio.world.status = 'running';
+    } else if (parsed.data.action === 'reset')
       studio.world = createWorld(studio.playbook, studio.world.seed);
     else if (studio.world.status !== 'finished')
       studio.world.status = parsed.data.action === 'pause' ? 'paused' : 'running';

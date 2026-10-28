@@ -220,6 +220,78 @@ performance fixes; wrote the negative graphics/presentation checks; reviewed cap
 recorded remaining fidelity/performance limits. Git identifies the exact revision. The main
 build session ID still needs verification before submission.
 
+## 2026-10-28 — Round results, rematch and broadcast finish
+
+**Completed**
+
+- Added one shared winner/draw result card to training and the read-only overlay, with an
+  original champion portrait, authoritative final score, elapsed simulation time, pinned
+  playbook version and cumulative possession/damage/lesson-execution stats for both actors.
+  The table reads full round metrics rather than reconstructing totals from the 40-entry
+  recent decision ledger. It makes no claim that a lesson caused a win.
+- Added the coach's **Play again** action and strict `rematch` control. Only a finished round
+  may rematch. Reset/start occurs synchronously before publication, using the same fixture
+  seed and latest adopted book. Concurrent duplicate requests start once; a running match's
+  pinned policy stays unchanged. Reset-to-paused remains a separate training control.
+- Added match-point/final-ten-second scoreboard cues, intact character portraits, a held
+  winner pose/lit gate, and original opt-in win/draw sound admitted only from a nearby
+  running→finished snapshot transition. Replay branch views keep their arena uncovered;
+  overlay/replay audio remains silent.
+- Kept results outside the canvas image role, with a semantic heading/table and one coach
+  status announcement per pause/run/result change. Added responsive result layouts and
+  larger broadcast score/team labels.
+- Added explicit spectator signal-loss labeling and froze cosmetic animation on the last
+  received state while reconnecting. Spectator keys still grant no mutation authority.
+- Fixed first-frame label projection in on-demand scenes: update the camera's world matrix
+  before HTML markers project, so a freshly opened paused/final overlay has visible labels.
+  Extended browser checks to assert markers are in the viewport.
+
+**Verification**
+
+- `npm run check` passes formatting, TypeScript, **68 tests in 10 files**, and the production
+  build. New unit/API checks cover authoritative winner/draw/capture/time outcomes, cumulative
+  metrics, pressure cues, sound dedupe/seek/gap boundaries, unfinished/unauthorized rematches,
+  concurrent duplicate clicks, zeroed metrics and next-round policy pinning.
+- A new isolated browser flow runs the real server clock through its normal 60-second limit.
+  It adopts v1, queues v2 while v1 runs, verifies the actual result/metrics, opens a separately
+  authorized 1920×1080 read-only overlay, starts a rematch at tick zero using v2, and drops only
+  the spectator signal to verify stale-frame labeling and frozen cosmetic motion.
+- The first complete browser run passed five existing checks and failed the new test's
+  arbitrary requirement that all spectator checks finish within ten seconds of rematching
+  (observed tick 208). Replaced that assumption with an assertion on the actual rematch
+  response: tick zero, running, no winner and the expected pinned book. The game had correctly
+  continued running during those checks; no simulation speed or result rule was changed.
+- Inspected desktop, 390px mobile and 1920×1080 broadcast captures. Seed 42's authored sample
+  v1 fixture finished **Mica 1–0 Rook** at 60 seconds, with **16** recorded Mica lesson uses.
+  This is fixture evidence, not live rivalry, independent viewer validation or tactic superiority.
+  Captures/traces remain ignored; no credentials, real chat or private source IDs are committed.
+- A later complete run passed the new round flow and four existing checks, then exposed
+  missing idle traffic in the browser-only mock EventSub provider: its 10-second keepalive
+  contract caused the real watchdog to close it during a longer graphics/teaching flow.
+  Added five-second provider keepalives with close cleanup to the browser harness only;
+  production timeouts and unit tests of connection loss remain unchanged.
+- Final verification after resuming on October 28: the corrected harness passes all three
+  studio browser flows (desktop, mobile and mocked Twitch compile/adopt/moderation/disconnect).
+  Together with the final graphics/fallback/full-round run, all **six browser flows** have
+  passed. TypeScript and formatting pass after the harness change. No additional application
+  change was made after the successful full-round/graphics checks. The lazy scene remains about
+  936KB minified/249KB gzip and retains Vite's >500KB warning; sustained OBS performance and
+  compressed-video readability remain unmeasured.
+
+**Boundaries and next work**
+
+This advances local S08/S10 presentation, not rival matches or the full release. Results and
+active rounds remain ephemeral. Full scenario/holdout evaluation, rollback/history, broadcast
+replay selection, production persistence, two-channel consent/matching and sustained OBS/player
+validation remain open. No paid/model call, real-chat post, deployment or submission occurred.
+
+**Codex contribution**
+
+Codex built the result/rematch flow, state-derived cues, accessible layouts and signal-loss
+presentation; tested the authority/concurrency boundary and actual full-round browser flow;
+fixed the static-scene projection issue; and recorded the limits. The feature commit gives the
+revision; the main Codex session ID still requires verification before submission.
+
 ## Future entry template
 
 For each completed milestone, record date, feature/acceptance IDs, commit reference, meaningful checks and outcomes, screenshots/replay/evaluation references where appropriate, remaining limitations, and how Codex contributed. Never include secrets or full private session transcripts. Store bulky recordings outside Git and link final authorized artifacts when available.

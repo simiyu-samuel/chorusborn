@@ -75,3 +75,24 @@ Semantic buttons and labels, full keyboard operation of coach controls, visible 
 ## Playtest script
 
 Give a streamer the product with minimal explanation. Observe whether they can connect, identify the correct channel, select a proposal, interpret a trial, adopt it for the next round, and identify a contribution credit. Then introduce a stale trial and a disconnected intake state. Ask viewers what changed and who contributed it. Record confusion before polishing the copy.
+
+## Implemented local round ending
+
+Training results and the OBS overlay share one semantic result card outside the canvas image
+role: authoritative winner/draw, final score, elapsed simulation time, pinned playbook version,
+and a table of core possession seconds, cumulative damage taken and recorded lesson executions
+for both champions. The short recent-decision ledger is not used to reconstruct full-round
+counts. No result claims a lesson caused a victory. The coach has a single **Play again** action;
+it atomically resets/starts the same fixture seed with the most recently adopted playbook.
+Unfinished-round rematch requests and read-only spectators cannot trigger it.
+
+A compact scoreboard cue marks match point or the final ten seconds during running play only.
+An important-state live region announces pause/run/result changes without narrating each tick.
+Result audio is opt-in in the coach preview and only admitted from a consecutive running→finished
+transition; mounting, seeks and reconnect gaps stay silent. Replay branch views keep the arena
+uncovered by the result card; the branch metrics remain their evidence surface.
+
+The read-only overlay has no rematch controls. On socket loss it retains the last observed world,
+labels the interrupted signal, and freezes cosmetic animation until a connection opens again.
+This is stale-frame handling, not server recovery or durable match history. Full broadcast replay
+selection, recorded match history, rivalry and OBS/readability measurements remain pending.
