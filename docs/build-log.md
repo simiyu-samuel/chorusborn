@@ -569,6 +569,27 @@ remote hosting/recovery milestone or guarantee of wins. General conflict analysi
 rollback and rival-opening proof still remain work. Codex implemented and verified this fix;
 this entry is committed with the corresponding source increment.
 
+## 2026-10-28 — Owner-requested local fresh start
+
+The owner requested clearing streamer gameplay data to begin with empty playbooks. Stopped
+the local dev processes before changing stores, made a private ignored recovery copy under
+`.local/backups/fresh-start-20261028-115125`, and reset every local stored book (including legacy
+fixture copies) to version 0 with no rules. Cleared the active chat store, including proposals,
+compiled results, ingress receipts and cooldowns. Preserved canonical channel bindings and local
+studio/overlay access so existing browsers continue to reach the same champions. Credentials
+were unchanged, verified by an in-memory before/after digest; none were printed or committed.
+
+Restarted the existing loopback dev server. Both developersimiyu and serleusler API states now
+show v0 / zero rules, tick 0, score 0–0, no latest trial and no active/pending rivalry. Application
+store loaders accept the reset files and both channel queues are empty. Visually verified the
+real developersimiyu **Playbook 0** empty state; the screenshot remains ignored. Restart cleared
+memory-only OAuth sessions, so both accounts must reconnect before teaching or re-challenging.
+The fixed baseline and authored sample tactic catalog remain available; no sample is adopted.
+
+This was a local data operation, with no game code or dependency changes. No provider call,
+chat message or silent lesson adoption was made. Only this operation record is committed;
+active stores and the recovery copy stay outside Git.
+
 ## Future entry template
 
 For each completed milestone, record date, feature/acceptance IDs, commit reference, meaningful checks and outcomes, screenshots/replay/evaluation references where appropriate, remaining limitations, and how Codex contributed. Never include secrets or full private session transcripts. Store bulky recordings outside Git and link final authorized artifacts when available.
