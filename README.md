@@ -10,7 +10,7 @@ The defining interaction is **teach → prove → adopt → compete**. A viewer'
 
 The first local fixture build is implemented: a React coach studio, shared 3D Core Run presentation, server-owned arena, bounded sample lesson contracts, exact two-branch replay, coach adoption, local playbook persistence, and a separately authorized read-only overlay. The planning baseline was created October 26, 2026 for the Codex x TwitchCon Hackathon.
 
-Twitch sign-in and EventSub intake are implemented: state-bound OAuth, verified broadcaster identity, periodic validation, serialized refresh, a durable local teaching queue, duplicate protection, and deletion/clear handling. **The Groq-backed lesson compiler is implemented locally.** A coach can compile a real proposal, inspect its rules, compare replay branches, and adopt it with trusted viewer credit. Local two-channel challenges and shared matches are implemented; a real second-broadcaster demonstration, PostgreSQL and the full evaluation suite remain pending. The UI labels sample tactics and fixture scenarios explicitly. Production architecture and release gates remain targets unless the build log records verification.
+Twitch sign-in and EventSub intake are implemented: state-bound OAuth, verified broadcaster identity, periodic validation, serialized refresh, a durable local teaching queue, duplicate protection, and deletion/clear handling. **The Groq-backed lesson compiler is implemented locally.** A coach can compile a real proposal, inspect its rules, compare replay branches, and adopt it with trusted viewer credit. Local two-channel challenges and shared matches are implemented, with a real developersimiyu/serleusler local match and neutral-proof review observed. An independent two-community broadcast demonstration, PostgreSQL and the full evaluation suite remain pending. The UI labels sample tactics and fixture scenarios explicitly. Production architecture and release gates remain targets unless the build log records verification.
 
 ## Run locally
 
@@ -75,7 +75,7 @@ pause, while start/resume/rematch requires both coaches. See [rivalry setup](doc
 For the intended **developersimiyu vs serleusler** match, both accounts must authorize separately.
 This local build can test two browser profiles on one computer. Remote streamers need a hosted
 server; a localhost URL is not a remote invitation link. Two-account automated checks use mocked
-providers and do not establish that serleusler has connected. Existing read-only overlays follow
+providers; separately, both real accounts have been observed authenticated with live chat, the same finished match and independent books (see the build log). Existing read-only overlays follow
 whichever rivalry their owner joins, without exposing private lesson queues.
 
 Engine `core-run/0.4.0` resolves equal core claims after ten uninterrupted ticks (0.5 seconds)

@@ -192,7 +192,8 @@ export function Arena({
             <span>CORE RUN</span>
             <strong>Relay Garden</strong>
             <small>
-              {mode === 'rivalry' ? 'Neutral opening' : 'Carrier dilemma'} · seed {world.seed}
+              {world.arena.id.startsWith('relay-duel-') ? 'Neutral opening' : 'Carrier dilemma'} ·
+              seed {world.seed}
             </small>
           </div>
           <div className="game-mode-tag">

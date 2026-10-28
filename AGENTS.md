@@ -11,7 +11,7 @@
 - The local fixture, Twitch OAuth/EventSub, durable proposal queue, and bounded Groq
   compiler exist. Real proposals can be reviewed, proved in carrier or paired neutral-opening scenarios,
   and adopted with source attribution. Local two-channel challenges, canonical channel books, shared matches with visible tie initiative, and explicit priority reordering are implemented.
-  A real second-broadcaster demonstration, PostgreSQL and full-suite evaluation remain pending. No claims of broad model accuracy or tactic superiority.
+  A real two-account local match and paired neutral proof have been observed. Independent community/broadcast demonstration, PostgreSQL and full-suite evaluation remain pending. No claims of broad model accuracy or tactic superiority.
   Twitch tokens are memory-only for now; restart requires reconnecting. Keep status honest.
 - Keep the ambitious core: Twitch teaching, evidence-backed lessons, deterministic
   branching replay, persistent playbooks, real attribution, and rival matches.

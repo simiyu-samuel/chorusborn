@@ -1,8 +1,11 @@
 # Local two-streamer rivalry
 
-Implemented locally, October 28, 2026. Live verification with a second human broadcaster is
-still required. Automated provider fixtures exercise two independent accounts, not proof that
-a real second streamer has authorized the app. This server remains bound to localhost.
+Implemented locally, October 28, 2026. Both real accounts (developersimiyu and serleusler) have
+now been observed authenticated with live chat, the same finished shared match and independent
+v6/v2 books. A real pending lesson was compiled and reviewed against the rival’s locked policy
+from both neutral starts. These local account checks do not establish an independent two-community
+broadcast or audience playtest. Automated checks separately use mocked providers. This server
+remains bound to localhost. See the [build log](build-log.md).
 
 ## Experience
 

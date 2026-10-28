@@ -16,6 +16,8 @@ test('coach tests both neutral initiatives, reorders priorities and keeps the ac
   expect(trial.paired).toBeDefined();
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByText('Both starting initiatives tested', { exact: true })).toBeVisible();
+  await expect(dialog.getByText('Neutral opening · seed 42', { exact: true })).toHaveCount(2);
+  await expect(dialog.getByText('Carrier dilemma · seed 42', { exact: true })).toHaveCount(0);
   await expect(dialog.getByText('Opponent initiative first:', { exact: false })).toBeVisible();
   await dialog.getByRole('button', { name: 'Adopt for next round', exact: true }).click();
   await expect(dialog.getByRole('button', { name: 'Lesson adopted', exact: true })).toBeDisabled();

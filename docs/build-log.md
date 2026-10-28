@@ -695,6 +695,42 @@ renderer chunk-size warning remains (about 916KB minified/243KB gzip); main web 
 added. Codex implemented and verified the controller/API/UI/tests and documented ADR 022; this
 entry is committed with that source increment.
 
+## 2026-10-28 — Real two-account result and a rejected improvement hypothesis
+
+The owner asked to proceed with priority and neutral-proof review. The connected studio already
+had the intended shield rule above generic return in v6; the completed round recorded three
+executions of that shield rule. No additional reorder was necessary or performed. Both real
+Twitch identities were authenticated with chat live. Read-only API inspection confirmed that
+both owners saw the same match ID/world and a finished score: serleusler v2 scored 2 with 6.30
+seconds possession, while developersimiyu v6 scored 3 with 8.85 seconds possession. The displayed
+result rounded the latter to 8.8 seconds. This confirms local real-account match flow, not an
+independent audience or broadcast study.
+
+Compiled one existing waiting retrieval proposal through the ordinary coach UI using the
+configured Groq model (one call; process allowance moved from 20 to 19). The reviewed interpretation
+selected available-core collection by a balanced route, with no ability. Ran **Neutral opening**
+proof against serleusler's locked v2 book. With own initiative first, current v6 scored 3 and the
+candidate scored 0; with the rival's initiative first, current scored 2 and candidate 0. Aggregate
+captures were 5 versus 0. The new rule would precede the existing direct retrieval rule and trade
+speed for a hazard-avoiding detour. Evidence therefore did not support adoption for this matchup.
+The candidate remains compiled and unadopted; published books stay v6/v2 and the live finished
+round is unchanged. No Twitch message, reset, reconnect, rematch or opponent control was issued.
+
+During the live proof review, the 3D arena footer incorrectly said **Carrier dilemma** because
+it selected scenario text from presentation mode (`replay`) instead of the serialized arena ID.
+Changed that footer to derive neutral/carrier text from world state, consistent with the SVG
+fallback. Extended the existing browser flow to assert two neutral arena footers and no carrier
+footer in the neutral dialog. Type checking, targeted formatting and the full neutral-proof/
+priority browser flow pass; the production frontend build also passes. No engine/backend or
+model configuration changed, so the prior 96-test simulation/API check was not needlessly rerun.
+The live proof screenshot remains ignored at `.local/screenshots/live-neutral-proof-review.png`.
+
+Updated current status text to distinguish the observed real local accounts/match from the
+still-pending independent two-community broadcast, broader scenarios/holdouts, deployment and
+durable recovery. The proof is evidence for this pinned opponent/seed only, not universal tactic
+ranking. Raw chat, credentials and private proposal identifiers remain outside Git. Codex operated
+the authorized review, fixed the scenario label and recorded this source increment.
+
 ## Future entry template
 
 For each completed milestone, record date, feature/acceptance IDs, commit reference, meaningful checks and outcomes, screenshots/replay/evaluation references where appropriate, remaining limitations, and how Codex contributed. Never include secrets or full private session transcripts. Store bulky recordings outside Git and link final authorized artifacts when available.
