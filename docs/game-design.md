@@ -23,7 +23,7 @@ These are design defaults. Tune with measurements; record changes as a new engin
 
 | Mechanic | Initial rule |
 | --- | --- |
-| Core | One neutral core; pickup within 750 units if not carrying; automatically score within 750 units of own gate |
+| Core | One neutral core; pickup within 750 units if not carrying; nearest surviving claimant wins, equal claims stay contested; automatically score within 750 units of own gate |
 | Champion health | 100 maximum; observations expose health in integer basis points (0–10,000) |
 | Tag attack | Nearest legal enemy within 1,000 units; 20 damage; 20-tick cooldown |
 | Shield | 30 ticks of half incoming damage, rounded down; 100-tick cooldown |
@@ -40,12 +40,12 @@ No hidden team stat differences. Exact movement speed, obstacle geometry, and ha
 1. Apply scheduled lifecycle events, cooldown expiry, and permitted pause commands.
 2. Construct each actor's observation from the same pre-action state.
 3. On decision ticks, evaluate all champion policies without mutating the shared state.
-4. Apply legal abilities and movement simultaneously; resolve equal claims by the ruleset's stable ID ordering.
+4. Apply legal abilities and movement simultaneously. Path tie breaks use home-relative horizontal cell order, so a horizontally mirrored scenario mirrors the route.
 5. Collect tag/hazard damage and apply it simultaneously, then resolve defeats and core drops.
-6. Resolve surviving actors' pickups and captures; a defeated actor cannot score on that tick.
+6. Resolve surviving actors' pickups and captures. The nearest eligible claimant takes an unheld core; equal-distance claims stay contested with no pickup. A defeated actor cannot pick up or score on that tick.
 7. Resolve resets, health regeneration, timer/end conditions, then emit state and decision records.
 
-Stable-ID ordering must not systematically favor one channel: mirrored evaluation pairs swap spawn side and actor ordering. The engine must specify and test any later change to collision or simultaneous claims.
+Engine `core-run/0.3.0` removes stable-ID pickup priority. When the core sits between grid cells, routes target any legal cell center within pickup range instead of flooring toward one side. Side-swapped simulation checks compare full trajectories and metrics for the tested symmetric layouts/books; they do not establish overall balance or replace the planned holdout suite. Equal policies in an exactly symmetric contest can draw. No hidden random winner breaks a tie.
 
 ## Strategy space
 

@@ -78,8 +78,11 @@ server; a localhost URL is not a remote invitation link. Two-account automated c
 providers and do not establish that serleusler has connected. Existing read-only overlays follow
 whichever rivalry their owner joins, without exposing private lesson queues.
 
-Engine `core-run/0.2.0` adds a complete serialized core spawn for the neutral rivalry opening.
-Earlier full checkpoints are incompatible; saved local books remain compatible. Channel ownership
+Engine `core-run/0.3.0` uses pickup-range approach cells, mirrored path tie breaks, and
+contested equal core claims instead of awarding possession by actor order. Identical books
+draw in the checked symmetric scenarios; different strategies can still win. The playbook
+shows exact duplicate tactics and actual execution counts. Earlier full checkpoints are
+incompatible; saved local books remain compatible. See the [fairness notes](docs/rivalry.md#fairness-and-why-a-smaller-book-can-win). Channel ownership
 now persists with each canonical local studio; OAuth tokens and matches remain memory-only.
 
 ## Twitch application registration

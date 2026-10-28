@@ -64,7 +64,7 @@ joins; only the owner's separate `playbook` and `intake` DTOs expose their sourc
 
 ## Simulation and consent
 
-Engine `core-run/0.2.0` serializes `arena.coreSpawn` as controller state. Original training uses
+Engine `core-run/0.3.0` retains `arena.coreSpawn` as controller state. Original training uses
 its previous carrier-dilemma opening/spawn; rivalry uses a neutral core at `(16000, 9500)`, no
 opening decoy, equal base stats and both actors at their homes. The core returns to that serialized
 spawn after capture or the ordinary idle timeout. Positions, metrics, full books and all controller
@@ -77,9 +77,46 @@ Pausing an in-progress round preserves those locked policies; resuming does not 
 them. The shared clock steps a match once per tick and publishes it to both coaches/overlays.
 Existing decision records attribute actor B execution just as they do actor A execution.
 
-A neutral opening does not establish competitive balance: deterministic update order resolves
-simultaneous pickup, and this is still one arena/seed rather than a mirrored tournament or
-holdout evaluation. Do not claim that a viewer caused a win or that a tactic generalizes.
+The neutral opening uses pickup-range cell goals and home-relative route tie breaks. Pickups
+choose the nearest living eligible claimant; equal claims remain contested until distance,
+retreat or defeat breaks the tie. Array order and actor IDs do not award the core. The shared
+arena/overlay labels a currently equal surviving claim as **CORE CONTESTED**. Identical policies
+can draw rather than receiving an arbitrary winner. Determinism and full snapshot restore remain
+required. Mirrored regression checks are not a full balance study or holdout evaluation.
+
+## Fairness and why a smaller book can win
+
+A playbook is a priority list, not a character level. The newest adopted rules run first; the
+first matching executable rule controls the goal/route/optional ability. The fixed novice
+baseline fills gaps. Repeating a return-home rule adds no new behavior. A carrying-only rule
+does nothing before pickup. Balanced/cautious routes avoid hazard cost and can take longer than
+a direct route. More lessons therefore do not imply a faster or stronger champion.
+
+The owner reported repeat 3–0 losses. An offline reproduction using the saved books confirmed
+two separate findings: the balanced-route retrieval rule loses the race to the opponent's
+baseline direct approach on this arena, **even after swapping their sides**; and the previous
+engine awarded equal eligible pickups to actor A, making identical return-home books produce
+an arbitrary 3–0. Engine 0.3.0 fixes the latter plus mirrored route/approach semantics. It does
+not alter the owner's books or force equal win rates. The same saved matchup still produces
+3–0 for the faster-retrieval policy after the fix.
+
+The playbook screen explains priority, flags exact duplicate behaviors and displays actual
+executions in the currently pinned round. A newly adopted rule absent from that book is marked
+as next-round behavior. Zero executions means no recorded movement/ability under that rule;
+it does not establish why it failed to run. General predicate-overlap/conflict analysis remains
+planned.
+
+A supported alternative to review/prove is:
+
+```text
+!teach When the core is available, collect it by the direct route and use shield when ready.
+```
+
+This expresses an explicit speed/risk trade-off and a contest ability. Inspect the compiled
+intent before adopting, then both coaches ready for a new round. The training proof still uses
+the declared carrier-dilemma fixture, so it does not validate a neutral-opening retrieval tactic
+against the current rival. No lesson is guaranteed to win across other books/layouts. Do not
+claim that a viewer caused a win or that one tested tactic generalizes.
 
 ## Implemented local API
 

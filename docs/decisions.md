@@ -106,6 +106,28 @@ persistence only. This advances S01/S02/S07/S08/S09/S10/S11/S12/S13 locally, whi
 channel consent/testing, remote hosting, durable recovery and balanced mirrored evaluation
 remain release requirements. See [rivalry](rivalry.md).
 
+### ADR 021 — 2026-10-28: contest equal core claims and mirror route tie breaks
+
+A user playtest reported repeated 3–0 wins by the one-lesson champion. Saved-book reproduction
+showed a legitimate direct-vs-balanced retrieval trade-off, plus a separate engine defect:
+identical return-home books won 3–0 for actor A because pickup iterated actors and took the
+first eligible claimant. A geometrically centered core also lay between grid cells, while
+pathfinding floored its target coordinate and used global horizontal cell order.
+
+Engine 0.3.0 chooses the nearest surviving eligible claimant and leaves exact ties contested.
+Plan core approaches to all cell centers within pickup range; test rule target legality with
+the same range. Normalize horizontal route ordering/neighbor order by home side to preserve
+mirror symmetry. Keep simultaneous damage/defeat before pickup. No random/channel-specific
+handicap, stat bonus for lesson count, or forced win-rate equalization. Equal behavior can draw;
+a shield or different route can change the contest. Old checkpoints are incompatible; books
+and source provenance stay unchanged. Current draws are a known product pacing trade-off.
+
+Add a visible contested-core cue and playbook exact-duplicate/use inspection. This explains the
+priority-list semantics without claiming broad conflict analysis. Regression evidence includes
+identical-book outcomes on four recorded seeds, full per-tick side-swapped trajectories with
+different routes/books and shields, nearest/dead/tied claimant checks, and existing restore/API
+checks. These are bounded regressions, not the planned complete balance/holdout evaluation.
+
 ## Product risks
 
 | Risk | Signal | Response / validation |

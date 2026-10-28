@@ -108,6 +108,9 @@ test('two independently signed-in streamers teach their own champions and share 
     await expect(
       onePanel.getByRole('button', { name: 'Pause rivalry', exact: true }),
     ).toBeVisible();
+    await expect(
+      page.getByText('Equal claims · win the contest to collect', { exact: true }),
+    ).toBeVisible();
     await onePanel.getByRole('button', { name: 'Pause rivalry', exact: true }).click();
     await expect(
       twoPanel.getByRole('button', { name: 'Ready for rivalry', exact: true }),

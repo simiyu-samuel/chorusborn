@@ -40,7 +40,7 @@ The first matching **executable** rule emits one movement goal and one optional 
 
 Examples: `return_home` requires carrying the core; `collect_core` requires an available unheld core; `attack_enemy` selects the real opponent, not a decoy. A decoy can distract the documented novice baseline. Rule evaluation and resulting ability execution are recorded separately: requesting an unavailable shield does not count as using a shield lesson.
 
-Route modes use fixed integer path costs declared in the ruleset. Tie-break by path cost, path length, then cell ID. Predicted risk uses current observable world facts only; no hidden future opponent intent. A policy receives the same facts irrespective of who authored it.
+Route modes use fixed integer path costs declared in the ruleset. The implemented A* queue orders path cost plus Manhattan distance, then home-relative horizontal cell order within a row; its neighbor order mirrors by home side. For an unheld core it targets the set of cell centers within pickup range. This preserves horizontal mirror symmetry in the tested arenas. Predicted risk uses current observable world facts only; no hidden future opponent intent. A policy receives the same facts irrespective of who authored it.
 
 Limits: 24 active learned rules per champion; 3 new rules per candidate; 4 conditions per rule; 280 characters of input lesson text; bounded candidate/output size; fixed evaluation budget. Exceeding a limit is a visible validation failure, not a partially adopted policy.
 
@@ -101,5 +101,5 @@ is pinned to the exact current playbook hash/version. Attempts and outcomes surv
 running work becomes visibly failed and is never silently replayed. See the root README for
 local caps, the explicit four-case live smoke command, and remaining durability limitations.
 Adoption currently prepends the candidate's rules in their displayed order; editable insertion,
-conflict analysis, disabling superseded rules and rollback remain release work. Trials use the
+general conflict analysis, disabling superseded rules and rollback remain release work. The playbook now identifies exact behavior duplicates (same conditions and intent) and displays executed-use counts only for rules present in the locked round book. Exact duplicates add no speed, health, damage or extra action; newest rules run first. Trials use the
 fixed opening fixture, not a live historical checkpoint or the broader scenario suite.

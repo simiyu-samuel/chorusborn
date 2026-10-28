@@ -52,7 +52,8 @@ export function RivalryPanel({
       </div>
       <p className="rivalry-explainer">
         Each community teaches its own champion. Both streamers approve the match. Playbooks stay
-        locked until the next round.
+        locked until the next round. Equal core claims stay contested; neither side gets a free
+        pickup.
       </p>
       {error ? (
         <p role="alert" className="modal-error">

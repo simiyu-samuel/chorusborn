@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createWorld, hash } from '@chorusborn/sim';
 import {
+  coreContested,
   actorPosition,
   canInterpolate,
   eventKey,
@@ -13,6 +14,24 @@ import {
 } from './presentation.js';
 
 describe('read-only game presentation', () => {
+  it('labels only an equal, living, unheld claim as contested without changing state', () => {
+    const world = createWorld();
+    world.core = { x: 16000, y: 9500, carrier: null, unheldSince: 0 };
+    world.champions[0].x = 15500;
+    world.champions[1].x = 16500;
+    world.champions[1].y = 9500;
+    const before = hash(world);
+    expect(coreContested(world)).toBe(true);
+    expect(hash(world)).toBe(before);
+    world.champions[1].x = 16250;
+    expect(coreContested(world)).toBe(false);
+    world.champions[1].x = 16500;
+    world.champions[1].health = 0;
+    expect(coreContested(world)).toBe(false);
+    world.champions[1].health = 100;
+    world.core.carrier = 'a';
+    expect(coreContested(world)).toBe(false);
+  });
   it('interpolates only between received positions, clamps progress and preserves authoritative input', () => {
     const world = createWorld(),
       before = structuredClone(world.champions[0]),

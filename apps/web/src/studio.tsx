@@ -27,6 +27,7 @@ import {
 import type { StudioState, Trial, World } from '@chorusborn/contracts';
 import { Arena, ChampionPortrait } from './arena.js';
 import { roundPressure } from './game/presentation.js';
+import { inspectPlaybook } from './game/playbook-inspection.js';
 import { describeCondition } from './lesson.js';
 import { RivalryPanel } from './rivalry-panel.js';
 import { ChatQueue } from './chat-queue.js';
@@ -497,6 +498,9 @@ export function App() {
   const world = state?.world;
   const ownActor = world?.champions.find((c) => c.id === state?.selfActor);
   const championName = state?.championName ?? 'Mica';
+  const ruleInspection = state
+    ? inspectPlaybook(state.playbook, ownActor?.playbook, world?.metrics[state.selfActor].ruleUses)
+    : [];
   const nextRound = world && state.playbook.version !== ownActor?.playbook.version;
   const receipts =
     world?.decisions
@@ -933,7 +937,10 @@ export function App() {
                     {championName}’s playbook{' '}
                     <span className="small-tag">v{state?.playbook.version ?? 0}</span>
                   </h2>
-                  <p>Accepted tactics take priority over the fixed novice baseline.</p>
+                  <p>
+                    Newest lessons run first. The first applicable rule controls the move; the fixed
+                    baseline handles the rest. More lessons do not add speed or strength.
+                  </p>
                 </div>
               </div>
               {state?.playbook.rules.length ? (
@@ -954,6 +961,17 @@ export function App() {
                           : rule.intent.ability}
                       </span>
                       <small>Contributed in the local lab · {rule.author}</small>
+                      <small>
+                        {ruleInspection[i]?.uses === null
+                          ? 'Not in this round’s locked book'
+                          : `Executed ${ruleInspection[i]?.uses ?? 0} times this round`}
+                      </small>
+                      {ruleInspection[i]?.duplicateOf !== undefined ? (
+                        <small>
+                          Repeats rule {String(ruleInspection[i]!.duplicateOf).padStart(2, '0')};
+                          adds no new behavior. The earlier rule takes priority.
+                        </small>
+                      ) : null}
                     </div>
                     <Check size={18} />
                   </div>

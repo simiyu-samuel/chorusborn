@@ -16,7 +16,7 @@ import {
   type StrikeEvent,
 } from '@chorusborn/contracts';
 
-export const ENGINE_VERSION = 'core-run/0.2.0' as const;
+export const ENGINE_VERSION = 'core-run/0.3.0' as const;
 export const TICKS_PER_SECOND = 20;
 export const MATCH_TICKS = 60 * TICKS_PER_SECOND;
 const HOME_A = { x: 2500, y: 9500 };
@@ -202,10 +202,32 @@ function matches(condition: Condition, observed: ReturnType<typeof facts>): bool
   return actual >= condition.value;
 }
 
-function nextStep(world: World, actor: Point, target: Point, route: Intent['route']): Point | null {
-  const start = cell(actor),
-    goal = cell(target);
-  if (sameCell(start, goal)) return null;
+function nextStep(
+  world: World,
+  actor: Champion,
+  target: Point,
+  route: Intent['route'],
+): Point | null {
+  const start = cell(actor);
+  // The neutral core can sit between cells. Plan to every cell center within
+  // pickup range, rather than flooring its coordinates toward the right side.
+  const goals: Point[] = [];
+  if (target === world.core && world.core.carrier === null) {
+    const center = cell(target);
+    for (let y = center.y - 1; y <= center.y + 1; y++)
+      for (let x = center.x - 1; x <= center.x + 1; x++) {
+        const candidate = { x, y };
+        if (distance(position(candidate), target) <= 750) goals.push(candidate);
+      }
+  } else goals.push(cell(target));
+  if (goals.some((goal) => sameCell(start, goal))) return null;
+  const remaining = (p: Point) =>
+    Math.min(...goals.map((goal) => Math.abs(p.x - goal.x) + Math.abs(p.y - goal.y)));
+  // Tie breaks use home-relative horizontal coordinates. Mirroring the arena
+  // and swapping books therefore mirrors routes instead of favoring low x.
+  const direction = actor.home.x < (world.arena.width * 1000) / 2 ? 1 : -1;
+  const routeOrder = (p: Point) =>
+    p.y * world.arena.width + (direction === 1 ? p.x : world.arena.width - 1 - p.x);
   const key = (p: Point) => p.y * world.arena.width + p.x;
   const blocked = new Set(world.arena.walls.map(key));
   const hazards = new Set(world.arena.hazards.map(key));
@@ -215,12 +237,12 @@ function nextStep(world: World, actor: Point, target: Point, route: Intent['rout
   const risk = route === 'cautious' ? 12 : route === 'balanced' ? 3 : 0;
   while (open.length > 0) {
     open.sort((a, b) => {
-      const ac = costs.get(key(a))! + Math.abs(a.x - goal.x) + Math.abs(a.y - goal.y);
-      const bc = costs.get(key(b))! + Math.abs(b.x - goal.x) + Math.abs(b.y - goal.y);
-      return ac - bc || key(a) - key(b);
+      const ac = costs.get(key(a))! + remaining(a);
+      const bc = costs.get(key(b))! + remaining(b);
+      return ac - bc || routeOrder(a) - routeOrder(b);
     });
     const current = open.shift()!;
-    if (sameCell(current, goal)) {
+    if (goals.some((goal) => sameCell(current, goal))) {
       let cursor = current;
       while (parent.has(key(cursor))) {
         const prior = parent.get(key(cursor))!;
@@ -235,7 +257,7 @@ function nextStep(world: World, actor: Point, target: Point, route: Intent['rout
       [1, 0],
       [0, 1],
     ] as const) {
-      const neighbor = { x: current.x + dx, y: current.y + dy };
+      const neighbor = { x: current.x + dx * direction, y: current.y + dy };
       if (
         neighbor.x < 0 ||
         neighbor.y < 0 ||
@@ -270,7 +292,11 @@ function plan(world: World, actor: Champion, enemy: Champion): Plan {
     const target = targetFor(rule.intent);
     if (!target) continue;
     const waypoint = nextStep(world, actor, target, rule.intent.route);
-    if (!sameCell(cell(actor), cell(target)) && !waypoint) continue;
+    const atTarget =
+      target === world.core && world.core.carrier === null
+        ? distance(actor, target) <= 750
+        : sameCell(cell(actor), cell(target));
+    if (!atTarget && !waypoint) continue;
     return {
       intent: rule.intent,
       target,
@@ -430,12 +456,18 @@ export function step(input: World): World {
     }
   }
   if (world.core.carrier === null) {
-    for (const actor of world.champions) {
-      if (actor.health > 0 && distance(actor, world.core) <= 750) {
-        world.core.carrier = actor.id;
-        event('pickup', actor, `${actor.name} picked up the core`);
-        break;
-      }
+    const claimants = world.champions
+      .filter((actor) => actor.health > 0 && distance(actor, world.core) <= 750)
+      .sort((a, b) => distance(a, world.core) - distance(b, world.core));
+    const nearest = claimants[0];
+    // Equal claims remain contested. Neither actor IDs nor array order award
+    // possession; a closer approach, retreat or defeat must break the tie.
+    if (
+      nearest &&
+      (!claimants[1] || distance(nearest, world.core) < distance(claimants[1], world.core))
+    ) {
+      world.core.carrier = nearest.id;
+      event('pickup', nearest, `${nearest.name} picked up the core`);
     }
     if (world.core.carrier === null && world.tick - world.core.unheldSince >= 200)
       world.core = { ...world.arena.coreSpawn, carrier: null, unheldSince: world.tick };

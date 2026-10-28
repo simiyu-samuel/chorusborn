@@ -57,6 +57,14 @@ export function visibleLesson(world: World, actorId: ActorId | 'both' = 'a') {
       world.tick - decision.tick <= 40,
   );
 }
+/** Matches the engine's equal, surviving claims; purely a display cue. */
+export function coreContested(world: World) {
+  if (world.core.carrier !== null) return false;
+  const claims = world.champions
+    .filter((c) => c.health > 0)
+    .map((c) => Math.abs(c.x - world.core.x) + Math.abs(c.y - world.core.y));
+  return claims.length === 2 && claims[0]! <= 750 && claims[0] === claims[1];
+}
 export function intentCue(world: World, actorId: ActorId) {
   const actor = world.champions.find((item) => item.id === actorId)!;
   if (actor.health <= 0) return 'Respawning';
@@ -64,7 +72,7 @@ export function intentCue(world: World, actorId: ActorId) {
   return actor.intent === 'Ready' ? 'Ready to run' : actor.intent;
 }
 
-// Presentation of the pinned core-run/0.1.x rules; the server determines the result.
+// Presentation of the pinned Core Run rules; the server determines the result.
 export function roundResult(world: World) {
   if (world.status !== 'finished' || world.winner === null) return null;
   const winner =

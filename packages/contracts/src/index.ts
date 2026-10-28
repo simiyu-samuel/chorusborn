@@ -141,7 +141,7 @@ export type ActorMetrics = {
   ruleUses: Record<string, number>;
 };
 export type World = {
-  engineVersion: 'core-run/0.2.0';
+  engineVersion: 'core-run/0.3.0';
   codecVersion: 1;
   seed: number;
   tick: number;

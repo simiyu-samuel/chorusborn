@@ -182,5 +182,7 @@ for two canonical channel studios. The live clock advances that match once, then
 both participants and their existing overlays. Separate channel queues and private books remain
 under verified OAuth; world-level source joins are redacted from the peer/public match DTO.
 Canonical channel bindings and books persist locally, while tokens/challenges/matches do not.
-Engine 0.2.0 snapshots include `arena.coreSpawn` to keep neutral rivalry resets deterministic.
+Engine 0.3.0 snapshots retain `arena.coreSpawn` for deterministic resets. Pickup-range path
+goals, home-relative route tie breaks and contested equal claims remove actor-order possession
+priority; earlier engine checkpoints are rejected while saved books remain compatible.
 See [rivalry](rivalry.md) for authorization, consent, migration and deployment boundaries.

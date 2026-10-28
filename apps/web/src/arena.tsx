@@ -11,7 +11,7 @@ import {
 import { Leaf, Volume2, VolumeX, Sparkles } from 'lucide-react';
 import type { World } from '@chorusborn/contracts';
 import { ArenaFallback } from './game/arena-fallback.js';
-import { intentCue, recentEvents, visibleLesson } from './game/presentation.js';
+import { coreContested, intentCue, recentEvents, visibleLesson } from './game/presentation.js';
 import { RoundResult } from './game/round-result.js';
 import { useArenaSound } from './game/sound.js';
 export { ChampionPortrait } from './game/champion-portrait.js';
@@ -99,7 +99,8 @@ export function Arena({
     renderReady = useCallback(() => setReady(true), []);
   const capture = recentEvents(world, 20).findLast((e) => e.type === 'capture');
   const lesson = visibleLesson(world, mode === 'rivalry' ? 'both' : 'a');
-  const summary = `${label}. ${world.champions[0].name} ${world.champions[0].score}, ${world.champions[1].name} ${world.champions[1].score}. ${world.status}. ${world.core.carrier === null ? 'Core available.' : `${world.champions.find((c) => c.id === world.core.carrier)?.name} carrying core.`}`;
+  const contested = coreContested(world);
+  const summary = `${label}. ${world.champions[0].name} ${world.champions[0].score}, ${world.champions[1].name} ${world.champions[1].score}. ${world.status}. ${world.core.carrier === null ? (contested ? 'Core contested. Equal claims; neither champion has possession.' : 'Core available.') : `${world.champions.find((c) => c.id === world.core.carrier)?.name} carrying core.`}`;
   const fallback = (
     <div className="graphics-fallback">
       <ArenaFallback world={world} label={label} reducedMotion={reducedMotion} />
@@ -214,14 +215,18 @@ export function Arena({
               {capture
                 ? 'CAPTURE'
                 : world.core.carrier === null
-                  ? 'THE OBJECTIVE'
+                  ? contested
+                    ? 'CORE CONTESTED'
+                    : 'THE OBJECTIVE'
                   : 'CORE POSSESSION'}
             </small>
             <strong>
               {capture
                 ? `${world.champions.find((c) => c.id === capture.actorId)?.name} brings it home`
                 : world.core.carrier === null
-                  ? 'The core is waiting'
+                  ? contested
+                    ? 'Equal claims · win the contest to collect'
+                    : 'The core is waiting'
                   : `${world.champions.find((c) => c.id === world.core.carrier)?.name} · ${intentCue(world, world.core.carrier)}`}
             </strong>
           </div>

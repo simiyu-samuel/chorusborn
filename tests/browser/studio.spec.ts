@@ -190,3 +190,42 @@ test('coach connects through a cross-site OAuth callback and disconnects with a 
   await expect(dialog.getByRole('link', { name: 'Connect Twitch', exact: true })).toBeVisible();
   await expect(dialog.getByRole('status')).toHaveText('Twitch disconnected.');
 });
+
+test('playbook explains duplicate tactics and distinguishes the next book from locked round use', async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  await page.goto('/');
+  await expect(page.getByText('Engine connected', { exact: true })).toBeVisible();
+  for (const expectedVersion of [0, 1]) {
+    const trialResponse = await page.request.post('/api/demo/trials', {
+      data: { sampleId: 'core-discipline' },
+    });
+    expect(trialResponse.ok()).toBe(true);
+    const trial = await trialResponse.json();
+    const adopted = await page.request.post('/api/demo/adoptions', {
+      data: { trialId: trial.id, expectedVersion },
+    });
+    expect(adopted.ok()).toBe(true);
+    if (expectedVersion === 0) {
+      expect(
+        (await page.request.post('/api/demo/controls', { data: { action: 'reset' } })).ok(),
+      ).toBe(true);
+    }
+  }
+  await page.getByRole('button', { name: /Playbook/ }).click();
+  await expect(
+    page.getByText('Repeats rule 01; adds no new behavior. The earlier rule takes priority.', {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(page.getByText('Not in this round’s locked book', { exact: true })).toBeVisible();
+  await expect(page.getByText('Executed 0 times this round', { exact: true })).toBeVisible();
+  await expect(
+    page.getByText('More lessons do not add speed or strength.', { exact: false }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: '.local/screenshots/playbook-diagnostics-mock.png',
+    fullPage: true,
+  });
+});

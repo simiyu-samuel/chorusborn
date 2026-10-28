@@ -54,7 +54,7 @@ describe('local studio boundaries', () => {
     const overlayPath = initial.json().overlayPath as string;
     const overlay = await app.inject(overlayPath.replace('/overlay?', '/api/demo/overlay?'));
     expect(overlay.statusCode).toBe(200);
-    expect(overlay.json().world.engineVersion).toBe('core-run/0.2.0');
+    expect(overlay.json().world.engineVersion).toBe('core-run/0.3.0');
     expect(overlay.json().overlayPath).toBeUndefined();
     const id = new URL(overlayPath, 'http://localhost').searchParams.get('studio')!;
     expect(

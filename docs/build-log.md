@@ -516,6 +516,59 @@ independent authority/teaching and shared-match boundaries; repaired browser syn
 and documented the limits. The feature commit supplies this revision. The main build session
 ID still needs verification before submission.
 
+## 2026-10-28 — Fair core claims and inspectable playbook behavior
+
+**Trigger and findings**
+
+The owner reported a real two-account test with repeated 3–0 wins for serleusler despite its
+one-rule book. The live studio showed both verified participants and locked v1/v7 books.
+Read-only saved-book reproduction confirmed the score. Swapping their sides preserved the
+winning *policy*, showing that the balanced retrieval route was slower than the opponent's
+baseline direct approach. Five of the seven owned rules repeated carrying/return behavior;
+only the highest-priority copy controlled that situation. A separate identical-book reproduction
+exposed an engine defect: actor A won 3–0 through array-order pickup priority.
+
+**Changes**
+
+- Engine `core-run/0.3.0` targets cell centers inside pickup range for a between-cell core,
+  mirrors path tie breaks by home side and checks rule arrival using the same interaction range.
+- The closest living eligible claimant picks up; equal-distance claims stay contested until
+  movement/retreat/defeat resolves them. Simultaneous damage and defeats still precede pickup.
+- Arena/overlay show **CORE CONTESTED** for equal living claims. The playbook explains first-rule
+  priority, identifies exact behavior duplicates and reports actual per-round executions only
+  for rules present in the locked book. New unpublished-to-round rules are labeled explicitly.
+- Both saved books remain unchanged. No model call, Twitch chat post or silent adoption was made.
+  The dev watcher restarted for the ruleset update, ending ephemeral tokens/match; reconnecting
+  both accounts and issuing a new challenge is required. Saved books remain available.
+- Documented the rules and limits in game design, behavior, rivalry, architecture and ADR 021.
+  Earlier engine checkpoints are deliberately incompatible; local stored books remain compatible.
+
+**Verification**
+
+- Full `npm run check` passes **92 tests in 16 files**, formatting, types and production build.
+  The existing shared-renderer chunk-size warning remains.
+- Fairness regressions cover nearest/dead/equal/reversed-storage claimants; identical-book draws
+  and equal cumulative metrics across seeds 0/1/2/42; per-tick mirrored full actor/controller/core
+  state and metrics with different route books; a shield contest that wins on either side; and
+  exact continuation from a contested checkpoint plus rejection of engine 0.2.0 checkpoints.
+- **Three targeted browser flows pass**: two independent mocked-channel teaching/consent/shared
+  rivalry with the contested cue; ordinary proof/adoption/locked round/read-only overlay; and
+  new duplicate/actual-use/next-round diagnostics. Providers are mocked, not a second live match.
+- Visually verified the real retained v7 book and its four duplicate warnings. Screenshots and
+  logs remain ignored under `.local/`. The current server carries the new ruleset.
+- Offline copied-book experiments still give the original 0–3 after the fix, with mirrored
+  scores on swapping sides. A synthetic direct-retrieval addition gives 0–0; direct plus shield
+  gives 3–0 on this one seed/opponent. These experiments did not change persisted books and are
+  not broad evidence of superiority. The training proof still uses the carrier-dilemma fixture.
+
+**Boundaries**
+
+Equal strategies may draw in this symmetric arena; no random or account-specific handicap forces
+a winner. This is a bounded fairness regression, not a completed balance study, holdout suite,
+remote hosting/recovery milestone or guarantee of wins. General conflict analysis, rule disabling,
+rollback and rival-opening proof still remain work. Codex implemented and verified this fix;
+this entry is committed with the corresponding source increment.
+
 ## Future entry template
 
 For each completed milestone, record date, feature/acceptance IDs, commit reference, meaningful checks and outcomes, screenshots/replay/evaluation references where appropriate, remaining limitations, and how Codex contributed. Never include secrets or full private session transcripts. Store bulky recordings outside Git and link final authorized artifacts when available.
