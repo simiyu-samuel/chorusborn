@@ -1,8 +1,8 @@
 import { useRef, type RefObject } from 'react';
 import { useFrame } from '@react-three/fiber';
 import type { Group } from 'three';
-import type { ActorId, CombatStudy } from '@chorusborn/contracts';
-import { fighterPose } from './combat-motion.js';
+import type { ActorId } from '@chorusborn/contracts';
+import type { FighterPose } from './combat-motion.js';
 
 type LimbRefs = RefObject<Group | null>[];
 function Limb({
@@ -28,17 +28,7 @@ function Limb({
     </group>
   );
 }
-export function FighterRig({
-  team,
-  study,
-  clock,
-  reducedMotion,
-}: {
-  team: ActorId;
-  study: CombatStudy;
-  clock: RefObject<number>;
-  reducedMotion: boolean;
-}) {
+export function FighterRig({ team, samplePose }: { team: ActorId; samplePose: () => FighterPose }) {
   const body = useRef<Group>(null),
     head = useRef<Group>(null),
     scarf = useRef<Group>(null);
@@ -56,7 +46,7 @@ export function FighterRig({
     dark = violet ? '#28223a' : '#3c2c1b';
   useFrame(() => {
     if (!body.current) return;
-    const p = fighterPose(study, team, clock.current, reducedMotion);
+    const p = samplePose();
     body.current.position.y = 1.3 + p.lift - p.collapse * 0.95;
     body.current.rotation.set(
       p.lean + p.recoil + p.flip,

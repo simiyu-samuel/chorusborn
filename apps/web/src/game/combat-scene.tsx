@@ -3,6 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Group, OrthographicCamera } from 'three';
 import type { CombatStudy } from '@chorusborn/contracts';
 import { FighterRig } from './fighter-rig.js';
+import { fighterPose } from './combat-motion.js';
 
 export type CombatSceneProps = {
   study: CombatStudy;
@@ -93,9 +94,9 @@ function SparringStage(props: CombatSceneProps) {
             <group rotation={[0, actor.id === 'a' ? Math.PI / 2 : -Math.PI / 2, 0]}>
               <FighterRig
                 team={actor.id}
-                study={props.study}
-                clock={clock}
-                reducedMotion={props.reducedMotion}
+                samplePose={() =>
+                  fighterPose(props.study, actor.id, clock.current, props.reducedMotion)
+                }
               />
             </group>
             {actor.shieldUntil > props.tick && actor.health > 0 ? (

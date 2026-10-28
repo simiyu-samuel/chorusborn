@@ -173,5 +173,6 @@ Final art and measured OBS composition remain review gates rather than completed
 The owner requested a stick-fighter style with visible fighting, jumps and acrobatics. The new
 [Combat Lab](combat-direction.md) makes that direction reviewable with articulated Mica/Rook rigs,
 recorded attack/shield/damage timing, airborne kicks, spins, somersaults and reduced-motion/SVG
-fallbacks. It is a separate authored sparring replay; the live arena retains the previous kit.
+fallbacks. Following owner approval, the same geometry kit now runs in live training, branch
+replays and the overlay. The normal arena reacts to confirmed contacts without replay lookahead.
 Actual jumping/dodging advantages remain a mechanics design task, not a cosmetic side effect.

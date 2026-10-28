@@ -38,7 +38,10 @@ If Chromium is already installed, set `CHROMIUM_PATH` to its executable for brow
 ## Game presentation
 
 Core Run now uses the **Relay Garden** scene with original procedural **Mica** and **Rook**
-characters. Training, both replay branches and the read-only overlay use the same renderer.
+stick fighters. Training, both replay branches and the read-only overlay use the same articulated
+fighter kit and renderer. Running, carrying, confirmed strikes, acrobatic recovery, recoil and
+defeat poses follow observed state; no future attack is predicted. Paused replays hold the
+selected contact pose. Matching SVG portraits and compatibility figures keep the same identities.
 Core carrying, shields, hazards, decoys, captures and real lesson-use cues follow server state.
 The renderer never decides movement or match results. Finished rounds show a winner/draw card
 with the final score and recorded possession, damage and lesson-use counts. **Play again**
@@ -58,8 +61,8 @@ Open **http://localhost:5173/combat-lab** for the new slender Mica/Rook fighter 
 kicks, spins, somersaults, shield contact, recoil and defeat poses in a recorded twelve-second
 sparring study. Play, scrub, use half speed or jump directly to a move. This preview has no
 Twitch/model dependency and leaves your live playbook unchanged. Jumps/spins are choreography;
-actual damage, shields and contacts follow the existing simulation. The normal arena keeps its
-current models while this kit is reviewed. See [Combat Lab](docs/combat-direction.md).
+actual damage, shields and contacts follow the existing simulation. The same fighter geometry
+now runs in the normal arena with reactive poses from confirmed contacts. See [Combat Lab](docs/combat-direction.md).
 
 The trace update uses engine `core-run/0.1.1`; earlier full checkpoints are incompatible.
 Stored local playbooks remain compatible. As before, restarting the server requires Twitch

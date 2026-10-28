@@ -360,6 +360,74 @@ preview UI and fallback; tested engine/API/rendering boundaries; found and corre
 render and test disconnect issues; and recorded the limitations. The feature commit supplies
 this revision. The main Codex session ID still needs verification before submission.
 
+## 2026-10-28 — Shared live acrobatic fighter rollout
+
+**Completed**
+
+- Following owner approval of the prototype, replaced the shared arena's earlier rounder
+  models with the articulated Mica/Rook fighter kit. Training, both branch comparisons and
+  the read-only broadcast view use the same geometry. Removed the unused earlier model code;
+  kept core/team primitives. Matching original SVG glyphs supply portraits and compatibility
+  figures in the arena and Combat Lab, without a new dependency or external asset.
+- Added a pure reactive match-pose sampler for running, core carrying, shield guard, confirmed
+  kicks, spinning/airborne/somersault recovery, recoil, defeat and the authoritative winner.
+  It sees only current/past strike records. Contact sparks use the recorded target position
+  and shield flag; hazard damage can cause recoil but never invents an attack. Captures clear
+  old contact/recoil poses, so a reset cannot keep fighting at the previous encounter.
+- Reused the prototype rig through a pose-sampling interface. Combat Lab retains its separate
+  complete-replay anticipation; live matches and normal branch replays never use that lookahead.
+  Live subframe pose time is bounded to two ticks between publications. World position still
+  interpolates only compatible observations; capture/respawn/gap/seek boundaries snap.
+- Separated animation enablement from reduced motion. A paused branch now holds its exact
+  contact pose with on-demand rendering instead of reverting to a reduced-motion guard.
+  Reduced motion still suppresses leaps/spins/flips. Spectator signal loss stops animation;
+  health, cooldowns, core possession, scores, rules and lesson receipts remain server-owned.
+- Updated the README, combat direction, architecture, brand/art direction and ADR 019.
+  No engine/API/schema/persistence change or new gameplay ability is introduced.
+
+**Verification**
+
+- Final `npm run check` passes formatting, TypeScript, **78 tests in 12 files**, and the web
+  production build. New tests cover current/past-only contact admission, determinism/input
+  immutability, bounded subframe sampling, exact paused sampling, accessibility suppression,
+  carrying/shield/damage/defeat/winner poses and capture-reset cleanup. An initial test wrongly
+  assumed the fixture's shield was still active at tick 35; it now explicitly sets a live shield
+  for that isolated presentation case rather than changing the engine's ability duration.
+- A new browser flow uses an actual proof API response, finds a recorded live contact in the
+  baseline branch, seeks to it, checks rendered tick/pose, seeks away and returns, and verifies
+  the coach world and playbook are unchanged. The shared kit remains visible in both branches.
+- The full browser run passes the new combat/branch checks, graphics/context-loss and no-WebGL
+  checks, real-clock full-round/rematch/broadcast checks, mobile studio and mocked Twitch flow.
+  One existing desktop proof assertion used a ten-second dialog deadline while its successful
+  API response took 10.3 seconds. Synchronize that test with the real proof response; its complete
+  teaching/adoption/overlay flow then passes. All **nine browser flows** have passed across
+  these runs. The final capture cleanup is covered by unit checks and a targeted branch-render
+  rerun. No simulation timing, worker timeout or assertion was weakened.
+- Inspected the actual built-in browser's updated studio, portraits and full broadcast arena
+  during a local fixture round. Captures remain ignored under `.local/screenshots`. Restored
+  the existing Twitch chat-read connection after the earlier server restart; the UI confirms
+  **Chat live** and the previously saved playbook/queue remains available. No chat post or
+  model compilation was performed for this step.
+- Shared Three/R3F/rig code remains about 916KB minified/243KB gzip, plus the roughly 16.5KB
+  arena scene; Vite's large-chunk warning remains visible. No sustained OBS/FPS, compressed-video
+  readability or independent audience result is claimed.
+
+**Boundaries and next work**
+
+This advances the local S08/S10/S13 presentation. Acrobatic recovery is cosmetic and reactive
+at confirmed contact; it grants no jump/dodge advantage or added damage. True evasive mechanics
+still need explicit cooldown, hit-window, movement/collision, counterplay and policy contracts
+with mirrored deterministic tests. Camera/contact polish, audience/OBS validation, evaluation
+and holdouts, rollback/history, rivalry and production persistence remain open. No deployment,
+paid resource or submission was created.
+
+**Codex contribution**
+
+Codex integrated the shared rig, state-derived pose sampler, compatibility glyphs and portraits;
+verified match/replay/authority boundaries, fixed pause/reset presentation and test synchronization,
+and recorded limits. The feature commit supplies this revision; submission still needs the
+verified main Codex session ID.
+
 ## Future entry template
 
 For each completed milestone, record date, feature/acceptance IDs, commit reference, meaningful checks and outcomes, screenshots/replay/evaluation references where appropriate, remaining limitations, and how Codex contributed. Never include secrets or full private session transcripts. Store bulky recordings outside Git and link final authorized artifacts when available.

@@ -2,12 +2,15 @@ import { useEffect, useLayoutEffect, useMemo, useRef, type RefObject } from 'rea
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Group, MathUtils, Mesh, OrthographicCamera, Vector3 } from 'three';
 import type { ActorId, World } from '@chorusborn/contracts';
-import { ChampionModel, CoreGem, TEAM, type RigMotion } from './characters.js';
+import { CoreGem, TEAM } from './characters.js';
+import { FighterRig } from './fighter-rig.js';
+import { liveFighterPose, matchStrike } from './combat-motion.js';
 import { Garden, HazardTiles, HomeGate } from './scenery.js';
 import { actorPosition, canInterpolate, recentEvents } from './presentation.js';
 
 type SceneProps = {
   world: World;
+  animate: boolean;
   reducedMotion: boolean;
   lowEffects: boolean;
   markers: RefObject<(HTMLDivElement | null)[]>;
@@ -45,11 +48,13 @@ function RenderReady({ ready }: { ready: () => void }) {
 function Actor({
   index,
   world,
+  animate,
   reducedMotion,
   markers,
 }: {
   index: 0 | 1;
   world: World;
+  animate: boolean;
   reducedMotion: boolean;
   markers: SceneProps['markers'];
 }) {
@@ -64,18 +69,14 @@ function Actor({
   const previousFrame = useRef({ x: actor.x / 1000, z: actor.y / 1000 });
   const angle = useRef(index === 0 ? -0.4 : -0.7),
     phase = useRef(0);
-  const rig = useRef<RigMotion>({
-    moving: 0,
-    carrying: false,
-    defeated: false,
-    hit: 0,
-    celebrating: false,
-    motion: false,
-  });
+  const pose = useRef(liveFighterPose(world, actor.id));
   const projection = useMemo(() => new Vector3(), []);
   useLayoutEffect(() => {
     const continuous =
-      !reducedMotion && world.status === 'running' && canInterpolate(previousWorld.current, world);
+      animate &&
+      !reducedMotion &&
+      world.status === 'running' &&
+      canInterpolate(previousWorld.current, world);
     transition.current = {
       from: continuous ? { ...actor, x: frame.current.x * 1000, y: frame.current.z * 1000 } : actor,
       to: actor,
@@ -83,14 +84,7 @@ function Actor({
       interpolate: continuous,
     };
     previousWorld.current = world;
-  }, [world, actor, reducedMotion]);
-  const captured = world.events.some(
-    (e) =>
-      e.type === 'capture' &&
-      e.actorId === actor.id &&
-      world.tick >= e.tick &&
-      world.tick - e.tick < 16,
-  );
+  }, [world, actor, animate, reducedMotion]);
   useFrame(({ camera, size }, delta) => {
     if (!root.current || !facing.current) return;
     const t = transition.current;
@@ -99,17 +93,22 @@ function Actor({
     const dx = p.x - previousFrame.current.x,
       dz = p.z - previousFrame.current.z;
     const moving = Math.min(1, Math.hypot(dx, dz) / Math.max(0.001, delta) / 5);
-    if (moving > 0.04) angle.current = Math.atan2(dx, dz);
-    const motion = !reducedMotion && world.status === 'running';
+    const contact = matchStrike(world, actor.id);
+    if (contact?.type === 'strike')
+      angle.current = Math.atan2(contact.to.x - contact.from.x, contact.to.y - contact.from.y);
+    else if (moving > 0.04) angle.current = Math.atan2(dx, dz);
+    const motion = animate && !reducedMotion && world.status === 'running';
     phase.current += motion ? delta : 0;
-    rig.current = {
-      moving: motion ? moving : 0,
-      carrying: world.core.carrier === actor.id,
-      defeated: actor.health <= 0,
-      hit: world.tick - actor.lastDamageAt < 5 ? 1 : 0,
-      celebrating: captured || (world.status === 'finished' && world.winner === actor.id),
-      motion,
-    };
+    const sampledTick =
+      world.tick + (motion ? Math.min(2, (performance.now() - t.started) / 50) : 0);
+    const travelled = Math.abs(t.to.x - t.from.x) + Math.abs(t.to.y - t.from.y);
+    pose.current = liveFighterPose(
+      world,
+      actor.id,
+      sampledTick,
+      motion && t.interpolate ? Math.min(1, travelled / 500) : 0,
+      reducedMotion,
+    );
     root.current.position.set(p.x, actor.health <= 0 ? -0.15 : 0, p.z);
     // Smooth orientation only, never movement beyond received positions.
     if (motion)
@@ -120,18 +119,21 @@ function Actor({
         ) -
           Math.PI) *
         Math.min(1, delta * 14);
-    else if (reducedMotion) facing.current.rotation.y = angle.current;
+    else facing.current.rotation.y = angle.current;
     root.current.visible = actor.health > 0 || world.tick - actor.lastDamageAt < 10;
     if (shield.current) {
       shield.current.visible = actor.shieldUntil > world.tick;
-      shield.current.scale.setScalar(motion ? 1 + Math.sin(phase.current * 3) * 0.025 : 1);
+      const pulse = motion ? 1 + Math.sin(phase.current * 3) * 0.025 : 1;
+      shield.current.scale.set(pulse, pulse * 1.6, pulse);
     }
     if (shadow.current) shadow.current.scale.setScalar(actor.health > 0 ? 1 : 0.6);
-    projection.set(p.x, 4.5, p.z).project(camera);
+    projection.set(p.x, 4.9, p.z).project(camera);
     const marker = markers.current[index];
     if (marker) {
       marker.style.transform = `translate(${(projection.x * 0.5 + 0.5) * size.width}px,${(-projection.y * 0.5 + 0.5) * size.height}px) translate(-50%,-100%)`;
       marker.style.opacity = actor.health > 0 ? '1' : '.55';
+      marker.dataset.pose = pose.current.move;
+      marker.dataset.renderedTick = String(world.tick);
     }
     frame.current = p;
     previousFrame.current = p;
@@ -147,14 +149,21 @@ function Actor({
         <meshBasicMaterial color={TEAM[actor.id]} transparent opacity={0.85} />
       </mesh>
       <group ref={facing} rotation={[0, index === 0 ? -0.4 : -0.7, 0]}>
-        <ChampionModel team={actor.id} motion={rig} />
+        <group scale={1.2}>
+          <FighterRig team={actor.id} samplePose={() => pose.current} />
+        </group>
         {world.core.carrier === actor.id && actor.health > 0 ? (
-          <group position={[0, 1.48, 1.04]}>
-            <CoreGem small motion={!reducedMotion && world.status === 'running'} />
+          <group position={[0, 1.9, 0.9]}>
+            <CoreGem small motion={animate && !reducedMotion && world.status === 'running'} />
           </group>
         ) : null}
       </group>
-      <mesh ref={shield} position={[0, 1.8, 0]} visible={actor.shieldUntil > world.tick}>
+      <mesh
+        ref={shield}
+        position={[0, 1.8, 0]}
+        scale={[1, 1.6, 1]}
+        visible={actor.shieldUntil > world.tick}
+      >
         <sphereGeometry args={[1.15, 20, 14]} />
         <meshStandardMaterial
           color="#8ce5ed"
@@ -231,6 +240,37 @@ function EventEffects({ world, reducedMotion }: { world: World; reducedMotion: b
   return (
     <>
       {recentEvents(world, 18).map((event) => {
+        if (event.type === 'strike') {
+          if (reducedMotion || world.tick - event.tick >= 5) return null;
+          const age = (world.tick - event.tick) / 5;
+          return (
+            <group
+              key={`${event.tick}-${event.actorId}-strike`}
+              position={[event.to.x / 1000, 1.8, event.to.y / 1000]}
+            >
+              {[0, 1, 2, 3].map((i) => (
+                <mesh
+                  key={i}
+                  position={[
+                    Math.cos((i * Math.PI) / 2) * 0.4,
+                    Math.sin((i * Math.PI) / 2) * 0.4,
+                    0,
+                  ]}
+                  rotation={[0, 0, (i * Math.PI) / 2]}
+                  scale={1 + age}
+                >
+                  <boxGeometry args={[0.45, 0.09, 0.09]} />
+                  <meshBasicMaterial
+                    color={event.shielded ? '#9deaff' : '#fff0bf'}
+                    transparent
+                    opacity={1 - age}
+                    depthWrite={false}
+                  />
+                </mesh>
+              ))}
+            </group>
+          );
+        }
         if (event.type !== 'capture' && event.type !== 'pickup' && event.type !== 'defeat')
           return null;
         const actor = world.champions.find((c) => c.id === event.actorId)!;
@@ -291,11 +331,16 @@ function ObjectMarkers({ world, markers }: { world: World; markers: SceneProps['
 }
 function Stage({
   world,
+  animate,
   reducedMotion,
   lowEffects,
   markers,
   onReady,
 }: Omit<SceneProps, 'onUnavailable'>) {
+  const invalidate = useThree((state) => state.invalidate);
+  useLayoutEffect(() => {
+    invalidate();
+  }, [world, animate, reducedMotion, lowEffects, invalidate]);
   return (
     <>
       <color attach="background" args={['#172628']} />
@@ -337,10 +382,22 @@ function Stage({
         />
       ))}
       <HazardTiles world={world} />
-      <Core world={world} reducedMotion={reducedMotion} />
+      <Core world={world} reducedMotion={reducedMotion || !animate} />
       <Decoys world={world} />
-      <Actor index={0} world={world} reducedMotion={reducedMotion} markers={markers} />
-      <Actor index={1} world={world} reducedMotion={reducedMotion} markers={markers} />
+      <Actor
+        index={0}
+        world={world}
+        animate={animate}
+        reducedMotion={reducedMotion}
+        markers={markers}
+      />
+      <Actor
+        index={1}
+        world={world}
+        animate={animate}
+        reducedMotion={reducedMotion}
+        markers={markers}
+      />
       <EventEffects world={world} reducedMotion={reducedMotion || lowEffects} />
       <RenderReady ready={onReady} />
     </>
@@ -362,7 +419,11 @@ export default function GameScene(props: SceneProps) {
     <Canvas
       ref={canvas}
       orthographic
-      frameloop={props.world.status === 'running' && !props.reducedMotion ? 'always' : 'demand'}
+      frameloop={
+        props.animate && props.world.status === 'running' && !props.reducedMotion
+          ? 'always'
+          : 'demand'
+      }
       camera={{ near: 0.1, far: 160, zoom: 1 }}
       shadows={!props.lowEffects}
       dpr={props.lowEffects ? 1 : [1, 1.5]}

@@ -165,3 +165,12 @@ frames, contacts and source/final hashes; it never reads or changes a user's stu
 Twitch or arbitrary scenario input is involved. `/combat-lab` samples known replay contacts for
 pure deterministic choreography, with a separate lazy 3D scene and SVG compatibility rendering.
 See [Combat Lab](combat-direction.md) for timing and the future live-animation boundary.
+
+### Shared acrobatic fighter rollout
+
+The shared arena now uses the same articulated `FighterRig` as Combat Lab. Its pose sampler
+reads the current `World`, observed movement and only past/current strike records. Combat Lab
+retains its separate complete-replay sampler. Match/replay poses never look ahead or feed back
+into the engine. Subframe pose time is bounded to two ticks; paused snapshots sample exactly.
+Animation enablement is separate from accessibility reduction so paused branch contacts retain
+their chosen pose. SVG fallback and portraits use an original matching `FighterGlyph`.

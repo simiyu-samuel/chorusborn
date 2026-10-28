@@ -1,5 +1,7 @@
 import { useId } from 'react';
 import type { Champion, World } from '@chorusborn/contracts';
+import { liveFighterPose } from './combat-motion.js';
+import { FighterGlyph } from './fighter-glyph.js';
 
 const project = (x: number, y: number, height = 0) => ({
   x: 440 + (x - y) * 19,
@@ -13,31 +15,15 @@ const tile = (x: number, y: number, height = 0) => [
   project(x, y + 1, height),
 ];
 
-function ChampionGlyph({ color }: { color: string }) {
-  return (
-    <>
-      <ellipse cx="60" cy="104" rx="32" ry="8" fill="#000" opacity=".25" />
-      <path d="M29 74 39 96 60 104 81 96 91 74 60 64Z" fill={color} opacity=".55" />
-      <path d="m32 44 10-18 18-7 18 7 10 18-5 37-23 12-23-12Z" fill={color} />
-      <path d="M39 45Q60 34 81 45L79 68Q60 81 41 68Z" fill="#252539" />
-      <path d="M48 55h4m16 0h4" stroke="#f8f7ff" strokeWidth="5" strokeLinecap="round" />
-      <path d="M56 68h8" stroke={color} strokeWidth="3" strokeLinecap="round" />
-      <path d="m32 44-7-12m63 12 7-12" stroke={color} strokeWidth="6" strokeLinecap="round" />
-      <path d="m47 89-6 13m32-13 6 13" stroke={color} strokeWidth="8" strokeLinecap="round" />
-      <path d="m54 25 6-10 6 10-6 9Z" fill="#e4dbff" />
-    </>
-  );
-}
-
-export function ChampionPortrait({ color = '#b7a0fb' }: { color?: string }) {
-  return (
-    <svg className="portrait" viewBox="0 0 120 120" aria-hidden="true">
-      <ChampionGlyph color={color} />
-    </svg>
-  );
-}
-
-function ChampionSprite({ actor, world }: { actor: Champion; world: World }) {
+function ChampionSprite({
+  actor,
+  world,
+  reducedMotion,
+}: {
+  actor: Champion;
+  world: World;
+  reducedMotion: boolean;
+}) {
   const p = project(actor.x / 1000, actor.y / 1000);
   const color = actor.id === 'a' ? '#b9a4ff' : '#f3b878';
   const carrying = world.core.carrier === actor.id;
@@ -60,8 +46,11 @@ function ChampionSprite({ actor, world }: { actor: Champion; world: World }) {
           strokeWidth="2"
         />
       ) : null}
-      <g transform="translate(-30 -57) scale(.5)">
-        <ChampionGlyph color={color} />
+      <g transform={`scale(${actor.id === 'a' ? 0.35 : -0.35} .35)`}>
+        <FighterGlyph
+          pose={liveFighterPose(world, actor.id, world.tick, 0, reducedMotion)}
+          team={actor.id}
+        />
       </g>
       <rect x="-22" y="-64" width="44" height="4" rx="2" fill="#11141c" />
       <rect x="-22" y="-64" width={(44 * actor.health) / 100} height="4" rx="2" fill={color} />
@@ -89,9 +78,11 @@ function ChampionSprite({ actor, world }: { actor: Champion; world: World }) {
 export function ArenaFallback({
   world,
   label = 'Core Run arena',
+  reducedMotion = false,
 }: {
   world: World;
   label?: string;
+  reducedMotion?: boolean;
 }) {
   const prefix = useId().replaceAll(':', '');
   const outline = [project(0, 0), project(32, 0), project(32, 18), project(0, 18)];
@@ -241,7 +232,12 @@ export function ArenaFallback({
       {world.champions
         .toSorted((a, b) => a.x + a.y - b.x - b.y)
         .map((actor) => (
-          <ChampionSprite key={actor.id} actor={actor} world={world} />
+          <ChampionSprite
+            key={actor.id}
+            actor={actor}
+            world={world}
+            reducedMotion={reducedMotion}
+          />
         ))}
       <text x="110" y="600" fill="#627265" fontSize="10" letterSpacing="2.5">
         CARRIER DILEMMA / SEED {world.seed}

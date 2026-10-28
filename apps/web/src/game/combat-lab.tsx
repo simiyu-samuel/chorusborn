@@ -1,56 +1,12 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Play, Pause, RotateCcw, Swords, SkipForward, Sparkles } from 'lucide-react';
-import type { CombatStudy, ActorId } from '@chorusborn/contracts';
+import type { CombatStudy } from '@chorusborn/contracts';
 import { canUseWebGL, GraphicsBoundary } from '../arena.js';
 import { fighterPose } from './combat-motion.js';
+import { FighterGlyph } from './fighter-glyph.js';
 import './combat-lab.css';
 const CombatScene = lazy(() => import('./combat-scene.js'));
 
-function LineFighter({
-  study,
-  tick,
-  team,
-  reduced,
-}: {
-  study: CombatStudy;
-  tick: number;
-  team: ActorId;
-  reduced: boolean;
-}) {
-  const p = fighterPose(study, team, tick, reduced),
-    scale = team === 'a' ? 1 : -1,
-    color = team === 'a' ? '#7751b5' : '#ac6d22';
-  const point = (angle: number, length: number) => [
-    Math.sin(-angle) * length,
-    Math.cos(angle) * length,
-  ];
-  const limb = (x: number, y: number, upper: number, lower: number) => {
-    const a = point(upper, 28),
-      b = point(upper + lower, 28);
-    return `${x},${y} ${x + a[0]!},${y + a[1]!} ${x + a[0]! + b[0]!},${y + a[1]! + b[1]!}`;
-  };
-  return (
-    <g
-      transform={`translate(${team === 'a' ? 225 : 375} ${285 - p.lift * 65}) scale(${scale} 1)`}
-      stroke={color}
-      strokeWidth="12"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      fill="none"
-    >
-      <g
-        transform={`translate(0 -80) rotate(${p.collapse * 80 + (p.flip * 180) / Math.PI}) scale(${Math.cos(p.spin)} 1) translate(0 80)`}
-      >
-        <circle cy="-142" r="22" fill={color} />
-        <path d="M0-111V-51" />
-        <polyline points={limb(0, -103, p.leftArm, p.leftElbow)} />
-        <polyline points={limb(0, -103, p.rightArm, p.rightElbow)} />
-        <polyline points={limb(0, -51, p.leftLeg, p.leftKnee)} />
-        <polyline points={limb(0, -51, p.rightLeg, p.rightKnee)} />
-      </g>
-    </g>
-  );
-}
 export function CombatLab() {
   const [study, setStudy] = useState<CombatStudy | null>(null),
     [error, setError] = useState<string | null>(null),
@@ -122,8 +78,12 @@ export function CombatLab() {
   const fallback = study ? (
     <div className="combat-compatible">
       <svg viewBox="0 0 600 340" aria-hidden="true">
-        <LineFighter study={study} tick={tick} team="a" reduced={reduced} />
-        <LineFighter study={study} tick={tick} team="b" reduced={reduced} />
+        <g transform="translate(225 285)">
+          <FighterGlyph pose={fighterPose(study, 'a', tick, reduced)} team="a" />
+        </g>
+        <g transform="translate(375 285) scale(-1 1)">
+          <FighterGlyph pose={fighterPose(study, 'b', tick, reduced)} team="b" />
+        </g>
       </svg>
       <small>Compatibility view · 3D unavailable</small>
     </div>

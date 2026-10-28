@@ -14,7 +14,12 @@ test('coach proves, adopts, starts a pinned round and shares a read-only overlay
   await expect(
     page.getByText('Groq compiler ready. Connect Twitch to teach from chat.', { exact: false }),
   ).toBeVisible();
+  const proofResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith('/api/demo/trials') && response.request().method() === 'POST',
+  );
   await page.getByRole('button', { name: 'Prove this lesson', exact: true }).click();
+  expect((await proofResponse).ok()).toBe(true);
   const comparison = page.getByRole('dialog');
   await expect(comparison).toBeVisible();
   await expect(comparison.getByText('Same starting state. One changed playbook.')).toBeVisible();

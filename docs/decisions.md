@@ -73,6 +73,13 @@ semantics, paused rendering, reduced motion and missing-WebGL checks supply loca
 Live kit rollout, tactical acrobatics, OBS measurements and audience validation remain open.
 See [combat direction](combat-direction.md).
 
+Owner approval on October 28 moves the geometry kit into the shared arena. Use a separate
+reactive sampler for live and branch worlds: only recorded contacts trigger attacks, followed
+by visual recovery. Keep replay lookahead exclusive to Combat Lab. Separate paused animation
+from reduced motion, and reuse matching SVG glyphs in portraits/fallback. This is a presentation
+rollout within S08/S10/S13; it adds no jump/dodge gameplay mechanic or new engine contract.
+
+
 ## Product risks
 
 | Risk | Signal | Response / validation |

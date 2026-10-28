@@ -2,7 +2,8 @@
 
 Status: **implemented visual prototype, October 28, 2026**. Open `/combat-lab`, or follow
 **Combat lab** from the studio. This is a separate, fixed sparring replay for reviewing a
-new fighter kit. Live training/replay/OBS retain their current champion models pending review.
+new fighter kit. Following owner approval, that articulated kit also renders in live training,
+branch comparisons and the read-only overlay, with matching portraits and SVG compatibility.
 
 ## Direction
 
@@ -61,11 +62,34 @@ Jump/spin variants never feed back into simulation. Paused scrubbing explicitly 
 the demand renderer; a frame marker verifies the 3D pose was drawn, rather than only the HUD.
 This replay lookahead is not a live opponent-prediction feature.
 
+## Shared arena rollout (October 28)
+
+The same `FighterRig` now receives a pose sampler in both Combat Lab and the shared arena.
+The normal arena uses `liveFighterPose(World, actor, presentationTick, moving, reduced)`.
+Unlike the fixed study, it does not inspect future frames: a recorded strike starts an extended
+kick followed by a twelve-tick airborne/spin/somersault recovery. Contact flashes use that
+strike's recorded target position and shield flag. Recoil can also follow actual hazard damage;
+it does not manufacture an attack event. Captures clear pre-reset contact/recoil choreography.
+Travel interpolates only consecutive observed positions,
+and recent contact direction faces the fighter toward the recorded opponent.
+
+Between normal live publications, pose time advances at most two ticks. It resets on every
+new snapshot, gap or seek, with no extra model/gameplay state. Paused frames sample exactly;
+replay pause and spectator signal loss disable animation separately from the user's reduced-
+motion setting. This preserves the selected static fight pose on pause while accessibility
+settings suppress the acrobatics themselves. Winner, carrying, shield and defeat poses remain
+state-derived. All score, health, cooldown, movement and attribution data stay server-owned.
+
+The earlier rounder model code has been removed. Original SVG fighter glyphs now share the
+same pose data in the fallback and Combat Lab, and supply matching static portraits. No new
+dependency, engine version, server endpoint, stored rule or Twitch/model permission is needed.
+Full-arena scale and broadcast readability still need independent viewer/OBS validation.
+
 ## Still required
 
-- Review this kit at actual match scale before replacing all live characters.
-- Adapt readable live anticipation using an explicit presentation buffer/event schedule;
-  a live renderer must not assume future strikes exist.
+- Refine this kit at actual match scale with audience playtesting.
+- The current live renderer reacts after confirmed contact. Any pre-contact live anticipation
+  still needs a presentation buffer or explicit attack schedule; it cannot assume future hits.
 - Define actual jump/dodge/acrobatics mechanics separately if selected: cooldown, duration,
   movement/collision, legal hit windows, counterplay, policy grammar, complete snapshots and
   mirrored scenario tests. Current compiler requests for unsupported mechanics stay unsupported.

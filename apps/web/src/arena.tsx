@@ -93,7 +93,7 @@ export function Arena({
     [ready, setReady] = useState(false);
   const settings = useVisualSettings(),
     sound = useArenaSound(world, interactive && !suspended);
-  const reducedMotion = settings.reducedMotion || !animate;
+  const reducedMotion = settings.reducedMotion;
   const markers = useRef<(HTMLDivElement | null)[]>([]);
   const unavailable = useCallback(() => setAvailable(false), []),
     renderReady = useCallback(() => setReady(true), []);
@@ -102,7 +102,7 @@ export function Arena({
   const summary = `${label}. Mica ${world.champions[0].score}, Rook ${world.champions[1].score}. ${world.status}. ${world.core.carrier === null ? 'Core available.' : `${world.core.carrier === 'a' ? 'Mica' : 'Rook'} carrying core.`}`;
   const fallback = (
     <div className="graphics-fallback">
-      <ArenaFallback world={world} label={label} />
+      <ArenaFallback world={world} label={label} reducedMotion={reducedMotion} />
       <span>Compatibility view · 3D graphics unavailable</span>
     </div>
   );
@@ -110,7 +110,8 @@ export function Arena({
     <div
       className="game-view"
       data-renderer={suspended ? 'suspended' : available && ready ? 'webgl' : 'compatibility'}
-      data-motion={reducedMotion ? 'reduced' : 'full'}
+      data-fighter-kit="acrobat-v1"
+      data-motion={reducedMotion || !animate ? 'reduced' : 'full'}
     >
       <div className="arena-presentation">
         <div className="game-viewport" role="img" aria-label={summary}>
@@ -121,6 +122,7 @@ export function Arena({
               <Suspense fallback={<div className="graphics-loading">Opening Relay Garden…</div>}>
                 <GameScene
                   world={world}
+                  animate={animate}
                   reducedMotion={reducedMotion}
                   lowEffects={settings.lowEffects || mode === 'replay'}
                   markers={markers}
