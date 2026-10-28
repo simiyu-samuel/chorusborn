@@ -140,3 +140,16 @@ adopted book and sets it running before publishing. Concurrent rematches produce
 start and one 409; unfinished worlds receive 409 unchanged. It does not store match history,
 create rivalry, alter an existing match's book, or grant overlay keys coach authority. The world
 and metrics remain ephemeral; this is not the future durable match API described above.
+
+## Combat preview (implemented)
+
+`GET /api/demo/combat-study` returns a fixed `sparring-v1` replay: `ticksPerSecond: 20`,
+`sourceHash`, `finalHash`, 241 complete `frames` and recorded `strikes`. It accepts no user-supplied
+scenario, requires no coach authority, and exposes no private studio/channel data. Generation
+shares one cached worker job; initial worker-cap pressure returns 429 and generation failure
+returns a sanitized 503. It is a local authored preview, not the evaluation suite or match API.
+
+Engine 0.1.1's `strike` event records `tick`, `actorId`, `targetId`, integer `from`/`to` positions,
+`damage` after shield reduction, `shielded`, and a display `text`. Damage is an attack contribution
+under existing overkill accounting. Event history remains bounded to forty entries in each world;
+the study separately collects every strike over its fixed interval.

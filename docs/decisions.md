@@ -54,6 +54,25 @@ on initialization failure/context loss. Keep an explicit SVG compatibility path 
 make unsupported hardware lose the coach workflow. This advances S10/S13; sustained OBS,
 compressed-video readability and independent viewer validation remain release gates.
 
+### ADR 019 — 2026-10-28: review acrobatics in a recorded Combat Lab
+
+The owner requested stick-fighter silhouettes, visible kicks, jumps and acrobatics. Build a
+separate `/combat-lab` movement study before replacing the shared live champion kit. Keep
+Mica/Rook identity cues and author articulated geometry and compatibility SVGs in code.
+This lets the owner inspect motion close up while the live teaching and match flow remains usable.
+
+Record legal tag contacts in the authoritative engine and bump its trace version to 0.1.1;
+old full checkpoints are rejected, while local playbooks remain compatible. A bounded worker
+runs one fixed twelve-second sparring fixture. The presentation samples that complete replay,
+including anticipation before known contacts. It never changes damage, hit range, cooldowns,
+shield rules or invulnerability. Actual jump/dodge mechanics require a separate rules and policy
+contract; live anticipation needs a buffer or scheduled events instead of replay lookahead.
+
+This advances the visual exploration within S08/S10/S13. Deterministic frame replay, contact
+semantics, paused rendering, reduced motion and missing-WebGL checks supply local evidence.
+Live kit rollout, tactical acrobatics, OBS measurements and audience validation remain open.
+See [combat direction](combat-direction.md).
+
 ## Product risks
 
 | Risk | Signal | Response / validation |

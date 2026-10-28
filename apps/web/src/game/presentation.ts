@@ -64,7 +64,7 @@ export function intentCue(world: World, actorId: ActorId) {
   return actor.intent === 'Ready' ? 'Ready to run' : actor.intent;
 }
 
-// Presentation of the pinned core-run/0.1.0 rules; the server determines the result.
+// Presentation of the pinned core-run/0.1.x rules; the server determines the result.
 export function roundResult(world: World) {
   if (world.status !== 'finished' || world.winner === null) return null;
   const winner =

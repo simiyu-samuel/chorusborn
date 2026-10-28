@@ -292,6 +292,74 @@ presentation; tested the authority/concurrency boundary and actual full-round br
 fixed the static-scene projection issue; and recorded the limits. The feature commit gives the
 revision; the main Codex session ID still requires verification before submission.
 
+## 2026-10-28 — Acrobatic fighter Combat Lab
+
+**Completed**
+
+- Added `/combat-lab` and its studio link as a separate movement prototype. New original
+  articulated Mica/Rook geometry uses long limbs, recognizable team accents and hip-centered
+  rotations for airborne kicks, spinning strikes, somersaults, recoil and defeat poses.
+  The owner's stick-fighting image informs the direction; no reference pixels are bundled.
+- Added a fixed twelve-second sparring study generated through 240 ordinary simulation ticks
+  in a bounded worker, with 241 full states, source/final hashes and all recorded contacts.
+  Generation shares the two-worker admission cap, caches one promise/result and does not read
+  or mutate the coach's playbook, Twitch channel or live world.
+- Added authoritative `strike` records for existing legal attacks, including attacker, target,
+  integer positions, post-shield damage contribution and shield status. Engine trace version
+  is now `core-run/0.1.1`. Movement, attack cooldown/range, health, captures and match rules
+  are unchanged. Older full engine checkpoints are rejected; stored local playbooks remain
+  compatible. Twitch tokens remain memory-only and need reconnection after server restart.
+- Added playback, half speed, keyboard-accessible scrubbing and move bookmarks, health/contact
+  cues, reduced motion and an original SVG compatibility view. The preview is silent. Normal
+  training, branching replay and broadcast retain the existing champion kit pending review.
+- Documented replay lookahead and the boundary between visual choreography and actual
+  jump/dodge mechanics in ADR 019 and the combat direction specification.
+
+**Verification**
+
+- `npm run check` passes formatting, TypeScript, **74 tests across 12 files** and the web build.
+  New checks verify legal contact/range/cooldown/shield semantics, simultaneous damage, source
+  immutability, every study frame reproduced through ordinary `step`, deterministic hashes,
+  defeat/respawn, old-checkpoint rejection, cached fixture isolation and reduced-motion poses.
+  TypeScript, formatting and the production build also pass after the final joint/pivot polish.
+- The new two-flow browser coverage verifies rendered WebGL poses after paused seeking,
+  recorded shield damage, playback, reduced motion, defeat, 390px overflow and missing-WebGL
+  compatibility. A visual inspection caught a paused-seek issue: only the HUD initially changed.
+  Explicit demand-frame invalidation fixes it; a rendered-frame marker guards that regression.
+- The wider browser run passed the two new combat checks, both existing graphics/fallback
+  checks and two existing studio checks. It exposed a test-only broadcast disconnect bug:
+  the injected socket wrapper also closed Vite's development socket, triggering a page reload.
+  Scope the injected disconnect to `/ws/demo`; the full real-clock round/rematch/stale-frame
+  flow then passes. The desktop studio and mocked OAuth flows also exhausted their 45-second total budgets
+  on this graphics-loaded host; give those multi-step flows 90 seconds without weakening
+  assertions. A later mocked-intake check caught an ingress race in the test: await visible
+  `Chat live` confirmation after Resume before emitting the next fixture event.
+- Final targeted regressions pass the full real-clock round/rematch flow, desktop and mobile
+  studio flows, and mocked Twitch teaching/compile/proof/adoption/moderation/disconnect flow
+  (52.9 seconds). Together with the final combat and graphics/fallback checks, all **eight
+  browser flows** have passed across these verification runs. No production application
+  source changed after those successful checks.
+- Inspected the actual built-in-browser preview playing and paused on the airborne somersault.
+  Desktop/mobile captures and regression traces remain ignored under local artifact folders.
+  No FPS, sustained OBS result, opponent prediction or independent viewer validation is claimed.
+  The shared Three/R3F chunk remains about 912KB minified/242KB gzip and keeps Vite's size warning.
+
+**Boundaries and next work**
+
+This is a fixed animation study, not a live rival match or final game art. Leaps and rotations
+have no new hit avoidance, damage, movement or cooldown effect. Live anticipation, kit rollout,
+contact refinement, actual jump/dodge rules and policy support, OBS measurements and audience
+playtesting remain open. Full evaluation/holdouts, rollback, rivalry and production persistence
+also remain required for the release. No model request, real chat post, deployment or submission
+was performed for this increment.
+
+**Codex contribution**
+
+Codex authored the contact trace, deterministic study, original fighter geometry/choreography,
+preview UI and fallback; tested engine/API/rendering boundaries; found and corrected the paused
+render and test disconnect issues; and recorded the limitations. The feature commit supplies
+this revision. The main Codex session ID still needs verification before submission.
+
 ## Future entry template
 
 For each completed milestone, record date, feature/acceptance IDs, commit reference, meaningful checks and outcomes, screenshots/replay/evaluation references where appropriate, remaining limitations, and how Codex contributed. Never include secrets or full private session transcripts. Store bulky recordings outside Git and link final authorized artifacts when available.

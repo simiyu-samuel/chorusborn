@@ -540,6 +540,9 @@ export function App() {
             About this build <ArrowUpRight size={14} />
           </button>
         </div>
+        <a className="combat-lab-link" href="/combat-lab">
+          <Swords size={16} /> Combat lab <ArrowUpRight size={13} />
+        </a>
         <div className="sidebar-bottom">
           <button onClick={() => setSettings(true)}>
             <Settings2 size={17} />

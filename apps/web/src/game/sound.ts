@@ -6,19 +6,21 @@ import { isNewRoundResult, newSoundEvents } from './presentation.js';
 function tone(context: AudioContext, type: GameEvent['type'] | 'victory' | 'draw') {
   if (context.state !== 'running') return;
   const notes =
-    type === 'victory'
-      ? [392, 493.88, 587.33, 784]
-      : type === 'draw'
-        ? [392, 440, 392]
-        : type === 'capture'
-          ? [392, 523.25, 659.25]
-          : type === 'pickup'
-            ? [523.25, 784]
-            : type === 'shield'
-              ? [330, 440]
-              : type === 'defeat'
-                ? [220, 146.83]
-                : [440];
+    type === 'strike'
+      ? [98]
+      : type === 'victory'
+        ? [392, 493.88, 587.33, 784]
+        : type === 'draw'
+          ? [392, 440, 392]
+          : type === 'capture'
+            ? [392, 523.25, 659.25]
+            : type === 'pickup'
+              ? [523.25, 784]
+              : type === 'shield'
+                ? [330, 440]
+                : type === 'defeat'
+                  ? [220, 146.83]
+                  : [440];
   const start = context.currentTime;
   notes.forEach((frequency, i) => {
     const oscillator = context.createOscillator(),

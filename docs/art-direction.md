@@ -167,3 +167,11 @@ pinned book and actual cumulative round stats; guarded one-click rematch; match-
 seconds cues; opt-in new-result sound; and a labeled, cosmetically frozen spectator frame on
 connection loss. The same banner appears in the read-only overlay without coach controls.
 Final art and measured OBS composition remain review gates rather than completed claims.
+
+### Acrobatic fighter direction — October 28
+
+The owner requested a stick-fighter style with visible fighting, jumps and acrobatics. The new
+[Combat Lab](combat-direction.md) makes that direction reviewable with articulated Mica/Rook rigs,
+recorded attack/shield/damage timing, airborne kicks, spins, somersaults and reduced-motion/SVG
+fallbacks. It is a separate authored sparring replay; the live arena retains the previous kit.
+Actual jumping/dodging advantages remain a mechanics design task, not a cosmetic side effect.

@@ -52,6 +52,19 @@ or lost graphics contexts show a labeled SVG compatibility view while game contr
 available. The first scene is a playable visual slice; the concept's final art fidelity and
 OBS performance/readability gates remain work. See [art direction](docs/art-direction.md).
 
+### Acrobatic fighter preview
+
+Open **http://localhost:5173/combat-lab** for the new slender Mica/Rook fighter kit: aerial
+kicks, spins, somersaults, shield contact, recoil and defeat poses in a recorded twelve-second
+sparring study. Play, scrub, use half speed or jump directly to a move. This preview has no
+Twitch/model dependency and leaves your live playbook unchanged. Jumps/spins are choreography;
+actual damage, shields and contacts follow the existing simulation. The normal arena keeps its
+current models while this kit is reviewed. See [Combat Lab](docs/combat-direction.md).
+
+The trace update uses engine `core-run/0.1.1`; earlier full checkpoints are incompatible.
+Stored local playbooks remain compatible. As before, restarting the server requires Twitch
+reconnection because tokens are memory-only.
+
 ## Twitch application registration
 
 First channel: **developersimiyu**. The owner has created the developer app. Register **`http://localhost:3001/auth/twitch/callback`** as the exact redirect URI, choose **Game Integration** and **Confidential**, and put the Client ID/secret into the ignored `.env` using `.env.example` as a template. The server loads it on startup; restart after editing credentials.

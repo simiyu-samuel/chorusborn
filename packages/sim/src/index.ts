@@ -12,9 +12,11 @@ import {
   type Snapshot,
   type TrialBranch,
   type World,
+  type CombatStudy,
+  type StrikeEvent,
 } from '@chorusborn/contracts';
 
-export const ENGINE_VERSION = 'core-run/0.1.0' as const;
+export const ENGINE_VERSION = 'core-run/0.1.1' as const;
 export const TICKS_PER_SECOND = 20;
 export const MATCH_TICKS = 60 * TICKS_PER_SECOND;
 const HOME_A = { x: 2500, y: 9500 };
@@ -343,8 +345,11 @@ export function step(input: World): World {
       ? plan(world, actor, world.champions[index === 0 ? 1 : 0])
       : null,
   );
-  const event = (type: World['events'][number]['type'], actor: Champion, text: string) =>
-    world.events.push({ tick: world.tick, type, actorId: actor.id, text });
+  const event = (
+    type: Exclude<World['events'][number]['type'], 'strike'>,
+    actor: Champion,
+    text: string,
+  ) => world.events.push({ tick: world.tick, type, actorId: actor.id, text });
   if (world.tick % 4 === 0) {
     const moves = plans.map((choice) => choice?.waypoint ?? null);
     for (const [i, actor] of world.champions.entries()) {
@@ -379,6 +384,19 @@ export function step(input: World): World {
     if (actor.health <= 0) continue;
     if (enemy.health > 0 && distance(actor, enemy) <= 1000 && actor.attackReadyAt <= world.tick) {
       damage[enemyIndex]! += 20;
+      // Trace legal contact, independently of rendering or animation. Damage is
+      // the attack contribution after shield reduction, including overkill like metrics.
+      world.events.push({
+        tick: world.tick,
+        type: 'strike',
+        actorId: actor.id,
+        targetId: enemy.id,
+        from: { x: actor.x, y: actor.y },
+        to: { x: enemy.x, y: enemy.y },
+        damage: enemy.shieldUntil > world.tick ? 10 : 20,
+        shielded: enemy.shieldUntil > world.tick,
+        text: `${actor.name} tagged ${enemy.name}`,
+      });
       actor.attackReadyAt = world.tick + 20;
       const choice = plans[i];
       if (choice && choice.intent.goal === 'attack_enemy' && world.tick % 4 === 0)
@@ -482,5 +500,55 @@ export function runBranch(source: Snapshot, playbook?: Playbook): TrialBranch {
     damage: world.metrics.a.damageTaken,
     distance: world.metrics.a.distance,
     ruleUses: Object.values(world.metrics.a.ruleUses).reduce((sum, value) => sum + value, 0),
+  };
+}
+
+/** One fixed, authored sparring replay. It has no user's channel or playbook. */
+export function createCombatStudy(): CombatStudy {
+  const candidate = (shield: boolean): Candidate => ({
+    contractVersion: '1',
+    summary: 'Hold the sparring mark.',
+    rules: [
+      {
+        label: 'Hold the mark',
+        when: { all: [{ fact: 'self.healthBps', op: 'gte', value: 0 }] },
+        intent: { goal: 'guard_home', route: 'direct', ability: shield ? 'shield' : 'none' },
+      },
+    ],
+  });
+  let world = createWorld(
+    addLesson(createPlaybook(), candidate(false), { author: 'Combat study' }),
+    42,
+  );
+  world.arena = { id: 'sparring-v1', width: 32, height: 18, walls: [], hazards: [] };
+  world.champions[0].home = { x: 14500, y: 9500 };
+  world.champions[1].home = { x: 15500, y: 9500 };
+  world.champions.forEach((c) => {
+    c.x = c.home.x;
+    c.y = c.home.y;
+    c.attackReadyAt = 20;
+  });
+  world.champions[1].playbook = addLesson(createPlaybook(), candidate(true), {
+    author: 'Combat study',
+  });
+  world.core = { x: 25000, y: 9500, carrier: null, unheldSince: 0 };
+  world.status = 'running';
+  const sourceHash = hash(world),
+    frames = [world],
+    strikes: StrikeEvent[] = [];
+  for (let tick = 0; tick < 240; tick++) {
+    world = step(world);
+    strikes.push(
+      ...world.events.filter((e): e is StrikeEvent => e.type === 'strike' && e.tick === world.tick),
+    );
+    frames.push(world);
+  }
+  return {
+    id: 'sparring-v1',
+    ticksPerSecond: 20,
+    sourceHash,
+    finalHash: hash(world),
+    frames,
+    strikes,
   };
 }

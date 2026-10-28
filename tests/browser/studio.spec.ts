@@ -4,6 +4,7 @@ test('coach proves, adopts, starts a pinned round and shares a read-only overlay
   page,
   context,
 }) => {
+  test.setTimeout(90_000);
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/');
@@ -69,6 +70,7 @@ test('mobile studio fits the viewport and remains usable', async ({ page }) => {
 test('coach connects through a cross-site OAuth callback and disconnects with a mocked provider', async ({
   page,
 }) => {
+  test.setTimeout(90_000);
   // Playwright routes match the first request in a redirect chain. Inspect the real
   // start response without following it, then make the provider navigation a new request.
   await page.route('**/auth/twitch/start', async (route) => {
@@ -157,6 +159,7 @@ test('coach connects through a cross-site OAuth callback and disconnects with a 
   ).toBeVisible();
   await expect(queue.getByRole('article')).toHaveCount(1);
   await queue.getByRole('button', { name: 'Resume intake', exact: true }).click();
+  await expect(queue.getByText('Chat live', { exact: true })).toBeVisible();
   await emit({
     event: {
       message_id: 'browser-lesson-two',

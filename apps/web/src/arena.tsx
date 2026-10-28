@@ -17,7 +17,7 @@ import { useArenaSound } from './game/sound.js';
 export { ChampionPortrait } from './game/champion-portrait.js';
 const GameScene = lazy(() => import('./game/scene.js'));
 
-class GraphicsBoundary extends Component<
+export class GraphicsBoundary extends Component<
   { children: ReactNode; fallback: ReactNode; onUnavailable: () => void },
   { failed: boolean }
 > {
@@ -33,7 +33,7 @@ class GraphicsBoundary extends Component<
   }
 }
 let webGLSupported: boolean | undefined;
-function canUseWebGL() {
+export function canUseWebGL() {
   if (webGLSupported !== undefined) return webGLSupported;
   try {
     const canvas = document.createElement('canvas'),

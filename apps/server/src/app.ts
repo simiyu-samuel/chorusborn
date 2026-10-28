@@ -19,6 +19,7 @@ import {
   type ChatProposal,
   type Trial,
   type World,
+  type CombatStudy,
 } from '@chorusborn/contracts';
 import { addLesson, createPlaybook, createWorld, snapshot, step, hash } from '@chorusborn/sim';
 import { LocalStore, type StoredStudio } from './store.js';
@@ -434,6 +435,43 @@ export async function createApp(options: AppOptions = {}) {
       publish(studio);
     },
   );
+  let combatStudyJob: Promise<CombatStudy> | null = null;
+  app.get('/api/demo/combat-study', async (_request, reply) => {
+    if (!combatStudyJob) {
+      if (workers.size >= 2)
+        return reply.code(429).send({ message: 'Replay workers are busy. Try again shortly.' });
+      combatStudyJob = new Promise<CombatStudy>((resolve, reject) => {
+        let received = false;
+        const worker = new Worker(new URL('./combat-worker.ts', import.meta.url), {
+          execArgv: [],
+          resourceLimits: { maxOldGenerationSizeMb: 128 },
+        });
+        workers.add(worker);
+        const timeout = setTimeout(() => {
+          void worker.terminate();
+          reject(new Error('Combat study timed out.'));
+        }, 20_000);
+        worker.once('message', (result: CombatStudy) => {
+          received = true;
+          resolve(result);
+        });
+        worker.once('error', reject);
+        worker.once('exit', () => {
+          workers.delete(worker);
+          clearTimeout(timeout);
+          if (!received) reject(new Error('Combat study worker stopped.'));
+        });
+      }).catch((error) => {
+        combatStudyJob = null;
+        throw error;
+      });
+    }
+    try {
+      return await combatStudyJob;
+    } catch {
+      return reply.code(503).send({ message: 'Combat study is unavailable. Try again.' });
+    }
+  });
   app.post('/api/demo/controls', async (request, reply) => {
     const studio = ownerStudio(request.headers.cookie);
     if (!studio) return reply.code(401).send({ message: 'Open your local studio first.' });

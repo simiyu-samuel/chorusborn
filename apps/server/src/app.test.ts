@@ -54,7 +54,7 @@ describe('local studio boundaries', () => {
     const overlayPath = initial.json().overlayPath as string;
     const overlay = await app.inject(overlayPath.replace('/overlay?', '/api/demo/overlay?'));
     expect(overlay.statusCode).toBe(200);
-    expect(overlay.json().world.engineVersion).toBe('core-run/0.1.0');
+    expect(overlay.json().world.engineVersion).toBe('core-run/0.1.1');
     expect(overlay.json().overlayPath).toBeUndefined();
     const id = new URL(overlayPath, 'http://localhost').searchParams.get('studio')!;
     expect(
@@ -172,4 +172,26 @@ describe('atomic rematch', () => {
     expect(restarted.metrics.a.ruleUses).toEqual({});
     expect((await app.inject(overlayURL)).json().world).toEqual(restarted);
   }, 30_000);
+});
+
+describe('isolated combat study', () => {
+  it('caches one worker-generated fixture without touching the studio or private data', async () => {
+    const app = await boot(),
+      initial = await app.inject('/api/demo/state');
+    const cookie = initial.headers['set-cookie']!.toString().split(';')[0]!;
+    const [a, b] = await Promise.all([
+      app.inject('/api/demo/combat-study'),
+      app.inject('/api/demo/combat-study'),
+    ]);
+    expect(a.statusCode, a.body.slice(0, 200)).toBe(200);
+    expect(b.json()).toEqual(a.json());
+    expect(a.json()).toMatchObject({ id: 'sparring-v1', ticksPerSecond: 20 });
+    expect(a.json().frames).toHaveLength(241);
+    expect(a.json().strikes.length).toBeGreaterThan(0);
+    expect(a.body).not.toContain(cookie.split('=')[1]!);
+    expect(a.body).not.toContain('overlayKey');
+    const after = (await app.inject({ url: '/api/demo/state', headers: { cookie } })).json();
+    expect(after.world).toEqual(initial.json().world);
+    expect(after.playbook).toEqual(initial.json().playbook);
+  });
 });

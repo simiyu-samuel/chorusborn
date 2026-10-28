@@ -24,4 +24,6 @@ The first local fixture build is verified in the [build log](build-log.md). Rele
 
 Example contracts: [candidate](examples/lesson-candidate.json) and [candidate schema](examples/lesson-candidate.schema.json). Runtime validation exists in `packages/contracts`; a local model-backed compiler now exists (see the build log), while these examples alone do not establish production integration.
 
-Visual design: [Core Run art direction and character/game-feel brief](art-direction.md), with a clearly labeled concept image and exact generation prompt. This is a proposed target, not implemented graphics.
+Visual design: [Core Run art direction and character/game-feel brief](art-direction.md), with a clearly labeled concept image and exact generation prompt. The shared 3D visual slice is implemented; the concept remains a final-quality target.
+
+[Combat Lab and acrobatic fighter prototype](combat-direction.md) records the new stick-fighter direction, recorded-contact choreography, and the boundary with future gameplay skills.

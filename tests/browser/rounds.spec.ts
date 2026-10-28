@@ -62,7 +62,9 @@ test('finishes a real fixture round, broadcasts its result and starts one rematc
       window.WebSocket = class extends NativeSocket {
         constructor(url: string | URL, protocols?: string | string[]) {
           super(url, protocols);
-          window.addEventListener('test-drop-spectator-signal', () => this.close());
+          if (new URL(String(url), location.href).pathname === '/ws/demo') {
+            window.addEventListener('test-drop-spectator-signal', () => this.close());
+          }
         }
       };
     });

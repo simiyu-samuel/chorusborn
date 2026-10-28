@@ -1,6 +1,6 @@
 # System architecture
 
-Status: target production architecture. The local build implements `apps/web`, `apps/server`, `packages/contracts`, and `packages/sim`, plus Twitch OAuth, EventSub lifecycle, and a durable local teaching queue. Tokens remain memory-only. It uses local file stores instead of PostgreSQL and a shared Three.js/React Three Fiber scene with an SVG compatibility view; a bounded Groq compiler now handles explicit coach requests. Production services remain pending. See ADR 013–018 in [decisions](decisions.md).
+Status: target production architecture. The local build implements `apps/web`, `apps/server`, `packages/contracts`, and `packages/sim`, plus Twitch OAuth, EventSub lifecycle, and a durable local teaching queue. Tokens remain memory-only. It uses local file stores instead of PostgreSQL and a shared Three.js/React Three Fiber scene with an SVG compatibility view; a bounded Groq compiler now handles explicit coach requests. Production services remain pending. See ADR 013–019 in [decisions](decisions.md).
 
 ## Architectural principle
 
@@ -151,3 +151,17 @@ coach scene unmounts while its replay dialog is open. Low effects caps DPR and d
 Resources dispose on unmount. WebGL errors/context loss select the labeled SVG compatibility
 view, without resetting the world. UI preferences are browser-local presentation state and never
 sent as simulation commands. The scene chunk is separate from the primary studio bundle.
+
+## Combat study and trace patch
+
+`core-run/0.1.1` emits legal `strike` contacts with attacker/target, positions and post-shield
+attack damage. Gameplay rules remain unchanged; complete earlier-version snapshots are rejected
+because the event trace/hash changes. Local stored playbooks are compatible.
+
+The loopback `GET /api/demo/combat-study` lazily generates one fixed, non-user scenario in a
+bounded Node worker, shares pending/completed results, resets a failed job for explicit retry,
+and uses the existing two-worker pool/close cleanup. The twelve-second result contains full
+frames, contacts and source/final hashes; it never reads or changes a user's studio. No model,
+Twitch or arbitrary scenario input is involved. `/combat-lab` samples known replay contacts for
+pure deterministic choreography, with a separate lazy 3D scene and SVG compatibility rendering.
+See [Combat Lab](combat-direction.md) for timing and the future live-animation boundary.

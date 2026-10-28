@@ -2,6 +2,9 @@
 
 Original arena geometry, procedural champion rigs, SVG portraits/glyphs, synthesized audio cues, favicon, and application source were authored for Chorusborn. Dependency packages retain their own licenses. This file does not grant a license to the original project code.
 
+The Combat Lab fighter rigs, choreography, stage and SVG fallback are original code-native work.
+A user-provided stick-figure reference informed the direction; that image is not copied or bundled.
+
 The proposed art-direction image at `docs/concepts/core-run-direction-v1.png` was generated
 with the built-in Imagegen tool on October 27, 2026, without external image references.
 Its exact prompt and design-only status are recorded alongside it. It is not bundled into

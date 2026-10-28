@@ -115,12 +115,25 @@ export type Decision = {
   executed: boolean;
   abilityExecuted: boolean;
 };
-export type GameEvent = {
+export type StrikeEvent = {
   tick: number;
-  type: 'capture' | 'defeat' | 'pickup' | 'shield' | 'decoy';
+  type: 'strike';
   actorId: ActorId;
+  targetId: ActorId;
+  from: Point;
+  to: Point;
+  damage: number;
+  shielded: boolean;
   text: string;
 };
+export type GameEvent =
+  | StrikeEvent
+  | {
+      tick: number;
+      type: 'capture' | 'defeat' | 'pickup' | 'shield' | 'decoy';
+      actorId: ActorId;
+      text: string;
+    };
 export type ActorMetrics = {
   damageTaken: number;
   distance: number;
@@ -128,7 +141,7 @@ export type ActorMetrics = {
   ruleUses: Record<string, number>;
 };
 export type World = {
-  engineVersion: 'core-run/0.1.0';
+  engineVersion: 'core-run/0.1.1';
   codecVersion: 1;
   seed: number;
   tick: number;
@@ -172,6 +185,14 @@ export type Trial = {
   candidateBranch: TrialBranch;
   createdAt: string;
   adopted: boolean;
+};
+export type CombatStudy = {
+  id: 'sparring-v1';
+  ticksPerSecond: 20;
+  sourceHash: string;
+  finalHash: string;
+  frames: World[];
+  strikes: StrikeEvent[];
 };
 export const chatStatusSchema = z.enum([
   'not-connected',
