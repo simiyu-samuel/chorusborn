@@ -96,6 +96,22 @@ rival's locked book (or the baseline), reports both results and shows the first-
 Carrier dilemma remains available for delivery lessons. Neither test is the planned full suite.
 Channel ownership/books persist locally; tokens, matches and trials remain memory-only.
 
+## Viewer guide and stream reminders
+
+Open **http://localhost:5173/guide** for the sign-in-free viewer field guide: Core Run rules,
+a two-home/core diagram, six copyable `!teach` examples, route/ability trade-offs, initiative,
+priority effects and the received → reviewed/tested → adopted → used journey. The page makes no
+coach API request. Copy buttons do not send chat; blocked clipboard access offers selectable
+text. The guide is linked from the coach sidebar, a share card and the read-only overlay.
+The share card copies only `/guide` on the current origin, without any overlay key/query, and
+labels localhost links as local previews. A hosted address is still needed for remote viewers.
+
+The overlay has a compact teaching reminder with no coach controls or private proposal data.
+The private queue separately labels received, ready-to-test, tested/awaiting-decision, next-round
+adoption, locked-book adoption and actual execution. Execution counts come from the owner's
+locked actor and metrics, including side B; receipt/adoption alone does not produce a used claim.
+No chat acknowledgement messages, write scope, QR service or public proposal-status feed was added.
+
 ## Twitch application registration
 
 First channel: **developersimiyu**. The owner has created the developer app. Register **`http://localhost:3001/auth/twitch/callback`** as the exact redirect URI, choose **Game Integration** and **Confidential**, and put the Client ID/secret into the ignored `.env` using `.env.example` as a template. The server loads it on startup; restart after editing credentials. The same application now accepts independently verified broadcaster accounts; `TWITCH_CHANNEL` is a legacy setup hint, not an authorization allowlist.

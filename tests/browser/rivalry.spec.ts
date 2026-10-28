@@ -140,6 +140,12 @@ test('two independently signed-in streamers teach their own champions and share 
     await expect(
       overlay.getByRole('img', { name: /Core Run arena\. fixture_host.*fixture_guest/ }),
     ).toBeVisible();
+    await expect(
+      overlay.getByRole('complementary', { name: 'How viewers participate' }),
+    ).toBeVisible();
+    expect(await overlay.evaluate(() => document.documentElement.scrollHeight > innerHeight)).toBe(
+      false,
+    );
     expect(
       (
         await spectator.request.post('http://localhost:5273/api/rivalry/controls', {

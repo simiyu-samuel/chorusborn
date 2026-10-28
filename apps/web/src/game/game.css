@@ -313,7 +313,7 @@
   overflow: hidden;
 }
 .overlay .game-viewport {
-  height: calc(100vh - 210px);
+  height: calc(100vh - 360px);
   min-height: 320px;
   aspect-ratio: auto;
 }

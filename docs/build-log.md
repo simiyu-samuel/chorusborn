@@ -731,6 +731,65 @@ durable recovery. The proof is evidence for this pinned opponent/seed only, not 
 ranking. Raw chat, credentials and private proposal identifiers remain outside Git. Codex operated
 the authorized review, fixed the scenario label and recorded this source increment.
 
+## 2026-10-28 — Viewer field guide, stream reminder and truthful lesson stages
+
+**Implemented**
+
+- Added anonymous `/guide` and `/guide/`, lazy-loaded without mounting the coach API effect.
+  It includes the core/home SVG diagram using owned fighter art, first-to-three/60-second rules,
+  shield/respawn timings, initiative, six condition/action examples, route/ability trade-offs,
+  priority and visual-only acrobatics, lesson stages and failed/inconclusive lesson explanations.
+  Anchors, skip navigation, semantic headings, disclosure FAQs and responsive layout support
+  keyboard/mobile use. The page identifies itself as **How to play — Chorusborn**.
+- Shared command/link copy component handles clipboard success and denial. Denial exposes a
+  read-only selectable textarea. Copying sends no message and triggers no model request. The
+  coach's share card and sidebar link open the guide; the copied URL uses only current origin
+  plus `/guide`, excluding overlay keys and query parameters. Localhost links are labeled local
+  previews; no hosted URL or QR distribution was invented.
+- Read-only overlays have a compact objective/command/review reminder and safe guide link. Their
+  arena height reserves space for it and the rivalry initiative strip. No coach controls, private
+  pending source text or new spectator API authority were introduced. Existing actual-use credits
+  remain driven by executed decisions. Public per-viewer receipt/status replies are not implemented.
+- Private community proposals show received, interpretation/review readiness, tested-awaiting-
+  decision, adopted-next-round, adopted-in-locked-book and used stages. Use counts join published
+  own rule IDs to the **owner's** locked actor/metrics, so redacted peer-world source joins and
+  side B work correctly. Publishing alone or counts from the other champion cannot imply use.
+  Moderation/rejection takes precedence, and tested evidence checks the compilation identity.
+  Removed redundant rejection text discovered by the browser flow.
+
+**Verification**
+
+- `npm run check` passes **98 tests in 18 files**, types, formatting and frontend production build.
+  Added semantic unit checks for receiving vs publishing vs pinning/executing, side-B metrics,
+  shared-world source redaction, the wrong actor's counts and source moderation. Final formatting,
+  type checking and build were also rerun after presentation/copy refinements.
+- **Four browser flows passed across final runs**: anonymous guide/copy/FAQ/390px layout with
+  zero coach API requests; clipboard-denied manual fallback plus clean share URL and a 1920×1080
+  read-only overlay; existing mocked Twitch teach/prove/adopt/execute/moderate/disconnect with the
+  new stage assertions; and two mocked communities sharing an actual pickup and a reminder-bearing
+  rivalry overlay. Both fixture and rivalry overlays fit their checked desktop viewport heights;
+  spectator mutation requests still reject with 401 and controls are absent.
+- The first community run exposed duplicate “Rejected by coach” text, then passed after redundant
+  source status text was clarified. Public guide/copy checks passed initially. The final overlay
+  sizing check required one allowed retry after automatic approval review timed out before starting
+  the command; the retry ran and both checks passed. No approval limitation remains.
+- Inspected desktop/mobile guide and 1080p overlay captures. Recovered a transient in-app browser
+  attachment timeout using a fresh tab in the same browser, then opened the live guide and saved
+  `.local/screenshots/viewer-guide-live.png`. It remains open as the visible deliverable. All
+  captures/logs are ignored. Existing real Twitch sessions/books/matches were not reset or modified;
+  no real chat post, model call, credential change or backend restart was needed for this feature.
+- Guide chunk is about 12KB minified/4KB gzip; main web bundle about 311KB/96KB gzip. Existing
+  shared renderer chunk-size warning remains (about 916KB/243KB). No new package or external
+  asset/provider was added; sustained OBS/compression/audience readability is still unmeasured.
+
+**Boundaries and Codex contribution**
+
+This provides a local viewer learning/share surface and owner-facing stage feedback, not public
+per-viewer acknowledgements, bot replies, remote hosting, ranked balance evidence or the full
+scenario/holdout suite. QR sharing awaits a usable hosted origin. Codex implemented the guide,
+sharing/reminder components, source/metric-derived stage helper, accessibility/fallback handling,
+regression checks and documentation/ADR 023. This entry is committed with that source increment.
+
 ## Future entry template
 
 For each completed milestone, record date, feature/acceptance IDs, commit reference, meaningful checks and outcomes, screenshots/replay/evaluation references where appropriate, remaining limitations, and how Codex contributed. Never include secrets or full private session transcripts. Store bulky recordings outside Git and link final authorized artifacts when available.

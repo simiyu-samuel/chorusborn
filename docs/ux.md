@@ -1,6 +1,6 @@
 # UX and broadcast experience
 
-Status: release design specification. The local build implements a responsive coach studio at `/`, a replay dialog, playbook/receipt panels, and a read-only `/overlay` route with a shared 3D arena, original procedural champions and a labeled SVG compatibility view. Connections & setup supports Twitch OAuth and disconnect. The community queue distinguishes chat readiness, pauses, gaps, actual received lessons awaiting compilation, and removed/rejected proposals. The routes and onboarding below describe the fuller release target; public profiles, rivalry, and production role management remain pending. The local Groq compiler and source-bound adoption now work; the playable visual slice and remaining graphical work are described in [art direction](art-direction.md).
+Status: release design specification. The local build implements a responsive coach studio at `/`, a replay dialog, playbook/receipt panels, and a read-only `/overlay` route with a shared 3D arena, original procedural champions and a labeled SVG compatibility view. Connections & setup supports Twitch OAuth and disconnect. The community queue distinguishes chat readiness, pauses, gaps, actual received lessons awaiting compilation, and removed/rejected proposals. Local two-streamer rivalry, priority controls and paired neutral proofs are implemented. The sign-in-free `/guide`, guide sharing, overlay reminder and explicit private lesson stages are also implemented. The route table below otherwise describes fuller release targets; public profiles and production role management remain pending. The local Groq compiler and source-bound adoption now work; the playable visual slice and remaining graphical work are described in [art direction](art-direction.md).
 
 ## Experience hierarchy
 
@@ -10,6 +10,7 @@ The audience should first see **what the champion wants**, then **what the viewe
 
 | Route | Primary user | Main content |
 | --- | --- | --- |
+| `/guide` | Viewer (implemented) | Sign-in-free rules, copyable teaching examples, priority/initiative and lesson journey |
 | `/` | New streamer/viewer | A short teach/prove/compete explanation and connect/watch actions |
 | `/coach/:channel` | Authenticated coach/reviewer | Champion, proposal queue, trial controls, role-appropriate management |
 | `/champions/:id` | Public viewer | Champion identity, current published playbook, contribution/history links |
@@ -96,3 +97,27 @@ The read-only overlay has no rematch controls. On socket loss it retains the las
 labels the interrupted signal, and freezes cosmetic animation until a connection opens again.
 This is stale-frame handling, not server recovery or durable match history. Full broadcast replay
 selection, recorded match history, rivalry and OBS/readability measurements remain pending.
+
+## Implemented viewer onboarding (local)
+
+`/guide` (also `/guide/`) is an anonymous, lazy-loaded guide. It uses original existing SVG
+champions in a static home/core diagram, the actual first-to-three/60-second rules, shield and
+respawn timings, the explicit tie initiative and English condition/action examples. It explains
+trade-offs, cooldowns, priority shadowing, visual-only acrobatics and inconclusive/worse lessons.
+Received, reviewed/tested, adopted and used are explained separately; attribution never claims
+that an author caused a win. Headings, anchor/skip links, native disclosure FAQs, labelled copy
+buttons and selectable manual fallback support keyboard/mobile access. The guide creates no
+studio/session by requesting the coach API, and copy does not submit to Twitch or an LLM.
+
+The coach can open/copy the guide from a share card or sidebar. Links use the current origin and
+`/guide` only, never the private overlay query. Localhost is explicitly a local preview for sharing.
+The overlay shows a static compact command/objective/review reminder plus a safe guide link;
+no queue or control authority is sent to spectators. Actual lesson-use credit remains driven by
+executed decisions. Its arena height reserves space for the reminder and initiative strip.
+
+The private queue now names each step from current state. Adoption detection joins the owned
+published rules to the owner's pinned actor by rule ID (shared worlds redact private source
+joins). Positive execution counters produce **Used in this round**; a published-but-unpinned
+rule is **Adopted · next round**. Old source text is hidden under moderation, and a current-base
+trial only counts as tested when its compilation ID still matches. Counts are not live-announced
+every tick. This is not a public per-viewer acknowledgement feed or Twitch bot reply feature.

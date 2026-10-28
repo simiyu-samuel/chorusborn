@@ -201,3 +201,18 @@ initiative A, then base/candidate with initiative B. The response includes prima
 opposite-start summaries/source hash, avoiding a second full replay payload. Existing worker
 caps, timeout, source eligibility and version-based adoption checks remain in force. No model
 runs inside a tick or trial worker. Initiative is an engine rule, not a compiler capability.
+
+### Viewer guide and derived lesson stages
+
+The `/guide` client route lazy-loads a static viewer component with existing SVG champion art;
+it does not mount the coach's `useStudio` effect or issue a coach API request. Copy state is local
+to each command/share component. Clipboard errors expose a read-only selectable textarea rather
+than pretending the copy succeeded. The shared URL is constructed from the current origin plus
+`/guide`, stripping all studio/overlay query data. The existing static production fallback serves
+the route once the frontend is built; this does not create a hosted deployment.
+
+Overlay teaching instructions use a static component with only a guide link. They require no
+new overlay DTO, backend authority or source disclosure. A pure private-queue helper derives
+stage labels from proposals, source-bound published rules, locked rule IDs and owner metrics.
+It checks compilation identity for current trial evidence and gives source removal/rejection
+precedence. No game state, model grammar or account/session persistence changed for this feature.

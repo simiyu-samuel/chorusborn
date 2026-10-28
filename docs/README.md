@@ -29,3 +29,5 @@ Visual design: [Core Run art direction and character/game-feel brief](art-direct
 [Combat Lab and acrobatic fighter prototype](combat-direction.md) records the new stick-fighter direction, recorded-contact choreography, and the boundary with future gameplay skills.
 
 The local [two-streamer rivalry guide](rivalry.md) covers canonical channel ownership, independent teaching queues, shared matches and the localhost/remote boundary.
+
+The local sign-in-free viewer guide is at `/guide`; the [UX specification](ux.md#implemented-viewer-onboarding-local) records its copy/share and lesson-stage boundaries.

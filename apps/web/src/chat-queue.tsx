@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { describeCondition } from './lesson.js';
+import { lessonProgress } from './game/lesson-progress.js';
 import { Radio, Pause, Play, RotateCcw, X, ArrowUpRight } from 'lucide-react';
 import type { StudioState } from '@chorusborn/contracts';
 
@@ -129,137 +130,148 @@ export function ChatQueue({ state, connect, command, prove }: Props) {
           ) : null}
           {intake.proposals.length ? (
             <div className="chat-proposals" aria-label="Received teaching proposals">
-              {(expanded ? intake.proposals : intake.proposals.slice(0, 6)).map((proposal) => (
-                <article className={`chat-proposal ${proposal.status}`} key={proposal.id}>
-                  <div>
-                    <div className="chat-proposal-byline">
-                      <strong>{proposal.author?.name ?? 'Removed contribution'}</strong>
-                      <span>
-                        {proposal.author ? `@${proposal.author.login}` : 'Twitch moderation'}
-                      </span>
-                      <time dateTime={new Date(proposal.receivedAt).toISOString()}>
-                        {new Date(proposal.receivedAt).toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </time>
-                    </div>
-                    <p>{proposal.text ?? 'This lesson was removed from Twitch chat.'}</p>
-                    <small>
-                      {proposal.status === 'removed'
-                        ? 'Text and attribution removed'
-                        : proposal.status === 'rejected'
-                          ? 'Rejected by coach'
-                          : proposal.status === 'compiled'
-                            ? 'Compiled from Twitch · coach review required'
-                            : 'Received from Twitch · awaiting review'}
-                    </small>
-                  </div>
-                  {['awaiting-compiler', 'compiled'].includes(proposal.status) &&
-                  !learned.has(proposal.id) ? (
-                    <div className="proposal-actions">
-                      <button
-                        className="secondary-button"
-                        disabled={
-                          busy ||
-                          !state.compiler.configured ||
-                          proposal.compilation?.status === 'running' ||
-                          proposal.compileAttempts >= 3 ||
-                          (proposal.status === 'compiled' &&
-                            proposal.compilation?.baseVersion === state.playbook.version)
-                        }
-                        onClick={() =>
-                          void perform(`/api/twitch/proposals/${proposal.id}/compile`, {})
-                        }
-                      >
-                        {proposal.compilation?.status === 'running'
-                          ? 'Compiling…'
-                          : proposal.compilation
-                            ? proposal.status === 'compiled' &&
-                              proposal.compilation.baseVersion === state.playbook.version
-                              ? 'Compiled'
-                              : 'Compile again'
-                            : 'Compile lesson'}
-                      </button>
-                      <button
-                        className="icon-button"
-                        aria-label={`Reject lesson from ${proposal.author?.name}`}
-                        disabled={busy}
-                        onClick={() =>
-                          void perform(`/api/twitch/proposals/${proposal.id}`, { action: 'reject' })
-                        }
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
-                  ) : null}
-                  {proposal.compilation ? (
-                    <div className="compiled-lesson" role="status">
-                      <strong>
-                        {proposal.compilation.status === 'running'
-                          ? 'Translating your lesson…'
-                          : proposal.compilation.status === 'failed'
-                            ? 'Compilation needs attention'
-                            : proposal.compilation.result?.outcome.replaceAll('_', ' ')}
-                      </strong>
-                      <p>
-                        {proposal.compilation.error ?? proposal.compilation.result?.explanation}
-                      </p>
-                      {proposal.compilation.result?.candidate ? (
-                        <>
-                          <h3>{proposal.compilation.result.candidate.summary}</h3>
-                          <ol>
-                            {proposal.compilation.result.candidate.rules.map((rule, index) => (
-                              <li key={index}>
-                                <strong>{rule.label}</strong>
-                                <p>
-                                  When{' '}
-                                  {rule.when.all
-                                    .map((condition) =>
-                                      describeCondition(condition, state.championName),
-                                    )
-                                    .join(' AND ')}
-                                </p>
-                                <p>
-                                  Do {rule.intent.goal.replaceAll('_', ' ')} · {rule.intent.route}{' '}
-                                  route ·{' '}
-                                  {rule.intent.ability === 'none'
-                                    ? 'no ability'
-                                    : rule.intent.ability}
-                                </p>
-                              </li>
-                            ))}
-                          </ol>
-                          {learned.has(proposal.id) ? (
-                            <p>Adopted in your playbook. Reset the arena to use it next round.</p>
-                          ) : proposal.compilation.baseVersion === state.playbook.version ? (
-                            <button
-                              className="primary-button"
-                              disabled={busy}
-                              onClick={async () => {
-                                setBusy(true);
-                                try {
-                                  await prove(proposal.id);
-                                } finally {
-                                  setBusy(false);
-                                }
-                              }}
-                            >
-                              Prove community lesson
-                            </button>
-                          ) : (
-                            <p>Playbook changed. Compile again before testing.</p>
-                          )}
-                        </>
-                      ) : null}
+              {(expanded ? intake.proposals : intake.proposals.slice(0, 6)).map((proposal) => {
+                const progress = lessonProgress(state, proposal);
+                return (
+                  <article className={`chat-proposal ${proposal.status}`} key={proposal.id}>
+                    <div>
+                      <div className="chat-proposal-byline">
+                        <strong>{proposal.author?.name ?? 'Removed contribution'}</strong>
+                        <span>
+                          {proposal.author ? `@${proposal.author.login}` : 'Twitch moderation'}
+                        </span>
+                        <time dateTime={new Date(proposal.receivedAt).toISOString()}>
+                          {new Date(proposal.receivedAt).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </time>
+                      </div>
+                      <p>{proposal.text ?? 'This lesson was removed from Twitch chat.'}</p>
+                      <div className="lesson-progress" aria-label="Lesson progress">
+                        <strong>{progress.label}</strong>
+                        <p>{progress.detail}</p>
+                      </div>
                       <small>
-                        {proposal.compilation.model} · playbook v{proposal.compilation.baseVersion}{' '}
-                        · attempt {proposal.compileAttempts}/3
+                        {proposal.status === 'removed'
+                          ? 'Text and attribution removed'
+                          : proposal.status === 'rejected'
+                            ? 'Source is ineligible for new adoption'
+                            : proposal.status === 'compiled'
+                              ? learned.has(proposal.id)
+                                ? 'Published in your playbook'
+                                : 'Compiled from Twitch · coach review required'
+                              : 'Received from Twitch · awaiting review'}
                       </small>
                     </div>
-                  ) : null}
-                </article>
-              ))}
+                    {['awaiting-compiler', 'compiled'].includes(proposal.status) &&
+                    !learned.has(proposal.id) ? (
+                      <div className="proposal-actions">
+                        <button
+                          className="secondary-button"
+                          disabled={
+                            busy ||
+                            !state.compiler.configured ||
+                            proposal.compilation?.status === 'running' ||
+                            proposal.compileAttempts >= 3 ||
+                            (proposal.status === 'compiled' &&
+                              proposal.compilation?.baseVersion === state.playbook.version)
+                          }
+                          onClick={() =>
+                            void perform(`/api/twitch/proposals/${proposal.id}/compile`, {})
+                          }
+                        >
+                          {proposal.compilation?.status === 'running'
+                            ? 'Compiling…'
+                            : proposal.compilation
+                              ? proposal.status === 'compiled' &&
+                                proposal.compilation.baseVersion === state.playbook.version
+                                ? 'Compiled'
+                                : 'Compile again'
+                              : 'Compile lesson'}
+                        </button>
+                        <button
+                          className="icon-button"
+                          aria-label={`Reject lesson from ${proposal.author?.name}`}
+                          disabled={busy}
+                          onClick={() =>
+                            void perform(`/api/twitch/proposals/${proposal.id}`, {
+                              action: 'reject',
+                            })
+                          }
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ) : null}
+                    {proposal.compilation ? (
+                      <div className="compiled-lesson" role="status">
+                        <strong>
+                          {proposal.compilation.status === 'running'
+                            ? 'Translating your lesson…'
+                            : proposal.compilation.status === 'failed'
+                              ? 'Compilation needs attention'
+                              : proposal.compilation.result?.outcome.replaceAll('_', ' ')}
+                        </strong>
+                        <p>
+                          {proposal.compilation.error ?? proposal.compilation.result?.explanation}
+                        </p>
+                        {proposal.compilation.result?.candidate ? (
+                          <>
+                            <h3>{proposal.compilation.result.candidate.summary}</h3>
+                            <ol>
+                              {proposal.compilation.result.candidate.rules.map((rule, index) => (
+                                <li key={index}>
+                                  <strong>{rule.label}</strong>
+                                  <p>
+                                    When{' '}
+                                    {rule.when.all
+                                      .map((condition) =>
+                                        describeCondition(condition, state.championName),
+                                      )
+                                      .join(' AND ')}
+                                  </p>
+                                  <p>
+                                    Do {rule.intent.goal.replaceAll('_', ' ')} · {rule.intent.route}{' '}
+                                    route ·{' '}
+                                    {rule.intent.ability === 'none'
+                                      ? 'no ability'
+                                      : rule.intent.ability}
+                                  </p>
+                                </li>
+                              ))}
+                            </ol>
+                            {learned.has(proposal.id) ? (
+                              <p>Adopted in your playbook. {progress.detail}</p>
+                            ) : proposal.compilation.baseVersion === state.playbook.version ? (
+                              <button
+                                className="primary-button"
+                                disabled={busy}
+                                onClick={async () => {
+                                  setBusy(true);
+                                  try {
+                                    await prove(proposal.id);
+                                  } finally {
+                                    setBusy(false);
+                                  }
+                                }}
+                              >
+                                Prove community lesson
+                              </button>
+                            ) : (
+                              <p>Playbook changed. Compile again before testing.</p>
+                            )}
+                          </>
+                        ) : null}
+                        <small>
+                          {proposal.compilation.model} · playbook v
+                          {proposal.compilation.baseVersion} · attempt {proposal.compileAttempts}/3
+                        </small>
+                      </div>
+                    ) : null}
+                  </article>
+                );
+              })}
             </div>
           ) : (
             <p className="chat-empty">

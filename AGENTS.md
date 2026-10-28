@@ -10,7 +10,7 @@
   authorization. Local commits are authorized.
 - The local fixture, Twitch OAuth/EventSub, durable proposal queue, and bounded Groq
   compiler exist. Real proposals can be reviewed, proved in carrier or paired neutral-opening scenarios,
-  and adopted with source attribution. Local two-channel challenges, canonical channel books, shared matches with visible tie initiative, and explicit priority reordering are implemented.
+  and adopted with source attribution. Local two-channel challenges, canonical channel books, shared matches with visible tie initiative, and explicit priority reordering are implemented. The anonymous viewer guide, clean guide sharing, overlay teaching reminder and owner-only lesson stages are implemented.
   A real two-account local match and paired neutral proof have been observed. Independent community/broadcast demonstration, PostgreSQL and full-suite evaluation remain pending. No claims of broad model accuracy or tactic superiority.
   Twitch tokens are memory-only for now; restart requires reconnecting. Keep status honest.
 - Keep the ambitious core: Twitch teaching, evidence-backed lessons, deterministic

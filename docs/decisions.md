@@ -158,6 +158,23 @@ the second start has explicit metrics/final/source hashes, and both results are 
 private source joins are stripped from returned frames. The live match is unchanged; the current
 model grammar is unchanged. This is bounded paired evidence, not the planned scenario/holdout suite.
 
+### ADR 023 — 2026-10-28: anonymous viewer guide and evidence-derived lesson stages
+
+The owner selected viewer onboarding after the live rivalry/proof loop worked. Provide a static,
+anonymous `/guide` with examples and a plain-English explanation of the real sport and teaching
+boundaries. Reuse existing code-native SVG champion art; do not add remote media, model calls,
+new providers or a dependency to draw the objective diagram. Copy actions are explicit and local,
+with a selectable fallback on denial. Share only a clean guide URL, label local preview addresses
+and defer QR/public distribution until a hosted URL exists.
+
+Add a compact read-only overlay reminder and guide link, preserving arena space. Pending private
+chat/proposals stay private. Public credit continues to require an actual executed decision.
+Private queue labels distinguish receiving, interpretation, test readiness/decision, adoption
+for next round versus this locked book, and real uses. Source-bound rule IDs identify the owned
+actor's locked rules even after shared-world source redaction. Do not infer use from a match
+win, activity on the other actor, or a newly published book not yet pinned. This is viewer
+explanation plus coach feedback, not automatic chat replies or a public proposal tracker.
+
 ## Product risks
 
 | Risk | Signal | Response / validation |

@@ -152,9 +152,11 @@ test('coach connects through a cross-site OAuth callback and disconnects with a 
   await proof.getByRole('button', { name: 'Adopt for next round' }).click();
   await expect(proof.getByRole('button', { name: 'Lesson adopted' })).toBeDisabled();
   await proof.getByRole('button', { name: 'Close dialog' }).click();
+  await expect(queue.getByText('Adopted · next round', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Reset arena for next round' }).click();
   await page.getByRole('button', { name: 'Start round', exact: true }).click();
   await expect(page.getByText('<b>Viewer One</b> · tick', { exact: false }).first()).toBeVisible();
+  await expect(queue.getByText('Used in this round', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Pause round' }).click();
   await page.screenshot({ path: '.local/screenshots/chat-queue-mock.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });

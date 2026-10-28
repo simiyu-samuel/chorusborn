@@ -33,6 +33,7 @@ import { inspectPlaybook } from './game/playbook-inspection.js';
 import { describeCondition } from './lesson.js';
 import { RivalryPanel } from './rivalry-panel.js';
 import { ChatQueue } from './chat-queue.js';
+import { GuideShare, ViewerReminder } from './viewer/reminder.js';
 
 async function request<T>(path: string, body?: unknown): Promise<T> {
   const response = await fetch(
@@ -607,6 +608,9 @@ export function App() {
             About this build <ArrowUpRight size={14} />
           </button>
         </div>
+        <a className="combat-lab-link" href="/guide" target="_blank" rel="noreferrer">
+          <BookOpen size={16} /> How to play <ArrowUpRight size={13} />
+        </a>
         <a className="combat-lab-link" href="/combat-lab">
           <Swords size={16} /> Combat lab <ArrowUpRight size={13} />
         </a>
@@ -724,6 +728,7 @@ export function App() {
               {state ? (
                 <RivalryPanel state={state} update={setState} connect={() => setSettings(true)} />
               ) : null}
+              <GuideShare />
               <section className="proof-scenario">
                 <label htmlFor="proof-scenario">Lesson test scenario</label>
                 <select
@@ -1313,6 +1318,7 @@ export function Overlay() {
           {online ? '' : '· RECONNECTING'}
         </span>
       </div>
+      <ViewerReminder />
       {error ? <p role="alert">{error}</p> : null}
       {!online && world ? (
         <div className="broadcast-stale" role="status">
