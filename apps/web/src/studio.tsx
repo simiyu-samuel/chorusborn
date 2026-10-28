@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ArrowDownLeft,
+  ArrowUp,
+  ArrowDown,
   ArrowRight,
   ArrowUpRight,
   BookOpen,
@@ -333,12 +335,37 @@ function TrialView({
         <div>
           <strong>Same starting state. One changed playbook.</strong>
           <p>
-            Fixture scenario · seed {trial.seed} · tick {trial.sourceTick} ·{' '}
-            {trial.sourceHash.slice(0, 12)}. Results cover this scenario only; broader evaluation is
-            still to come. Rule-use receipts: {trial.candidateBranch.ruleUses}.
+            {trial.scenario === 'neutral'
+              ? 'Neutral opening · replay shows your initiative first'
+              : 'Carrier fixture'}{' '}
+            · opponent {trial.opponent.name} v{trial.opponent.version} · seed {trial.seed} · tick{' '}
+            {trial.sourceTick} · {trial.sourceHash.slice(0, 12)}. Results cover this scenario only;
+            broader evaluation is still to come. Rule-use receipts: {trial.candidateBranch.ruleUses}
+            .
           </p>
         </div>
       </div>
+      {trial.paired ? (
+        <div className="evidence-note">
+          <div>
+            <strong>Both starting initiatives tested</strong>
+            <p>
+              Your initiative first: current {trial.baseline.score} → candidate{' '}
+              {trial.candidateBranch.score} captures.
+            </p>
+            <p>
+              Opponent initiative first: current {trial.paired.baseline.score} → candidate{' '}
+              {trial.paired.candidateBranch.score} captures.
+            </p>
+            <p>
+              Total across both starts: current {trial.baseline.score + trial.paired.baseline.score}{' '}
+              → candidate {trial.candidateBranch.score + trial.paired.candidateBranch.score}{' '}
+              captures. Second source: {trial.paired.sourceHash.slice(0, 12)}. The replay above
+              shows the first start only.
+            </p>
+          </div>
+        </div>
+      ) : null}
       <div className="modal-footer">
         <span>
           {trial.adopted
@@ -370,6 +397,8 @@ export function App() {
   const { state, setState, connection, error, setError } = useStudio();
   const [tab, setTab] = useState<'studio' | 'playbook' | 'trials'>('studio');
   const [selected, setSelected] = useState('core-discipline');
+  const [scenario, setScenario] = useState<'carrier' | 'neutral'>('carrier');
+  const [orderBusy, setOrderBusy] = useState(false);
   const [busy, setBusy] = useState(false),
     [adopting, setAdopting] = useState(false);
   const [trial, setTrial] = useState<Trial | null>(null);
@@ -444,6 +473,28 @@ export function App() {
     },
     [setState, setError],
   );
+  const moveRule = async (index: number, direction: number) => {
+    if (!state || orderBusy) return;
+    const ruleIds = state.playbook.rules.map((r) => r.id);
+    const target = index + direction;
+    if (target < 0 || target >= ruleIds.length) return;
+    [ruleIds[index], ruleIds[target]] = [ruleIds[target]!, ruleIds[index]!];
+    setOrderBusy(true);
+    try {
+      setState(
+        await request<StudioState>('/api/demo/playbook/order', {
+          expectedVersion: state.playbook.version,
+          ruleIds,
+        }),
+      );
+      setTrial(null);
+      setError(null);
+    } catch (cause) {
+      setError((cause as Error).message);
+    } finally {
+      setOrderBusy(false);
+    }
+  };
   const prove = async (proposalId?: string) => {
     setBusy(true);
     setError(null);
@@ -451,7 +502,7 @@ export function App() {
       setTrial(
         await request<Trial>(
           '/api/demo/trials',
-          proposalId ? { proposalId } : { sampleId: selected },
+          proposalId ? { proposalId, scenario } : { sampleId: selected, scenario },
         ),
       );
     } catch (cause) {
@@ -673,6 +724,22 @@ export function App() {
               {state ? (
                 <RivalryPanel state={state} update={setState} connect={() => setSettings(true)} />
               ) : null}
+              <section className="proof-scenario">
+                <label htmlFor="proof-scenario">Lesson test scenario</label>
+                <select
+                  id="proof-scenario"
+                  value={scenario}
+                  onChange={(event) => setScenario(event.target.value as 'carrier' | 'neutral')}
+                >
+                  <option value="carrier">Carrier dilemma · starts with the core</option>
+                  <option value="neutral">Neutral opening · both starting initiatives</option>
+                </select>
+                <p>
+                  {scenario === 'neutral'
+                    ? 'Tests retrieval from both homes, twice with opposite initiative. Uses your rival’s locked book when a rivalry is attached; otherwise the baseline.'
+                    : 'Tests delivery from the authored carrier fixture. Choose neutral opening to test retrieval.'}
+                </p>
+              </section>
               {state ? (
                 <ChatQueue
                   state={state}
@@ -939,7 +1006,8 @@ export function App() {
                   </h2>
                   <p>
                     Newest lessons run first. The first applicable rule controls the move; the fixed
-                    baseline handles the rest. More lessons do not add speed or strength.
+                    baseline handles the rest. More lessons do not add speed or strength. Move rules
+                    up/down to save a new version for the next round; the active round stays locked.
                   </p>
                 </div>
               </div>
@@ -971,9 +1039,33 @@ export function App() {
                           Repeats rule {String(ruleInspection[i]!.duplicateOf).padStart(2, '0')};
                           adds no new behavior. The earlier rule takes priority.
                         </small>
+                      ) : ruleInspection[i]?.shadowedBy !== undefined ? (
+                        <small role="note">
+                          Blocked by higher-priority rule{' '}
+                          {String(ruleInspection[i]!.shadowedBy).padStart(2, '0')} with matching or
+                          broader conditions for the same goal. Move this rule up to give it
+                          priority.
+                        </small>
                       ) : null}
                     </div>
-                    <Check size={18} />
+                    <div className="rule-order" aria-label={`Priority for rule ${i + 1}`}>
+                      <button
+                        className="icon-button"
+                        aria-label={`Move rule ${i + 1} up`}
+                        disabled={orderBusy || i === 0}
+                        onClick={() => void moveRule(i, -1)}
+                      >
+                        <ArrowUp size={16} />
+                      </button>
+                      <button
+                        className="icon-button"
+                        aria-label={`Move rule ${i + 1} down`}
+                        disabled={orderBusy || i === state.playbook.rules.length - 1}
+                        onClick={() => void moveRule(i, 1)}
+                      >
+                        <ArrowDown size={16} />
+                      </button>
+                    </div>
                   </div>
                 ))
               ) : (

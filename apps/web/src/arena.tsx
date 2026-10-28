@@ -207,6 +207,15 @@ export function Arena({
         </div>
         {mode !== 'replay' && !suspended ? <RoundResult world={world} /> : null}
       </div>
+      {world.contest.enabled ? (
+        <div className="initiative-cue" role="status">
+          Tie initiative → {world.champions.find((c) => c.id === world.contest.initiative)?.name}
+          {world.contest.since !== null
+            ? ` · resolving in ${Math.max(0, (10 - (world.tick - world.contest.since)) / 20).toFixed(1)}s`
+            : ' · equal claims resolve after 0.5s'}
+          {' · passes after use; first turn switches on rematch'}
+        </div>
+      ) : null}
       <div className="game-lower-third">
         <div className={`game-cue ${world.core.carrier === null ? '' : 'has-core'}`}>
           <span className="core-symbol">◆</span>
@@ -225,7 +234,7 @@ export function Arena({
                 ? `${world.champions.find((c) => c.id === capture.actorId)?.name} brings it home`
                 : world.core.carrier === null
                   ? contested
-                    ? 'Equal claims · win the contest to collect'
+                    ? 'Equal claims · initiative resolves the contest'
                     : 'The core is waiting'
                   : `${world.champions.find((c) => c.id === world.core.carrier)?.name} · ${intentCue(world, world.core.carrier)}`}
             </strong>

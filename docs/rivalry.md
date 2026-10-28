@@ -64,76 +64,57 @@ joins; only the owner's separate `playbook` and `intake` DTOs expose their sourc
 
 ## Simulation and consent
 
-Engine `core-run/0.3.0` retains `arena.coreSpawn` as controller state. Original training uses
-its previous carrier-dilemma opening/spawn; rivalry uses a neutral core at `(16000, 9500)`, no
-opening decoy, equal base stats and both actors at their homes. The core returns to that serialized
-spawn after capture or the ordinary idle timeout. Positions, metrics, full books and all controller
-fields are snapshotted. Previous engine checkpoints are rejected; stored local playbooks remain
-compatible. Source text is never executable code.
+Engine `core-run/0.4.0` retains a neutral core at `(16000,9500)`, equal home spawns, pickup-range
+path goals and mirrored horizontal path ordering. Every world serializes `contest.enabled`,
+`opening`, `initiative` and nullable `since` tick. A unique nearest surviving claimant picks up
+immediately. Equal surviving claims start a ten-tick/0.5-second contest; on expiry, the current
+initiative holder picks up and initiative passes to the other champion. Losing the equal claim
+resets the timer. Simultaneous damage/defeat still happens before any pickup. Unique pickups do
+not spend initiative. No model, display animation or channel name decides the result.
 
-At match start/rematch, both published playbooks are deep-copied into the authoritative world.
-Readiness records policy hashes and adoption clears pending readiness before a new start.
-Pausing an in-progress round preserves those locked policies; resuming does not silently replace
-them. The shared clock steps a match once per tick and publishes it to both coaches/overlays.
-Existing decision records attribute actor B execution just as they do actor A execution.
+On acceptance the server draws the initial initiative with `crypto.randomInt(2)` and displays
+it before readying. A tick-zero start preserves that draw. Pause/resume preserves the timer and
+arrow; every finished-round rematch flips the **opening** initiative. Only tied pickups use the
+arrow; it is not a speed/stat bonus. The shared arena and overlay show its holder and countdown,
+and a recorded `initiative` event identifies an actual tied award. Earlier checkpoints are
+incompatible; saved playbooks remain compatible. The carrier fixture leaves tie resolution off.
 
-The neutral opening uses pickup-range cell goals and home-relative route tie breaks. Pickups
-choose the nearest living eligible claimant; equal claims remain contested until distance,
-retreat or defeat breaks the tie. Array order and actor IDs do not award the core. The shared
-arena/overlay labels a currently equal surviving claim as **CORE CONTESTED**. Identical policies
-can draw rather than receiving an arbitrary winner. Determinism and full snapshot restore remain
-required. Mirrored regression checks are not a full balance study or holdout evaluation.
+Both coaches still consent/ready. Books are copied and pinned at match start; mid-round priority
+edits/adoptions do not mutate the active world. A disconnected account pauses the match as before.
 
 ## Fairness and why a smaller book can win
 
-A playbook is a priority list, not a character level. The newest adopted rules run first; the
-first matching executable rule controls the goal/route/optional ability. The fixed novice
-baseline fills gaps. Repeating a return-home rule adds no new behavior. A carrying-only rule
-does nothing before pickup. Balanced/cautious routes avoid hazard cost and can take longer than
-a direct route. More lessons therefore do not imply a faster or stronger champion.
+The earlier order-based pickup favored actor A; replacing it with indefinite ties then exposed
+a zero-possession loop. Engine 0.4.0 makes the symmetry-breaking rule visible and records it.
+Identical delivery books now contest, collect and score. A single first-to-three round can favor
+the opening initiative, so compare opposite starts/rematches. Mirrored checks swap initiative
+with the policies and sides. These bounded checks do not establish full competitive balance.
 
-The owner reported repeat 3–0 losses. An offline reproduction using the saved books confirmed
-two separate findings: the balanced-route retrieval rule loses the race to the opponent's
-baseline direct approach on this arena, **even after swapping their sides**; and the previous
-engine awarded equal eligible pickups to actor A, making identical return-home books produce
-an arbitrary 3–0. Engine 0.3.0 fixes the latter plus mirrored route/approach semantics. It does
-not alter the owner's books or force equal win rates. The same saved matchup still produces
-3–0 for the faster-retrieval policy after the fix.
+A playbook is a priority list. More lessons add no speed or strength. Carrying-only rules cannot
+help until possession; direct/safer routes trade speed and hazard exposure. A newer generic
+return-home rule can prevent an older return-with-shield rule from running. **Playbook** now
+shows exact duplicates plus syntactically provable same-goal shadowing (an earlier rule's
+conditions are a subset of the later rule's). This is not complete numeric/conflict analysis.
 
-The playbook screen explains priority, flags exact duplicate behaviors and displays actual
-executions in the currently pinned round. A newly adopted rule absent from that book is marked
-as next-round behavior. Zero executions means no recorded movement/ability under that rule;
-it does not establish why it failed to run. General predicate-overlap/conflict analysis remains
-planned.
+Use **Move rule N up/down** to save an explicit new version with the same rules, authors and
+source attribution. The complete order and expected version are validated; stale/duplicate/
+missing/foreign IDs are rejected. Changes invalidate current proof evidence and pending readiness,
+then apply at the next round. Current rounds keep their locked books. Rules are not deleted or
+automatically rearranged by Codex/the compiler. General disabling/history/rollback remains work.
 
-A supported alternative to review/prove is:
+## Neutral-opening proofs
 
-```text
-!teach When the core is available, collect it by the direct route and use shield when ready.
-```
+Choose **Lesson test scenario → Neutral opening** before proving a community or sample lesson.
+The owned candidate/base book is actor A in a fresh home-spawn scenario. The opponent is the
+attached rival's **locked** book/name/version (not its unstarted next version), or the fixed
+baseline if no rivalry is attached. The source is independent of the current live clock.
 
-This expresses an explicit speed/risk trade-off and a contest ability. Inspect the compiled
-intent before adopting, then both coaches ready for a new round. The training proof still uses
-the declared carrier-dilemma fixture, so it does not validate a neutral-opening retrieval tactic
-against the current rival. No lesson is guaranteed to win across other books/layouts. Do not
-claim that a viewer caused a win or that one tested tactic generalizes.
-
-## Known zero-possession stalemate
-
-A current playtest with v2/v5 books reproduced a 0–0 match with zero possession for both.
-A direct retrieval policy and the opposing novice approach reach equal claims, deal equal
-simultaneous damage, respawn together and repeat. Carrying-only return/shield lessons never
-activate because the core is never held. A newer generic return rule can additionally shadow
-an older carrying-and-shield rule through first-match priority.
-
-An opening shield for one side can win the tested contest, but giving the same opening shield
-to both sides reproduces another zero-possession draw. More identical lessons therefore are
-not a general repair. Exact-duplicate warnings do not yet identify all broader rule conflicts,
-and training proofs still start with a carrier rather than testing neutral-core retrieval.
-
-The equal-claim rule needs an explicit, visible contest-resolution design and mirrored/paired
-balance checks. Perfectly symmetric deterministic actors do not spontaneously choose a unique
-winner. The owner books remain unchanged by this diagnostic; see the [build log](build-log.md).
+Baseline and candidate run from the same full snapshot. The worker repeats both from the
+opposite starting initiative. Both source hashes, policy/opponent metadata and both results are
+returned; the replay shows the first start only and the summary reports both, including totals.
+A peer's private source/proposal joins are removed from returned frames. Current match state is
+unchanged. The carrier-dilemma proof remains for delivery tactics and is still the default.
+These two initiative starts are not the planned scenario/holdout suite or guaranteed improvement.
 
 ## Implemented local API
 
@@ -143,11 +124,12 @@ winner. The owner books remain unchanged by this diagnostic; see the [build log]
 | `POST /api/rivalry/challenges/:id` | `{action: "accept" | "decline" | "cancel"}`; invited owner accepts/declines; inviter cancels |
 | `POST /api/rivalry/controls` | `{matchId, action: "ready" | "pause" | "leave"}`; current verified participant and matching active ID |
 | `GET /api/demo/state`, `/ws/demo` | Owner-specific private state plus the shared rivalry world; `selfActor` identifies the coach's side |
+| `POST /api/demo/playbook/order` | `{expectedVersion,ruleIds}`; current coach cookie, all own rule IDs exactly once, new version with active round pinned |
+| `POST /api/demo/trials` | `{sampleId,scenario?}` or `{proposalId,scenario?}`; scenario `carrier` (default) or `neutral`; neutral returns both starting-initiative results |
 | Existing overlay HTTP/WebSocket | Redacted shared world and mode only; no queue or mutation authority |
 
 Studio state adds `championName`, `selfActor`, `rivalry` and `mode: "rivalry" | "local-fixture"`.
 Private rivalry state includes pending invitations, match participants, each side's readiness
 and verified-connection flags. Controls and viewer input cannot supply an actor side, arbitrary
 policy, channel ID, match outcome or simulation speed. Fixture reset/start controls reject use
-while a shared rivalry is attached. Proof comparisons remain explicitly labeled training-fixture
-evidence; they are not yet branches against the rival's current policy or broad evaluation.
+while a shared rivalry is attached. Proofs declare their carrier/neutral scenario and opponent version. Neutral proof uses the attached rival’s locked policy; neither mode is a live historical checkpoint branch or broad evaluation.

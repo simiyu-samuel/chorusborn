@@ -10,6 +10,7 @@ import type { WebSocket } from 'ws';
 import {
   SAMPLE_LESSONS,
   adoptRequestSchema,
+  reorderRequestSchema,
   controlSchema,
   trialRequestSchema,
   intakeControlSchema,
@@ -24,7 +25,15 @@ import {
   type World,
   type CombatStudy,
 } from '@chorusborn/contracts';
-import { addLesson, createPlaybook, createWorld, snapshot, step, hash } from '@chorusborn/sim';
+import {
+  addLesson,
+  createPlaybook,
+  createWorld,
+  createRivalWorld,
+  snapshot,
+  step,
+  hash,
+} from '@chorusborn/sim';
 import { Rivalries, RivalFailure } from './rivalry.js';
 import { LocalStore, type StoredStudio } from './store.js';
 import { TwitchOAuth, TwitchFailure } from './twitch.js';
@@ -654,6 +663,46 @@ export async function createApp(options: AppOptions = {}) {
     publish(studio);
     return toState(studio);
   });
+  app.post('/api/demo/playbook/order', async (request, reply) => {
+    const studio = ownerStudio(request.headers.cookie);
+    if (!studio) return reply.code(401).send({ message: 'Open your studio first.' });
+    const parsed = reorderRequestSchema.safeParse(request.body);
+    if (!parsed.success) return reply.code(422).send({ message: 'Invalid playbook order.' });
+    if (studio.adopting || studio.busy || parsed.data.expectedVersion !== studio.playbook.version)
+      return reply
+        .code(409)
+        .send({ message: 'The book changed or a review is running. Refresh and try again.' });
+    const { ruleIds } = parsed.data;
+    const byRule = new Map(studio.playbook.rules.map((r) => [r.id, r]));
+    if (
+      ruleIds.length !== byRule.size ||
+      new Set(ruleIds).size !== ruleIds.length ||
+      ruleIds.some((id) => !byRule.has(id))
+    )
+      return reply.code(422).send({ message: 'Include every current rule exactly once.' });
+    if (ruleIds.every((id, i) => studio.playbook.rules[i]?.id === id)) return toState(studio);
+    studio.adopting = true;
+    try {
+      const playbook = {
+        version: studio.playbook.version + 1,
+        rules: ruleIds.map((id) => structuredClone(byRule.get(id)!)),
+      };
+      await store.put({
+        id: studio.id,
+        token: studio.token,
+        overlayKey: studio.overlayKey,
+        ...(studio.channel ? { channel: studio.channel } : {}),
+        playbook,
+      });
+      studio.playbook = playbook;
+      studio.trial = null;
+      rivalry.adopted(studio.id);
+      publishAll();
+      return toState(studio);
+    } finally {
+      studio.adopting = false;
+    }
+  });
   app.post('/api/demo/trials', async (request, reply) => {
     const studio = ownerStudio(request.headers.cookie);
     if (!studio) return reply.code(401).send({ message: 'Open your local studio first.' });
@@ -688,13 +737,34 @@ export async function createApp(options: AppOptions = {}) {
       return reply.code(429).send({ message: 'A trial is already running. Please wait.' });
     if (studio.playbook.rules.length + candidate.rules.length > 24)
       return reply.code(422).send({ message: 'Playbook limit reached.' });
-    const source = snapshot(trainingWorld(studio));
+    const scenario = parsed.success ? parsed.data.scenario : 'carrier';
+    let opening = trainingWorld(studio);
+    if (scenario === 'neutral') {
+      const match = rivalry.current(studio.id);
+      const self = match?.owners[0] === studio.id ? 'a' : 'b';
+      const rival = match?.world.champions.find((c) => c.id !== self);
+      opening = createRivalWorld(
+        [
+          { name: studio.channel?.login ?? 'Mica', playbook: studio.playbook },
+          {
+            name: rival?.name ?? 'Baseline opponent',
+            playbook: rival?.playbook ?? createPlaybook(),
+          },
+        ],
+        studio.world.seed,
+        'a',
+      );
+      // A rival's private proposal joins are not replay evidence for this coach.
+      opening = overlayWorld(opening);
+      opening.champions[0].playbook = structuredClone(studio.playbook);
+    }
+    const source = snapshot(opening);
     studio.busy = true;
     try {
-      const result = await new Promise<Pick<Trial, 'baseline' | 'candidateBranch'>>(
+      const result = await new Promise<Pick<Trial, 'baseline' | 'candidateBranch' | 'paired'>>(
         (resolve, reject) => {
           const worker = new Worker(new URL('./trial-worker.ts', import.meta.url), {
-            workerData: { source, candidate, attribution },
+            workerData: { source, candidate, attribution, paired: scenario === 'neutral' },
             // Node 24 strips our erasable TypeScript directly. Do not inherit a
             // dev watcher/loader or test-runner flags inside the simulation worker.
             execArgv: [],
@@ -727,6 +797,12 @@ export async function createApp(options: AppOptions = {}) {
         ...(attribution ? { author: attribution.author, source: attribution.source } : {}),
         candidate,
         baseVersion: source.state.champions[0].playbook.version,
+        scenario,
+        opponent: {
+          name: source.state.champions[1].name,
+          version: source.state.champions[1].playbook.version,
+          hash: hash(source.state.champions[1].playbook),
+        },
         sourceHash: source.hash,
         sourceTick: source.state.tick,
         seed: source.state.seed,

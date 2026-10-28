@@ -23,7 +23,7 @@ These are design defaults. Tune with measurements; record changes as a new engin
 
 | Mechanic | Initial rule |
 | --- | --- |
-| Core | One neutral core; pickup within 750 units if not carrying; nearest surviving claimant wins, equal claims stay contested; automatically score within 750 units of own gate |
+| Core | One neutral core; pickup within 750 units if not carrying; nearest surviving claimant wins; exact ties resolve after 10 uninterrupted ticks through visible alternating initiative; automatically score within 750 units of own gate |
 | Champion health | 100 maximum; observations expose health in integer basis points (0–10,000) |
 | Tag attack | Nearest legal enemy within 1,000 units; 20 damage; 20-tick cooldown |
 | Shield | 30 ticks of half incoming damage, rounded down; 100-tick cooldown |
@@ -42,10 +42,22 @@ No hidden team stat differences. Exact movement speed, obstacle geometry, and ha
 3. On decision ticks, evaluate all champion policies without mutating the shared state.
 4. Apply legal abilities and movement simultaneously. Path tie breaks use home-relative horizontal cell order, so a horizontally mirrored scenario mirrors the route.
 5. Collect tag/hazard damage and apply it simultaneously, then resolve defeats and core drops.
-6. Resolve surviving actors' pickups and captures. The nearest eligible claimant takes an unheld core; equal-distance claims stay contested with no pickup. A defeated actor cannot pick up or score on that tick.
+6. Resolve surviving actors' pickups and captures. The nearest eligible claimant takes an unheld core; equal-distance claims in rivalry start/continue a ten-tick contest. On expiry, the visible initiative holder picks up and the arrow passes. Losing equal eligibility clears the timer; unique claims do not consume the arrow. A defeated actor cannot pick up or score on that tick.
 7. Resolve resets, health regeneration, timer/end conditions, then emit state and decision records.
 
-Engine `core-run/0.3.0` removes stable-ID pickup priority. When the core sits between grid cells, routes target any legal cell center within pickup range instead of flooring toward one side. Side-swapped simulation checks compare full trajectories and metrics for the tested symmetric layouts/books; they do not establish overall balance or replace the planned holdout suite. Equal policies in an exactly symmetric contest can draw. No hidden random winner breaks a tie.
+Engine `core-run/0.4.0` retains pickup-range approach cells and home-relative path ordering.
+Rivalry resolves exact ties after 0.5 seconds using explicit serialized initiative. A server-side
+cryptographic coin draw selects the opening initiative at challenge acceptance; it is displayed
+before either coach readies and never redrawn at start/resume. It passes only after a tied pickup.
+Every rematch switches the opening initiative, irrespective of the last arrow holder. The
+carrier training fixture has initiative resolution disabled and preserves its authored opening.
+
+Mirror tests swap books, sides **and initiative**. Compare both starting initiatives for paired
+fairness; a single first-to-three game can still have a first-turn advantage. Equal carrier books
+now capture (3–2 / 2–3 on the recorded symmetric cases) rather than deadlocking at zero possession.
+Untrained baselines may still draw because they chase instead of returning home. There is no
+forced winner or guaranteed scoring for arbitrary books. All controller state is snapshotted;
+old engine checkpoints are rejected. Broad balance/scenario/holdout evaluation remains planned.
 
 ## Strategy space
 

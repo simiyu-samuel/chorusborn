@@ -57,10 +57,12 @@ describe('mutually authorized rivalry', () => {
   it('starts only after both ready, advances once, pins both books and resumes/rematches by mutual consent', () => {
     const { rivals, people, accept } = setup();
     accept();
+    const initialInitiative = rivals.current('one')!.world.contest.opening;
     rivals.control('one', 'ready');
     expect(rivals.current('two')!.world.status).toBe('paused');
     rivals.control('two', 'ready');
     expect(rivals.current('one')!.world.status).toBe('running');
+    expect(rivals.current('one')!.world.contest.opening).toBe(initialInitiative);
     rivals.tick();
     expect(rivals.current('two')!.world.tick).toBe(1);
     people.get('two')!.playbook = addLesson(createPlaybook(), SAMPLE_LESSONS[0]!.candidate, {
@@ -84,6 +86,9 @@ describe('mutually authorized rivalry', () => {
       winner: null,
     });
     expect(rivals.current('one')!.world.champions[1].playbook.version).toBe(1);
+    expect(rivals.current('one')!.world.contest.opening).toBe(
+      initialInitiative === 'a' ? 'b' : 'a',
+    );
     expect(() => rivals.control('one', 'ready')).toThrow('already running');
   });
   it('clears readiness after adoption or lost authority and requires reconnection before resuming', () => {

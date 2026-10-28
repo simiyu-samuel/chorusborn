@@ -1,6 +1,6 @@
 # System architecture
 
-Status: target production architecture. The local build implements `apps/web`, `apps/server`, `packages/contracts`, and `packages/sim`, plus Twitch OAuth, EventSub lifecycle, and a durable local teaching queue. Tokens remain memory-only. It uses local file stores instead of PostgreSQL and a shared Three.js/React Three Fiber scene with an SVG compatibility view; a bounded Groq compiler now handles explicit coach requests. Production services remain pending. See ADR 013–020 in [decisions](decisions.md).
+Status: target production architecture. The local build implements `apps/web`, `apps/server`, `packages/contracts`, and `packages/sim`, plus Twitch OAuth, EventSub lifecycle, and a durable local teaching queue. Tokens remain memory-only. It uses local file stores instead of PostgreSQL and a shared Three.js/React Three Fiber scene with an SVG compatibility view; a bounded Groq compiler now handles explicit coach requests. Production services remain pending. See ADR 013–022 in [decisions](decisions.md).
 
 ## Architectural principle
 
@@ -182,7 +182,22 @@ for two canonical channel studios. The live clock advances that match once, then
 both participants and their existing overlays. Separate channel queues and private books remain
 under verified OAuth; world-level source joins are redacted from the peer/public match DTO.
 Canonical channel bindings and books persist locally, while tokens/challenges/matches do not.
-Engine 0.3.0 snapshots retain `arena.coreSpawn` for deterministic resets. Pickup-range path
-goals, home-relative route tie breaks and contested equal claims remove actor-order possession
+Engine 0.4.0 snapshots retain `arena.coreSpawn` for deterministic resets. Pickup-range path
+goals, home-relative route tie breaks and a serialized ten-tick initiative contest replace actor-order possession
 priority; earlier engine checkpoints are rejected while saved books remain compatible.
 See [rivalry](rivalry.md) for authorization, consent, migration and deployment boundaries.
+
+### Reviewed priorities and paired neutral trials
+
+The owner-only `/api/demo/playbook/order` requires the current version and exact permutation of
+all current rule IDs. The adopting lock serializes publication, persistence precedes the new
+pointer, proof evidence is invalidated, and pending rivalry readiness clears. The existing world
+stays pinned. Same-order requests are no-ops; failed publication does not publish a partial book.
+
+Neutral trial creation normalizes the tested owner to actor A and pins the rival's locked policy.
+Public/peer source joins are stripped before worker input, then the owned private policy is
+restored for owner-only provenance. The bounded worker runs four branches: base/candidate with
+initiative A, then base/candidate with initiative B. The response includes primary frames and
+opposite-start summaries/source hash, avoiding a second full replay payload. Existing worker
+caps, timeout, source eligibility and version-based adoption checks remain in force. No model
+runs inside a tick or trial worker. Initiative is an engine rule, not a compiler capability.

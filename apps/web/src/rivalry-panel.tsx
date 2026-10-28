@@ -52,8 +52,9 @@ export function RivalryPanel({
       </div>
       <p className="rivalry-explainer">
         Each community teaches its own champion. Both streamers approve the match. Playbooks stay
-        locked until the next round. Equal core claims stay contested; neither side gets a free
-        pickup.
+        locked until the next round. Tied claims resolve after half a second using the visible
+        initiative arrow, then it passes. First initiative is drawn at challenge creation and
+        switches on each rematch.
       </p>
       {error ? (
         <p role="alert" className="modal-error">

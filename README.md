@@ -78,12 +78,23 @@ server; a localhost URL is not a remote invitation link. Two-account automated c
 providers and do not establish that serleusler has connected. Existing read-only overlays follow
 whichever rivalry their owner joins, without exposing private lesson queues.
 
-Engine `core-run/0.3.0` uses pickup-range approach cells, mirrored path tie breaks, and
-contested equal core claims instead of awarding possession by actor order. Identical books
-draw in the checked symmetric scenarios; different strategies can still win. The playbook
-shows exact duplicate tactics and actual execution counts. Earlier full checkpoints are
-incompatible; saved local books remain compatible. See the [fairness notes](docs/rivalry.md#fairness-and-why-a-smaller-book-can-win). Channel ownership
-now persists with each canonical local studio; OAuth tokens and matches remain memory-only.
+Engine `core-run/0.4.0` resolves equal core claims after ten uninterrupted ticks (0.5 seconds)
+using a visible **tie initiative** arrow. The arrow passes after a tied pickup. A fair server-side
+draw chooses the first initiative when a challenge is accepted; every rematch reverses that
+starting turn. Faster unique claims still win immediately. Snapshot state includes opening/current
+initiative and the contest timer; older checkpoints are incompatible, while saved books remain
+compatible. This breaks the previous zero-possession loop without hidden actor-order priority.
+A single first-to-three match can favor the first initiative; compare opposite starts rather than
+claiming universal balance. See the [fairness notes](docs/rivalry.md#fairness-and-why-a-smaller-book-can-win).
+
+In **Playbook**, use up/down buttons to save a new priority version. All existing rules/authors
+remain intact; active rounds stay pinned. Exact duplicate warnings and provable same-goal
+shadowing explain some priority conflicts. General conflict analysis, disabling and rollback are
+still planned. In Training grounds choose **Lesson test scenario → Neutral opening** before
+proving a sample or community lesson. This tests both starting initiatives against the attached
+rival's locked book (or the baseline), reports both results and shows the first-start replay.
+Carrier dilemma remains available for delivery lessons. Neither test is the planned full suite.
+Channel ownership/books persist locally; tokens, matches and trials remain memory-only.
 
 ## Twitch application registration
 

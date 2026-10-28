@@ -130,7 +130,7 @@ export type GameEvent =
   | StrikeEvent
   | {
       tick: number;
-      type: 'capture' | 'defeat' | 'pickup' | 'shield' | 'decoy';
+      type: 'capture' | 'defeat' | 'pickup' | 'shield' | 'decoy' | 'initiative';
       actorId: ActorId;
       text: string;
     };
@@ -141,7 +141,7 @@ export type ActorMetrics = {
   ruleUses: Record<string, number>;
 };
 export type World = {
-  engineVersion: 'core-run/0.3.0';
+  engineVersion: 'core-run/0.4.0';
   codecVersion: 1;
   seed: number;
   tick: number;
@@ -154,6 +154,12 @@ export type World = {
     walls: Point[];
     hazards: Point[];
     coreSpawn: Point;
+  };
+  contest: {
+    enabled: boolean;
+    opening: ActorId;
+    initiative: ActorId;
+    since: number | null;
   };
   champions: [Champion, Champion];
   core: Point & { carrier: ActorId | null; unheldSince: number };
@@ -184,6 +190,13 @@ export type Trial = {
   source?: LessonSource;
   author?: string;
   baseVersion: number;
+  scenario: 'carrier' | 'neutral';
+  opponent: { name: string; version: number; hash: string };
+  paired?: {
+    sourceHash: string;
+    baseline: Omit<TrialBranch, 'frames'>;
+    candidateBranch: Omit<TrialBranch, 'frames'>;
+  };
   candidate: Candidate;
   sourceHash: string;
   sourceTick: number;
@@ -297,9 +310,19 @@ export const controlSchema = z.strictObject({
   action: z.enum(['pause', 'resume', 'reset', 'rematch']),
 });
 export const trialRequestSchema = z.union([
-  z.strictObject({ sampleId: z.string().min(1).max(64) }),
-  z.strictObject({ proposalId: z.string().uuid() }),
+  z.strictObject({
+    sampleId: z.string().min(1).max(64),
+    scenario: z.enum(['carrier', 'neutral']).default('carrier'),
+  }),
+  z.strictObject({
+    proposalId: z.string().uuid(),
+    scenario: z.enum(['carrier', 'neutral']).default('carrier'),
+  }),
 ]);
+export const reorderRequestSchema = z.strictObject({
+  expectedVersion: z.number().int().min(0),
+  ruleIds: z.array(z.string().min(1).max(128)).max(24),
+});
 export const adoptRequestSchema = z.strictObject({
   trialId: z.string().uuid(),
   expectedVersion: z.number().int().min(0),

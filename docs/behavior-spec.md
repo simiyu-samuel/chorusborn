@@ -1,6 +1,6 @@
 # Teaching, policy, and replay specification
 
-Status: contract v1. Runtime enforcement is implemented in `packages/contracts`, and a basic interpreter/branch simulation runs in `packages/sim`. The checked-in [JSON schema](examples/lesson-candidate.schema.json) and [example](examples/lesson-candidate.json) match the bounded candidate format. A bounded Groq compiler is implemented for local coach-triggered jobs. Conflict analysis and full release evidence remain planned.
+Status: contract v1. Runtime enforcement is implemented in `packages/contracts`, and a basic interpreter/branch simulation runs in `packages/sim`. The checked-in [JSON schema](examples/lesson-candidate.schema.json) and [example](examples/lesson-candidate.json) match the bounded candidate format. A bounded Groq compiler is implemented for local coach-triggered jobs. Exact duplicates and some provable same-goal shadowing are inspected locally; general conflict analysis and full release evidence remain planned.
 
 ## Meaning of learning
 
@@ -100,6 +100,15 @@ The four-outcome envelope is runtime validated, including requiring a candidate 
 is pinned to the exact current playbook hash/version. Attempts and outcomes survive restart;
 running work becomes visibly failed and is never silently replayed. See the root README for
 local caps, the explicit four-case live smoke command, and remaining durability limitations.
-Adoption currently prepends the candidate's rules in their displayed order; editable insertion,
-general conflict analysis, disabling superseded rules and rollback remain release work. The playbook now identifies exact behavior duplicates (same conditions and intent) and displays executed-use counts only for rules present in the locked round book. Exact duplicates add no speed, health, damage or extra action; newest rules run first. Trials use the
-fixed opening fixture, not a live historical checkpoint or the broader scenario suite.
+Adoption prepends candidate rules in their displayed order. The coach can then explicitly reorder
+the complete book with up/down controls; this validates expected version and all rule IDs, saves
+a new version, preserves provenance, invalidates prior trial evidence and leaves active books
+pinned. Exact duplicates and same-goal rules shadowed by earlier subset conditions are labeled;
+complete numeric/predicate overlap analysis, rule disabling, history and rollback remain planned.
+
+Proof requests declare `carrier` (default delivery fixture) or `neutral`. Neutral creates a fresh
+home-spawn world with the current owned book and attached rival's locked book, or the baseline.
+It runs candidate/base branches for both starting tie initiatives. Each pair changes only the
+owned policy; paired source hashes, final hashes and metrics are returned. The first start has
+replay frames; the opposite start is summarized explicitly. No live world is mutated. The
+opponent metadata and scenario are part of the evidence. This is not full-suite/holdout evidence.

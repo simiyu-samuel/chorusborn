@@ -108,9 +108,18 @@ test('two independently signed-in streamers teach their own champions and share 
     await expect(
       onePanel.getByRole('button', { name: 'Pause rivalry', exact: true }),
     ).toBeVisible();
-    await expect(
-      page.getByText('Equal claims · win the contest to collect', { exact: true }),
-    ).toBeVisible();
+    await expect(page.getByText('Tie initiative →', { exact: false })).toBeVisible();
+    await expect
+      .poll(
+        async () => {
+          const live = await (
+            await page.request.get('http://localhost:5273/api/demo/state')
+          ).json();
+          return live.world.metrics.a.possessionTicks + live.world.metrics.b.possessionTicks;
+        },
+        { timeout: 20_000 },
+      )
+      .toBeGreaterThan(0);
     await onePanel.getByRole('button', { name: 'Pause rivalry', exact: true }).click();
     await expect(
       twoPanel.getByRole('button', { name: 'Ready for rivalry', exact: true }),

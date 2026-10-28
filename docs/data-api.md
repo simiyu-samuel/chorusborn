@@ -119,7 +119,7 @@ These remain loopback-only and separate from the planned production API:
 | Endpoint | Body / behavior |
 | --- | --- |
 | `POST /api/twitch/proposals/:id/compile` | Empty JSON object; verified channel source required; explicit one-shot Groq call or reuse of a valid same-base candidate |
-| `POST /api/demo/trials` | Exactly `{proposalId}` for an eligible compiled source, or `{sampleId}` for an authored fixture |
+| `POST /api/demo/trials` | `{proposalId,scenario?}` for an eligible compiled source or `{sampleId,scenario?}` for a sample; scenario is `carrier` (default) or `neutral` |
 | `POST /api/demo/adoptions` | Existing `{trialId,expectedVersion}`; source/compiler/base-policy checks apply before storing viewer-authored rules |
 
 Proposal DTOs now include nullable `compilation` and `compileAttempts` (old stored rows default
@@ -163,3 +163,19 @@ over. Both coaches receive the same match world with private source joins redact
 only their own unredacted book/queue. Overlay reads expose world/mode only. Match controls
 require the expected match ID and current participant OAuth. This is not the durable production
 match/checkpoint/outbox design above.
+
+## Local priority and initiative contract (implemented)
+
+`POST /api/demo/playbook/order` accepts `{expectedVersion,ruleIds}` from an owning studio cookie.
+Every existing ID must appear exactly once, with no additions. A changed order saves version+1
+with identical rule/provenance data, invalidates previous trial evidence and clears pending rival
+readiness. The active world remains pinned. Same order returns without incrementing the version.
+
+World engine `core-run/0.4.0` adds required `contest: {enabled,opening,initiative,since}` controller
+state. `since` is null or an integer tick no later than the snapshot tick; both actor IDs must be
+valid. Neutral rivalry enables the ten-tick tie rule; carrier fixtures disable it. A tied award
+emits `initiative` then `pickup`; source hashes therefore include the declared symmetry breaker.
+
+Trials include `scenario`, `opponent: {name,version,hash}` and, for neutral, `paired` with the
+opposite-initiative source hash and both branch summaries. Only the first start includes frames.
+Latest-trial metadata may include these bounded summaries, never the paired replay frames.

@@ -632,6 +632,69 @@ fixture that starts with possession. Perfectly symmetric deterministic play cann
 unique winner without an explicit symmetry-breaking rule; do not reintroduce hidden actor-ID
 priority or silently rewrite the owners' lessons to conceal that trade-off.
 
+## 2026-10-28 — Visible tie initiative, reviewed priority order and paired neutral proofs
+
+**Implemented**
+
+- Engine `core-run/0.4.0` replaces indefinite rivalry ties with a ten-tick/0.5-second contest.
+  The visible initiative holder wins a sustained equal claim, a real event records it and the
+  arrow passes. Unique/closer surviving claims still resolve immediately; simultaneous defeat
+  precedes pickup. Losing equality or an idle-core relocation clears the timer. Training carrier
+  fixtures keep initiative disabled. Full snapshots require opening/current arrow and timer;
+  old checkpoints reject while stored books remain compatible.
+- Challenge acceptance draws the opening arrow server-side using `crypto.randomInt(2)`; it is
+  visible before readying and stays fixed through tick-zero start/pause/resume. Each rematch
+  reverses the opening arrow. Single games may have a first-turn advantage; opposite-start pairs
+  make it measurable. The engine remains deterministic after that recorded initial input.
+- New owner-only priority endpoint validates expected version and an exact permutation of all
+  own rule IDs, publishes a new version, preserves source/author data, clears old trial evidence
+  and pending readiness, and leaves the active world pinned. UI up/down buttons implement it.
+  Exact duplicates and syntactically provable same-goal shadowing are labeled. The real owned
+  shield rule is visibly marked as blocked by rule 02; no user rule was silently reordered.
+- Lesson scenario selection supports carrier delivery or a neutral home-spawn opening. Neutral
+  proofs use the attached rival's locked book/version (baseline otherwise), pin it for four
+  deterministic branches and report both starting initiatives. First-start replay frames and
+  opposite-start summary/source/final hashes are explicit. Peer private provenance is redacted
+  from replay frames; live worlds stay untouched. Both sample and eligible community lessons use
+  the same selector and existing reviewed adoption path.
+
+**Verification**
+
+- Full `npm run check`: **96 tests in 17 files**, formatting, types and frontend build pass.
+  An initial run overlapped Chromium and timed out the two new multi-worker API tests; the full
+  standalone rerun passed without weakening their timeouts or the production worker timeout.
+- Simulation regressions cover both initiative starts across seeds 0/1/2/42, equal aggregate
+  opposite-start outcomes for identical delivery books, full per-tick mirrored trajectories
+  when policies/sides/initiative swap, uninterrupted timer/paused state, unique/defeated claims,
+  timer reset on core relocation, exact checkpoint continuation and missing/old state rejection.
+- API tests cover no-cookie/invalid/stale/duplicate orders, concurrent publication, no-op order,
+  persistence, pinned active book, repeatable paired neutral results, unchanged live state and
+  stale adoption rejection. Mocked two-channel integration checks rival book selection,
+  side-B-to-A normalization and private peer source redaction in neutral proof frames.
+- **Four browser flows pass**: independent mocked accounts with an actual shared-match pickup;
+  new neutral paired proof/review/priority save and mobile fit; ordinary proof/adoption/locked
+  round/read-only overlay; and duplicate/next-round execution diagnostics. No live provider is
+  involved in browser fixtures. Captures/logs remain ignored under `.local/`.
+- Offline copies of the real v5/v2 books now produce 3–2 with own initial initiative and 2–3 with
+  the opposite. Both champions record possession/captures. Identical carrier books behave the
+  same way on the checked symmetric cases. Empty novice books can still draw, with possession,
+  because their baseline does not consistently deliver under pressure. This is not a promise
+  of nonzero scores for arbitrary strategies or broad competitive balance.
+- Restored the local dev server after it had stopped during an interrupted session. Confirmed
+  the real v5/six-rule book and its blocked-shield warning plus priority buttons in the browser.
+  Persisted user books and credential configuration were left intact. The restarted process has
+  no live OAuth sessions/rivalry; both accounts must reconnect and create a fresh challenge.
+
+**Boundaries**
+
+The proof pair varies initiative only; broad layouts/opponents/holdouts, editable rule disabling,
+version-history rollback, remote hosting, durable recovery and OBS performance evidence remain
+work. The second proof start has summary metrics rather than a second replay viewer. Existing
+renderer chunk-size warning remains (about 916KB minified/243KB gzip); main web bundle is about
+305KB/95KB gzip. No dependency, model integration, chat post, deployment or paid resource was
+added. Codex implemented and verified the controller/API/UI/tests and documented ADR 022; this
+entry is committed with that source increment.
+
 ## Future entry template
 
 For each completed milestone, record date, feature/acceptance IDs, commit reference, meaningful checks and outcomes, screenshots/replay/evaluation references where appropriate, remaining limitations, and how Codex contributed. Never include secrets or full private session transcripts. Store bulky recordings outside Git and link final authorized artifacts when available.

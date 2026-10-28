@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID, randomInt } from 'node:crypto';
 import type {
   ChannelIdentity,
   Playbook,
@@ -113,10 +113,14 @@ export class Rivalries {
       throw new RivalFailure(409, 'The inviting channel changed. Request a new challenge.');
     if (this.current(owner) || this.current(challenge.owner))
       throw new RivalFailure(409, 'A participant is already in a rivalry.');
-    const world = createRivalWorld([
-      { name: from.channel.login, playbook: from.playbook },
-      { name: who.channel.login, playbook: who.playbook },
-    ]);
+    const world = createRivalWorld(
+      [
+        { name: from.channel.login, playbook: from.playbook },
+        { name: who.channel.login, playbook: who.playbook },
+      ],
+      42,
+      randomInt(2) === 0 ? 'a' : 'b',
+    );
     const match: Match = {
       id: randomUUID(),
       owners: [challenge.owner, owner],
@@ -161,6 +165,11 @@ export class Rivalries {
           { name: string; playbook: Playbook },
         ],
         match.world.seed,
+        match.world.status === 'finished'
+          ? match.world.contest.opening === 'a'
+            ? 'b'
+            : 'a'
+          : match.world.contest.opening,
       );
     }
     match.world.status = 'running';

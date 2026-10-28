@@ -207,6 +207,21 @@ describe('two-channel authority and teaching', () => {
     expect(a.world.champions[1].playbook.rules[0].source).toBeUndefined();
     expect(b.playbook.rules[0].source.channelId).toBe('222');
     expect((await post(one, '/api/demo/controls', { action: 'reset' })).statusCode).toBe(409);
+    const neutralProof = await post(two, '/api/demo/trials', {
+      sampleId: 'core-discipline',
+      scenario: 'neutral',
+    });
+    expect(neutralProof.statusCode).toBe(200);
+    const neutral = neutralProof.json();
+    expect(neutral.opponent).toMatchObject({ name: 'streamer_one', version: 1 });
+    expect(neutral.baseline.frames[0].champions.map((c: { name: string }) => c.name)).toEqual([
+      'streamer_two',
+      'streamer_one',
+    ]);
+    expect(neutral.baseline.frames[0].champions[0].playbook.rules[0].source.channelId).toBe('222');
+    expect(neutral.baseline.frames[0].champions[1].playbook.rules[0].source).toBeUndefined();
+    expect(neutral.paired).toBeDefined();
+    expect((await state(one)).world).toEqual(a.world);
     await post(one, '/api/rivalry/controls', { action: 'ready' });
     expect((await state(two)).world.status).toBe('paused');
     await post(two, '/api/rivalry/controls', { action: 'ready' });

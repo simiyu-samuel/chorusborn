@@ -128,6 +128,36 @@ identical-book outcomes on four recorded seeds, full per-tick side-swapped traje
 different routes/books and shields, nearest/dead/tied claimant checks, and existing restore/API
 checks. These are bounded regressions, not the planned complete balance/holdout evaluation.
 
+### ADR 022 — 2026-10-28: visible alternating initiative, priority edits and neutral proof pairs
+
+The owner authorized proceeding after the zero-possession audit. Perfectly symmetric deterministic
+actors need an explicit symmetry breaker; indefinite equal claims produced repeated mutual defeats.
+Engine 0.4.0 resolves ten uninterrupted equal-claim ticks with a visible initiative arrow, emits
+an actual award event, and passes the arrow. A unique nearest survivor still picks up immediately
+without spending the arrow. Losing equality or relocating an idle core resets the timer. A
+cryptographic server draw chooses the opening arrow when a challenge is accepted, before readying;
+it is not redrawn at start/resume. A finished-round rematch reverses the opening arrow. Full
+snapshots serialize all initiative/timer fields and old engine checkpoints are incompatible.
+
+This deliberately introduces a declared first-turn effect into a single first-to-three game.
+Mirroring therefore swaps initiative with books/sides, and paired results compare both opening
+turns. No account name, array-order shortcut or model decides a tied award. Equal delivery books
+can now score; untrained/arbitrary policies can still draw. The short contest remains visible
+instead of silently making the fighters stronger or guaranteeing a winner for every policy.
+
+The coach may explicitly reorder the exact complete rule set. Expected-version and publication
+locks prevent stale/concurrent edits; the order saves a new version with rule authors/source
+joins preserved. Current worlds stay pinned, trial evidence invalidates and pending readiness
+clears. The UI flags exact duplicates and a sufficient syntactic same-goal shadowing case, not
+complete Boolean/numeric conflict analysis. No rule is automatically deleted or rearranged.
+
+Proof requests choose the existing carrier fixture or a neutral opening. Neutral uses the owned
+current book and attached rival's locked book (baseline when absent), normalizes the owner to A,
+and runs base/candidate branches for both starting initiatives. The main replay shows one start;
+the second start has explicit metrics/final/source hashes, and both results are reported. Peer
+private source joins are stripped from returned frames. The live match is unchanged; the current
+model grammar is unchanged. This is bounded paired evidence, not the planned scenario/holdout suite.
+
 ## Product risks
 
 | Risk | Signal | Response / validation |

@@ -16,7 +16,7 @@ import {
   type StrikeEvent,
 } from '@chorusborn/contracts';
 
-export const ENGINE_VERSION = 'core-run/0.3.0' as const;
+export const ENGINE_VERSION = 'core-run/0.4.0' as const;
 export const TICKS_PER_SECOND = 20;
 export const MATCH_TICKS = 60 * TICKS_PER_SECOND;
 const HOME_A = { x: 2500, y: 9500 };
@@ -111,6 +111,7 @@ export function createWorld(playbook = createPlaybook(), seed = 42): World {
       hazards: [7, 8, 9, 22, 23, 24].flatMap((x) => [8, 9].map((y) => ({ x, y }))),
       coreSpawn: copy(CENTER),
     },
+    contest: { enabled: false, opening: 'a', initiative: 'a', since: null },
     champions: [a, b],
     core: { ...CENTER, carrier: 'a', unheldSince: 0 },
     decoys: [{ x: 20500, y: 7500, owner: 'b', expiresAt: 100 }],
@@ -140,6 +141,14 @@ export function restore(input: Snapshot): World {
     world.tick < 0 ||
     world.tick > MATCH_TICKS ||
     world.champions.length !== 2 ||
+    !world.contest ||
+    typeof world.contest.enabled !== 'boolean' ||
+    !['a', 'b'].includes(world.contest.opening) ||
+    !['a', 'b'].includes(world.contest.initiative) ||
+    (world.contest.since !== null &&
+      (!Number.isInteger(world.contest.since) ||
+        world.contest.since < 0 ||
+        world.contest.since > world.tick)) ||
     !world.arena.coreSpawn ||
     !Number.isInteger(world.arena.coreSpawn.x) ||
     !Number.isInteger(world.arena.coreSpawn.y) ||
@@ -460,17 +469,31 @@ export function step(input: World): World {
       .filter((actor) => actor.health > 0 && distance(actor, world.core) <= 750)
       .sort((a, b) => distance(a, world.core) - distance(b, world.core));
     const nearest = claimants[0];
-    // Equal claims remain contested. Neither actor IDs nor array order award
-    // possession; a closer approach, retreat or defeat must break the tie.
-    if (
+    const tied =
       nearest &&
-      (!claimants[1] || distance(nearest, world.core) < distance(claimants[1], world.core))
-    ) {
-      world.core.carrier = nearest.id;
-      event('pickup', nearest, `${nearest.name} picked up the core`);
+      claimants[1] &&
+      distance(nearest, world.core) === distance(claimants[1], world.core);
+    if (tied && world.contest.enabled) {
+      world.contest.since ??= world.tick;
+      if (world.tick - world.contest.since >= 10) {
+        const winner = claimants.find((c) => c.id === world.contest.initiative)!;
+        world.core.carrier = winner.id;
+        event('initiative', winner, `${winner.name} won the tied claim by initiative`);
+        event('pickup', winner, `${winner.name} picked up the core`);
+        world.contest.initiative = winner.id === 'a' ? 'b' : 'a';
+        world.contest.since = null;
+      }
+    } else {
+      world.contest.since = null;
+      if (nearest && !tied) {
+        world.core.carrier = nearest.id;
+        event('pickup', nearest, `${nearest.name} picked up the core`);
+      }
     }
-    if (world.core.carrier === null && world.tick - world.core.unheldSince >= 200)
+    if (world.core.carrier === null && world.tick - world.core.unheldSince >= 200) {
       world.core = { ...world.arena.coreSpawn, carrier: null, unheldSince: world.tick };
+      world.contest.since = null;
+    }
   }
   for (const actor of world.champions) {
     if (world.core.carrier === actor.id) {
@@ -604,8 +627,10 @@ export function createCombatStudy(): CombatStudy {
 export function createRivalWorld(
   participants: [{ name: string; playbook: Playbook }, { name: string; playbook: Playbook }],
   seed = 42,
+  opening: ActorId = 'a',
 ): World {
   const world = createWorld(participants[0].playbook, seed);
+  world.contest = { enabled: true, opening, initiative: opening, since: null };
   world.arena.id = `relay-duel-${seed >>> 0}`;
   world.arena.coreSpawn = { x: 16000, y: 9500 };
   world.core = { ...world.arena.coreSpawn, carrier: null, unheldSince: 0 };
