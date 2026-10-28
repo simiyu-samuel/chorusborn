@@ -118,6 +118,23 @@ the declared carrier-dilemma fixture, so it does not validate a neutral-opening 
 against the current rival. No lesson is guaranteed to win across other books/layouts. Do not
 claim that a viewer caused a win or that one tested tactic generalizes.
 
+## Known zero-possession stalemate
+
+A current playtest with v2/v5 books reproduced a 0–0 match with zero possession for both.
+A direct retrieval policy and the opposing novice approach reach equal claims, deal equal
+simultaneous damage, respawn together and repeat. Carrying-only return/shield lessons never
+activate because the core is never held. A newer generic return rule can additionally shadow
+an older carrying-and-shield rule through first-match priority.
+
+An opening shield for one side can win the tested contest, but giving the same opening shield
+to both sides reproduces another zero-possession draw. More identical lessons therefore are
+not a general repair. Exact-duplicate warnings do not yet identify all broader rule conflicts,
+and training proofs still start with a carrier rather than testing neutral-core retrieval.
+
+The equal-claim rule needs an explicit, visible contest-resolution design and mirrored/paired
+balance checks. Perfectly symmetric deterministic actors do not spontaneously choose a unique
+winner. The owner books remain unchanged by this diagnostic; see the [build log](build-log.md).
+
 ## Implemented local API
 
 | Route | Body / authority |

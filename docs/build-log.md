@@ -590,6 +590,48 @@ This was a local data operation, with no game code or dependency changes. No pro
 chat message or silent lesson adoption was made. Only this operation record is committed;
 active stores and the recovery copy stay outside Git.
 
+## 2026-10-28 — Audit of the zero-possession rivalry stalemate
+
+The owner reported repeated 0–0 rounds after teaching both champions. Read-only API inspection
+confirmed an actual finished shared rivalry, engine 0.3.0, with the current books pinned:
+serleusler v2 (two rules) and developersimiyu v5 (six rules). Both had exactly zero possession
+ticks; serleusler had zero learned-rule executions, while the direct-retrieval rule executed
+97 times for developersimiyu. Thus neither a stale adopted version nor absent retrieval-rule
+execution explains this case.
+
+A deterministic offline run of those saved books reproduced the live cumulative metrics and
+0–0 score, including 730 damage taken by each champion and zero pickup/shield events. The first
+meeting is tick 52 (2.6 seconds); equal 20-damage attacks produce simultaneous defeats at tick
+132 (6.6 seconds), then at 300/468/636/804/972/1140. There are seven mutual defeats and 560 ticks
+of equal surviving core claims. The process repeats because equal claims grant no possession,
+the baseline/explicit retrieval approaches repeat, and the post-respawn world has the same
+relevant tactical symmetry. Swapping books between sides reproduces the stalemate.
+
+Both published shield policies require `self.carryingCore`, which is never true. On the owned
+v5 book, the newer generic carrying/return-home rule also precedes and shadows the older
+carrying-and-shield-ready rule: even a later pickup would select the generic return rule first.
+The exact-duplicate inspector does not yet warn about this broader predicate overlap. The
+first-match-priority semantics are functioning, but their effect is poorly exposed.
+
+Counterfactuals used offline copies only, with one added available-core/direct-route/shield
+rule. Adding it to developersimiyu alone yields 3–0, 9.15 seconds possession, three pickups and
+six shield events; swapping sides mirrors that win. Adding it to **both** books yields another
+0–0 with no possession, despite 24 shield events. This demonstrates that simply asking both
+communities for the same opening-shield lesson does not solve the symmetric ruleset deadlock.
+These are one-seed diagnostics, not a tactic benchmark or proof of overall competitive balance.
+The compact report is ignored at `.local/stalemate-audit.json`.
+
+No persisted book, active match, OAuth session, engine rule, or external provider was changed
+for this audit. No model/Twitch request or server restart was needed. The previous equal-claim
+fix removed order bias but intentionally allowed draws; this playtest shows that the resulting
+zero-possession loop needs a deliberate game-design revision, rather than being presented as
+successful gameplay. Next design work should define a visible and balanced contest-resolution
+mechanic (including mirrored/paired evaluation), expose priority conflicts/reordering, and
+support neutral-opening/rival-policy proof instead of judging retrieval lessons only from a
+fixture that starts with possession. Perfectly symmetric deterministic play cannot pick a
+unique winner without an explicit symmetry-breaking rule; do not reintroduce hidden actor-ID
+priority or silently rewrite the owners' lessons to conceal that trade-off.
+
 ## Future entry template
 
 For each completed milestone, record date, feature/acceptance IDs, commit reference, meaningful checks and outcomes, screenshots/replay/evaluation references where appropriate, remaining limitations, and how Codex contributed. Never include secrets or full private session transcripts. Store bulky recordings outside Git and link final authorized artifacts when available.
