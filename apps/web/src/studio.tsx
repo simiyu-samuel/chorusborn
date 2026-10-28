@@ -28,6 +28,7 @@ import type { StudioState, Trial, World } from '@chorusborn/contracts';
 import { Arena, ChampionPortrait } from './arena.js';
 import { roundPressure } from './game/presentation.js';
 import { describeCondition } from './lesson.js';
+import { RivalryPanel } from './rivalry-panel.js';
 import { ChatQueue } from './chat-queue.js';
 
 async function request<T>(path: string, body?: unknown): Promise<T> {
@@ -124,7 +125,7 @@ function Mark() {
   );
 }
 
-function Scoreboard({ world }: { world: World }) {
+function Scoreboard({ world, rivalry = false }: { world: World; rivalry?: boolean }) {
   const seconds = Math.max(0, 60 - Math.floor(world.tick / 20));
   const pressure = roundPressure(world);
   return (
@@ -135,7 +136,9 @@ function Scoreboard({ world }: { world: World }) {
         </span>
         <span>
           {world.champions[0].name.toUpperCase()}
-          <small>Your champion</small>
+          <small>
+            {rivalry ? `Streamer · v${world.champions[0].playbook.version}` : 'Your champion'}
+          </small>
         </span>
       </div>
       <div className="score-center">
@@ -154,7 +157,9 @@ function Scoreboard({ world }: { world: World }) {
       <div className="team-label amber">
         <span>
           {world.champions[1].name.toUpperCase()}
-          <small>Baseline opponent</small>
+          <small>
+            {rivalry ? `Streamer · v${world.champions[1].playbook.version}` : 'Baseline opponent'}
+          </small>
         </span>
         <span className="team-icon">
           <ChampionPortrait team="b" color="#e4a348" />
@@ -392,7 +397,7 @@ export function App() {
           : result === 'denied'
             ? 'Twitch sign-in was cancelled. Your local champion is still available.'
             : result === 'wrong-channel'
-              ? `Sign in with the ${state.twitch.expectedChannel} Twitch account.`
+              ? 'This studio belongs to a different Twitch channel. Reconnect its owner, or use a separate browser profile for another streamer.'
               : 'Twitch sign-in did not complete. Try connecting again from this studio.',
       );
     }
@@ -490,10 +495,17 @@ export function App() {
     }
   };
   const world = state?.world;
-  const nextRound = world && state.playbook.version !== world.champions[0].playbook.version;
+  const ownActor = world?.champions.find((c) => c.id === state?.selfActor);
+  const championName = state?.championName ?? 'Mica';
+  const nextRound = world && state.playbook.version !== ownActor?.playbook.version;
   const receipts =
     world?.decisions
-      .filter((item) => item.ruleId && (item.executed || item.abilityExecuted))
+      .filter(
+        (item) =>
+          item.actorId === state?.selfActor &&
+          item.ruleId &&
+          (item.executed || item.abilityExecuted),
+      )
       .slice(-3) ?? [];
   return (
     <div className="app-shell">
@@ -655,6 +667,9 @@ export function App() {
           {tab === 'studio' ? (
             <>
               {state ? (
+                <RivalryPanel state={state} update={setState} connect={() => setSettings(true)} />
+              ) : null}
+              {state ? (
                 <ChatQueue
                   state={state}
                   connect={() => setSettings(true)}
@@ -667,10 +682,10 @@ export function App() {
                   <div className="card-heading">
                     <div>
                       <span className="live-square" />
-                      THE TRAINING GROUNDS
+                      {state?.mode === 'rivalry' ? 'THE RIVALRY ARENA' : 'THE TRAINING GROUNDS'}
                     </div>
                     <span className="mode-chip">
-                      Core Run <span>·</span> Training
+                      Core Run <span>·</span> {state?.mode === 'rivalry' ? 'Rivalry' : 'Training'}
                     </span>
                   </div>
                   {world ? (
@@ -685,13 +700,17 @@ export function App() {
                             ? 'Round paused.'
                             : 'Round running.'}
                       </p>
-                      <Scoreboard world={world} />
+                      <Scoreboard world={world} rivalry={state?.mode === 'rivalry'} />
                       <div className="arena-stage">
                         <div className="arena-corner">
                           <span className="small-dot" />
                           CARRIER DILEMMA<span>SCENARIO 01</span>
                         </div>
-                        <Arena world={world} suspended={trial !== null} />
+                        <Arena
+                          world={world}
+                          mode={state?.mode === 'rivalry' ? 'rivalry' : 'training'}
+                          suspended={trial !== null}
+                        />
                         {world.status === 'paused' ? (
                           <div className="stage-state">
                             <Pause size={11} />
@@ -702,7 +721,7 @@ export function App() {
                             <Swords size={12} />
                             {world.winner === 'draw'
                               ? 'Round drawn'
-                              : `${world.winner === 'a' ? 'Mica' : 'Rook'} wins the round`}
+                              : `${world.champions.find((c) => c.id === world.winner)?.name} wins the round`}
                           </div>
                         ) : null}
                       </div>
@@ -710,7 +729,9 @@ export function App() {
                         <div>
                           <button
                             className="primary-button"
-                            disabled={controlBusy || connection !== 'online'}
+                            disabled={
+                              controlBusy || connection !== 'online' || state?.mode === 'rivalry'
+                            }
                             onClick={() =>
                               void perform(
                                 world.status === 'running'
@@ -722,22 +743,26 @@ export function App() {
                             }
                           >
                             {world.status === 'running' ? <Pause size={15} /> : <Play size={15} />}
-                            {world.status === 'running'
-                              ? 'Pause round'
-                              : world.status === 'finished'
-                                ? 'Play again'
-                                : 'Start round'}
+                            {state?.mode === 'rivalry'
+                              ? 'Use rivalry controls above'
+                              : world.status === 'running'
+                                ? 'Pause round'
+                                : world.status === 'finished'
+                                  ? 'Play again'
+                                  : 'Start round'}
                           </button>
                           <button
                             className="icon-button reset-button"
-                            disabled={controlBusy || connection !== 'online'}
+                            disabled={
+                              controlBusy || connection !== 'online' || state?.mode === 'rivalry'
+                            }
                             onClick={() => void perform('reset')}
                             aria-label="Reset arena for next round"
                           >
                             <RotateCcw size={17} />
                           </button>
                           <span className="round-book">
-                            Round v{world.champions[0].playbook.version}
+                            Round v{ownActor?.playbook.version}
                             {nextRound ? <em>v{state.playbook.version} ready next round</em> : null}
                           </span>
                         </div>
@@ -826,12 +851,16 @@ export function App() {
                 <section className="champion-card">
                   <div className="champion-profile">
                     <div className="portrait-backdrop">
-                      <ChampionPortrait />
+                      <ChampionPortrait
+                        team={state?.selfActor ?? 'a'}
+                        color={state?.selfActor === 'b' ? '#e4a348' : '#b7a0fb'}
+                      />
                     </div>
                     <div>
                       <span className="eyebrow">YOUR CHAMPION</span>
                       <h2>
-                        Mica<span className="small-tag">v{state?.playbook.version ?? 0}</span>
+                        {championName}
+                        <span className="small-tag">v{state?.playbook.version ?? 0}</span>
                       </h2>
                       <p>A work in progress. A team effort.</p>
                     </div>
@@ -844,7 +873,10 @@ export function App() {
                     <div>
                       <strong>
                         {world
-                          ? Object.values(world.metrics.a.ruleUses).reduce((a, b) => a + b, 0)
+                          ? Object.values(world.metrics[state?.selfActor ?? 'a'].ruleUses).reduce(
+                              (a, b) => a + b,
+                              0,
+                            )
                           : 0}
                       </strong>
                       <span>lesson uses this round</span>
@@ -898,7 +930,7 @@ export function App() {
                 <BookOpen size={22} />
                 <div>
                   <h2>
-                    Mica’s playbook{' '}
+                    {championName}’s playbook{' '}
                     <span className="small-tag">v{state?.playbook.version ?? 0}</span>
                   </h2>
                   <p>Accepted tactics take priority over the fixed novice baseline.</p>
@@ -910,7 +942,11 @@ export function App() {
                     <span className="rule-number">{String(i + 1).padStart(2, '0')}</span>
                     <div>
                       <h3>{rule.label}</h3>
-                      <p>{rule.when.all.map(describeCondition).join(' AND ')}</p>
+                      <p>
+                        {rule.when.all
+                          .map((condition) => describeCondition(condition, championName))
+                          .join(' AND ')}
+                      </p>
                       <span>
                         {rule.intent.goal.replaceAll('_', ' ')} · {rule.intent.route} route ·{' '}
                         {rule.intent.ability === 'none'
@@ -927,8 +963,8 @@ export function App() {
                   <ChampionPortrait />
                   <h3>The first chapter is yours.</h3>
                   <p>
-                    Prove a sample tactic in the training grounds, then adopt it to begin Mica’s
-                    playbook.
+                    Prove a sample tactic in the training grounds, then adopt it to begin{' '}
+                    {championName}’s playbook.
                   </p>
                   <button className="primary-button" onClick={() => setTab('studio')}>
                     Find a better move
@@ -1021,7 +1057,7 @@ export function App() {
                 <p>
                   {state?.twitch.channel
                     ? state.intake.message
-                    : `Connect the ${state?.twitch.expectedChannel ?? 'developersimiyu'} broadcaster account.`}
+                    : 'Connect your own Twitch broadcaster account. Each streamer uses their own browser profile.'}
                 </p>
               </div>
             </div>
@@ -1102,6 +1138,7 @@ export function App() {
 }
 
 export function Overlay() {
+  const [mode, setMode] = useState<'local-fixture' | 'rivalry'>('local-fixture');
   const [world, setWorld] = useState<World | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [online, setOnline] = useState(false);
@@ -1112,9 +1149,12 @@ export function Overlay() {
       retry: ReturnType<typeof setTimeout> | undefined;
     const connect = async () => {
       try {
-        const result = await request<{ world: World }>(`/api/demo/overlay?${query}`);
+        const result = await request<{ world: World; mode: 'local-fixture' | 'rivalry' }>(
+          `/api/demo/overlay?${query}`,
+        );
         if (!active) return;
         setWorld(result.world);
+        setMode(result.mode);
         setError(null);
         socket = new WebSocket(
           `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws/demo?${query}`,
@@ -1125,7 +1165,10 @@ export function Overlay() {
         socket.onmessage = (event) => {
           try {
             const packet = JSON.parse(event.data);
-            if (active && packet.type === 'overlay') setWorld(packet.world);
+            if (active && packet.type === 'overlay') {
+              setWorld(packet.world);
+              setMode(packet.mode ?? 'local-fixture');
+            }
           } catch {
             if (active) setError('Unreadable overlay update.');
           }
@@ -1155,7 +1198,10 @@ export function Overlay() {
       <div className="overlay-brand">
         <Mark />
         <strong>chorusborn.</strong>
-        <span>LOCAL FIXTURE · READ-ONLY {online ? '' : '· RECONNECTING'}</span>
+        <span>
+          {mode === 'rivalry' ? 'LOCAL RIVALRY' : 'LOCAL FIXTURE'} · READ-ONLY{' '}
+          {online ? '' : '· RECONNECTING'}
+        </span>
       </div>
       {error ? <p role="alert">{error}</p> : null}
       {!online && world ? (
@@ -1165,8 +1211,13 @@ export function Overlay() {
       ) : null}
       {world ? (
         <>
-          <Scoreboard world={world} />
-          <Arena world={world} interactive={false} animate={online} />
+          <Scoreboard world={world} rivalry={mode === 'rivalry'} />
+          <Arena
+            world={world}
+            interactive={false}
+            animate={online}
+            mode={mode === 'rivalry' ? 'rivalry' : 'training'}
+          />
         </>
       ) : (
         <p>Opening the arena…</p>

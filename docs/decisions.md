@@ -80,6 +80,32 @@ from reduced motion, and reuse matching SVG glyphs in portraits/fallback. This i
 rollout within S08/S10/S13; it adds no jump/dodge gameplay mechanic or new engine contract.
 
 
+### ADR 020 — 2026-10-28: canonical channel champions and mutually authorized rivalry
+
+The owner selected streamer-versus-streamer play with Twitch usernames on the fighters and
+independent community teaching on both sides. Remove the global one-login OAuth restriction;
+keep client/scope/user validation and bind each verified Twitch ID to one canonical local studio.
+Persist ownership alongside its book, recover that canonical studio after a fresh-browser login,
+and reject a different identity taking over an existing or source-bound legacy book. First bind
+migrates the current browser's appropriate local book; do not silently merge legacy duplicates.
+
+Keep Fastify and the existing per-channel EventSub/teaching/compiler/proof pipeline. A separate
+process-local coordinator handles targeted invitations, accept/decline/cancel, mutual readiness,
+pause, rematch and departure. Only verified participants control it, with an expected match ID.
+Both studios/overlays receive one authoritative world; each private queue/book stays scoped to
+its owner, and peer/public match worlds omit private source joins. No write-chat scope or
+unsolicited provider message is introduced.
+
+Rivalry uses a neutral core and both home spawns rather than the carrier-dilemma training
+fixture. Engine 0.2.0 adds the required serialized `arena.coreSpawn` controller field so captures
+and idle resets reproduce that opening. Original fixture gameplay defaults stay the same; old
+full checkpoints are incompatible and stored books remain compatible. Both policies are copied
+at start/rematch; mid-round adoption does not change them. A lost OAuth connection pauses the
+match and clears readiness. Tokens, challenges and matches remain ephemeral, with local book
+persistence only. This advances S01/S02/S07/S08/S09/S10/S11/S12/S13 locally, while actual second-
+channel consent/testing, remote hosting, durable recovery and balanced mirrored evaluation
+remain release requirements. See [rivalry](rivalry.md).
+
 ## Product risks
 
 | Risk | Signal | Response / validation |

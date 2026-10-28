@@ -27,3 +27,5 @@ Example contracts: [candidate](examples/lesson-candidate.json) and [candidate sc
 Visual design: [Core Run art direction and character/game-feel brief](art-direction.md), with a clearly labeled concept image and exact generation prompt. The shared 3D visual slice is implemented; the concept remains a final-quality target.
 
 [Combat Lab and acrobatic fighter prototype](combat-direction.md) records the new stick-fighter direction, recorded-contact choreography, and the boundary with future gameplay skills.
+
+The local [two-streamer rivalry guide](rivalry.md) covers canonical channel ownership, independent teaching queues, shared matches and the localhost/remote boundary.

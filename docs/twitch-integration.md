@@ -8,7 +8,7 @@ The owner identified `developersimiyu` as the first channel and created the Twit
 
 The callback is implemented. `.env.example` records local settings; actual credentials belong only in the ignored `.env`, loaded on server startup. Open the localhost studio, choose **Connections & setup → Connect Twitch**, and review the read-chat grant on Twitch. The connect link moves alternate-hostname visitors to localhost before starting state-bound OAuth. The live app can add an HTTPS callback once a deployment URL exists.
 
-Current OAuth state is a random, one-time, ten-minute value bound to the initiating studio. New attempts supersede older attempts; disconnect invalidates pending and in-flight sign-ins. The callback validates the token's client ID, scope, user ID, and configured channel login. Session cookies use `HttpOnly; SameSite=Lax` for the top-level cross-site callback; JSON-only mutation and loopback origin/host checks remain enforced. The development `/auth` proxy preserves the original Host header.
+Current OAuth state is a random, one-time, ten-minute value bound to the initiating studio. New attempts supersede older attempts; disconnect invalidates pending and in-flight sign-ins. The callback validates the token's client ID, scope, user ID, and valid channel login. It accepts independently verified broadcasters; the app then binds or restores that user's canonical channel studio rather than enforcing one global configured login. Session cookies use `HttpOnly; SameSite=Lax` for the top-level cross-site callback; JSON-only mutation and loopback origin/host checks remain enforced. The development `/auth` proxy preserves the original Host header.
 
 This local milestone keeps tokens only in server memory. It validates on sign-in and every 55 minutes, refreshing through one serialized operation on a 401. Transient validation failure is visible and retries after a minute; invalid refresh or changed identity ends the OAuth session. Disconnect clears local identity before requesting revocation. Restart discards authorization and requires reconnecting. Encrypted durable token storage and production channel-role authorization are still release work.
 
@@ -78,7 +78,7 @@ Deletion/clear subscriptions and source redaction are implemented for the local 
 
 ## Two-channel rivalry
 
-Each broadcaster connects independently and accepts participation. Both source channels can contribute to their own champions while the server coordinates one match. A Twitch raid event is not required for the release. Future raid-triggered invitations must be opt-in and must not treat a raid payload as a roster of individual viewers.
+The local challenge/accept/readiness implementation is described in [rivalry](rivalry.md). Each broadcaster connects independently and accepts participation. Both source channels can contribute to their own champions while the server coordinates one match. A Twitch raid event is not required for the release. Future raid-triggered invitations must be opt-in and must not treat a raid payload as a roster of individual viewers.
 
 ## Real integration evidence required
 

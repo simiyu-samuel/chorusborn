@@ -10,7 +10,7 @@ The defining interaction is **teach → prove → adopt → compete**. A viewer'
 
 The first local fixture build is implemented: a React coach studio, shared 3D Core Run presentation, server-owned arena, bounded sample lesson contracts, exact two-branch replay, coach adoption, local playbook persistence, and a separately authorized read-only overlay. The planning baseline was created October 26, 2026 for the Codex x TwitchCon Hackathon.
 
-Twitch sign-in and EventSub intake are implemented: state-bound OAuth, verified broadcaster identity, periodic validation, serialized refresh, a durable local teaching queue, duplicate protection, and deletion/clear handling. **The Groq-backed lesson compiler is implemented locally.** A coach can compile a real proposal, inspect its rules, compare replay branches, and adopt it with trusted viewer credit. PostgreSQL, rival channels, and the full evaluation suite remain pending. The UI labels sample tactics and fixture scenarios explicitly. Production architecture and release gates remain targets unless the build log records verification.
+Twitch sign-in and EventSub intake are implemented: state-bound OAuth, verified broadcaster identity, periodic validation, serialized refresh, a durable local teaching queue, duplicate protection, and deletion/clear handling. **The Groq-backed lesson compiler is implemented locally.** A coach can compile a real proposal, inspect its rules, compare replay branches, and adopt it with trusted viewer credit. Local two-channel challenges and shared matches are implemented; a real second-broadcaster demonstration, PostgreSQL and the full evaluation suite remain pending. The UI labels sample tactics and fixture scenarios explicitly. Production architecture and release gates remain targets unless the build log records verification.
 
 ## Run locally
 
@@ -64,13 +64,27 @@ Twitch/model dependency and leaves your live playbook unchanged. Jumps/spins are
 actual damage, shields and contacts follow the existing simulation. The same fighter geometry
 now runs in the normal arena with reactive poses from confirmed contacts. See [Combat Lab](docs/combat-direction.md).
 
-The trace update uses engine `core-run/0.1.1`; earlier full checkpoints are incompatible.
-Stored local playbooks remain compatible. As before, restarting the server requires Twitch
-reconnection because tokens are memory-only.
+## Streamer versus streamer
+
+Connected champions use their streamer's verified Twitch username. The **Streamer vs streamer**
+card lets a coach challenge another username; that channel signs in independently, accepts and
+readies its own champion. Each community teaches/adopts into its own playbook. Both sides then
+share one neutral-opening match and result, with both books pinned for the round. Either can
+pause, while start/resume/rematch requires both coaches. See [rivalry setup](docs/rivalry.md).
+
+For the intended **developersimiyu vs serleusler** match, both accounts must authorize separately.
+This local build can test two browser profiles on one computer. Remote streamers need a hosted
+server; a localhost URL is not a remote invitation link. Two-account automated checks use mocked
+providers and do not establish that serleusler has connected. Existing read-only overlays follow
+whichever rivalry their owner joins, without exposing private lesson queues.
+
+Engine `core-run/0.2.0` adds a complete serialized core spawn for the neutral rivalry opening.
+Earlier full checkpoints are incompatible; saved local books remain compatible. Channel ownership
+now persists with each canonical local studio; OAuth tokens and matches remain memory-only.
 
 ## Twitch application registration
 
-First channel: **developersimiyu**. The owner has created the developer app. Register **`http://localhost:3001/auth/twitch/callback`** as the exact redirect URI, choose **Game Integration** and **Confidential**, and put the Client ID/secret into the ignored `.env` using `.env.example` as a template. The server loads it on startup; restart after editing credentials.
+First channel: **developersimiyu**. The owner has created the developer app. Register **`http://localhost:3001/auth/twitch/callback`** as the exact redirect URI, choose **Game Integration** and **Confidential**, and put the Client ID/secret into the ignored `.env` using `.env.example` as a template. The server loads it on startup; restart after editing credentials. The same application now accepts independently verified broadcaster accounts; `TWITCH_CHANNEL` is a legacy setup hint, not an authorization allowlist.
 
 Open **http://localhost:5173**, choose **Connections & setup → Connect Twitch**, and authorize while signed in as `developersimiyu`. The app requests only `user:read:chat`; it never sends chat messages. An attempted sign-in from `127.0.0.1` first moves to the canonical localhost studio, which can have a separate local fixture playbook because browser cookies belong to a hostname.
 

@@ -13,6 +13,9 @@ import {
   controlSchema,
   trialRequestSchema,
   intakeControlSchema,
+  rivalInviteSchema,
+  rivalChallengeSchema,
+  rivalControlSchema,
   proposalControlSchema,
   type StudioState,
   type Compilation,
@@ -22,6 +25,7 @@ import {
   type CombatStudy,
 } from '@chorusborn/contracts';
 import { addLesson, createPlaybook, createWorld, snapshot, step, hash } from '@chorusborn/sim';
+import { Rivalries, RivalFailure } from './rivalry.js';
 import { LocalStore, type StoredStudio } from './store.js';
 import { TwitchOAuth, TwitchFailure } from './twitch.js';
 import { ChatStore } from './chat-store.js';
@@ -113,9 +117,11 @@ export async function createApp(options: AppOptions = {}) {
   const twitch = options.twitch ?? new TwitchOAuth(null);
   const workers = new Set<Worker>();
   const authorityEpoch = new Map<string, number>();
+  let authorityChanged = () => {};
   const unwatchAuthority = twitch.onChange((owner) => {
     if (twitch.publicState(owner).status !== 'authenticated')
       authorityEpoch.set(owner, (authorityEpoch.get(owner) ?? 0) + 1);
+    authorityChanged();
   });
   const hydrate = (record: StoredStudio): Studio => ({
     ...record,
@@ -125,7 +131,27 @@ export async function createApp(options: AppOptions = {}) {
     adopting: false,
     clients: new Set(),
   });
-  for (const record of store.records) studios.set(record.token, hydrate(record));
+  for (const record of store.records) {
+    const studio = hydrate(record);
+    if (studio.channel) studio.world.champions[0].name = studio.channel.login;
+    studios.set(record.token, studio);
+  }
+  const byId = (id: string) => [...studios.values()].find((studio) => studio.id === id);
+  const rivalry = new Rivalries((owner) => {
+    const studio = byId(owner),
+      identity = twitch.publicState(owner);
+    return studio?.channel &&
+      identity.status === 'authenticated' &&
+      identity.channel?.id === studio.channel.id
+      ? { studioId: studio.id, channel: identity.channel, playbook: studio.playbook }
+      : null;
+  });
+  const worldFor = (studio: Studio) => rivalry.current(studio.id)?.world ?? studio.world;
+  const trainingWorld = (studio: Studio) => {
+    const world = createWorld(studio.playbook, studio.world.seed);
+    if (studio.channel) world.champions[0].name = studio.channel.login;
+    return world;
+  };
   const toState = (studio: Studio): StudioState => {
     const {
       baseline: _baseline,
@@ -134,7 +160,10 @@ export async function createApp(options: AppOptions = {}) {
     } = studio.trial ?? ({} as Trial);
     const chat = intake.view(studio.id);
     return {
-      mode: 'local-fixture',
+      mode: rivalry.current(studio.id) ? 'rivalry' : 'local-fixture',
+      championName: studio.channel?.login ?? 'Mica',
+      selfActor: rivalry.view(studio.id).match?.self ?? 'a',
+      rivalry: rivalry.view(studio.id),
       connected: chat.status === 'live',
       twitch: { ...twitch.publicState(studio.id), chat: chat.status },
       intake: chat,
@@ -143,7 +172,7 @@ export async function createApp(options: AppOptions = {}) {
         model: options.compiler?.model ?? null,
         remainingCalls: options.compiler?.remainingCalls ?? 0,
       },
-      world: studio.world,
+      world: rivalry.current(studio.id) ? overlayWorld(worldFor(studio)) : studio.world,
       playbook: studio.playbook,
       samples: SAMPLE_LESSONS,
       latestTrial: studio.trial ? trial : null,
@@ -172,11 +201,73 @@ export async function createApp(options: AppOptions = {}) {
       client.send(
         JSON.stringify(
           readOnly
-            ? { type: 'overlay', world: overlayWorld(studio.world) }
+            ? {
+                type: 'overlay',
+                world: overlayWorld(worldFor(studio)),
+                mode: rivalry.current(studio.id) ? 'rivalry' : 'local-fixture',
+              }
             : { type: 'state', state: toState(studio) },
         ),
       );
     }
+  };
+  const publishAll = () => {
+    for (const studio of studios.values()) publish(studio);
+  };
+  authorityChanged = () => {
+    rivalry.syncAuthority();
+    if (intake) publishAll();
+  };
+  let bindings: Promise<void> = Promise.resolve();
+  const bindChannel = (studio: Studio): Promise<Studio> => {
+    const operation = bindings.then(async () => {
+      const identity = twitch.publicState(studio.id);
+      if (identity.status !== 'authenticated' || !identity.channel)
+        throw new TwitchFailure('reconnect');
+      const historicalChannels = studio.playbook.rules.flatMap((rule) =>
+        rule.source ? [rule.source.channelId] : [],
+      );
+      if (
+        historicalChannels.some((id) => id !== identity.channel!.id) ||
+        studio.adopting ||
+        (studio.channel && studio.channel.id !== identity.channel.id)
+      )
+        throw new TwitchFailure('wrong-channel');
+      const legacyOwner = (candidate: Studio) =>
+        !candidate.channel &&
+        candidate.playbook.rules.some((rule) => rule.source?.channelId === identity.channel!.id) &&
+        candidate.playbook.rules.every(
+          (rule) => !rule.source || rule.source.channelId === identity.channel!.id,
+        );
+      const canonical =
+        [...studios.values()].find((s) => s.channel?.id === identity.channel!.id) ??
+        (legacyOwner(studio) ? studio : [...studios.values()].find(legacyOwner)) ??
+        studio;
+      if (canonical.adopting) throw new TwitchFailure('unavailable');
+      const channel = identity.channel;
+      await store.put({
+        id: canonical.id,
+        token: canonical.token,
+        overlayKey: canonical.overlayKey,
+        playbook: canonical.playbook,
+        channel,
+      });
+      // Persist channel ownership before moving the verified OAuth session/cookie.
+      canonical.channel = channel;
+      twitch.moveOwner(studio.id, canonical.id);
+      if (
+        !rivalry.current(canonical.id) &&
+        canonical.world.status === 'paused' &&
+        canonical.world.tick === 0
+      )
+        canonical.world.champions[0].name = channel.login;
+      return canonical;
+    });
+    bindings = operation.then(
+      () => {},
+      () => {},
+    );
+    return operation;
   };
   const ownerStudio = (cookie: string | undefined) => studios.get(cookies(cookie).cb_session ?? '');
   const overlayStudio = (id: string, key: string) =>
@@ -279,11 +370,23 @@ export async function createApp(options: AppOptions = {}) {
       if (request.query.error) return finish('denied');
       const code = request.query.code;
       if (typeof code !== 'string' || !code.length || code.length > 2048) return finish('failed');
+      let completed = false;
       try {
-        await twitch.complete(pending, code);
-        publish(studio);
+        const expectedChannelId =
+          studio.channel?.id ??
+          studio.playbook.rules.find((rule) => rule.source)?.source?.channelId;
+        await twitch.complete(pending, code, expectedChannelId);
+        completed = true;
+        const canonical = await bindChannel(studio);
+        reply.header(
+          'Set-Cookie',
+          `cb_session=${canonical.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800`,
+        );
+        publishAll();
         return finish('connected');
       } catch (error) {
+        if (completed && twitch.publicState(studio.id).status === 'authenticated')
+          await twitch.disconnect(studio.id);
         return finish(
           error instanceof TwitchFailure && error.reason === 'wrong-channel'
             ? 'wrong-channel'
@@ -412,7 +515,10 @@ export async function createApp(options: AppOptions = {}) {
     async (request, reply) => {
       const studio = overlayStudio(request.query.studio ?? '', request.query.key ?? '');
       if (!studio) return reply.code(404).send({ message: 'Overlay link is unavailable.' });
-      return { mode: 'local-fixture', world: overlayWorld(studio.world) };
+      return {
+        world: overlayWorld(worldFor(studio)),
+        mode: rivalry.current(studio.id) ? 'rivalry' : 'local-fixture',
+      };
     },
   );
   app.get<{ Querystring: { studio?: string; key?: string } }>(
@@ -472,9 +578,67 @@ export async function createApp(options: AppOptions = {}) {
       return reply.code(503).send({ message: 'Combat study is unavailable. Try again.' });
     }
   });
+  app.post('/api/rivalry/challenges', async (request, reply) => {
+    const studio = ownerStudio(request.headers.cookie);
+    if (!studio) return reply.code(401).send({ message: 'Open your studio first.' });
+    const parsed = rivalInviteSchema.safeParse(request.body);
+    if (!parsed.success)
+      return reply.code(422).send({ message: 'Enter the other streamer’s Twitch username.' });
+    try {
+      rivalry.invite(studio.id, parsed.data.opponentLogin);
+    } catch (error) {
+      if (error instanceof RivalFailure)
+        return reply.code(error.status).send({ message: error.message });
+      throw error;
+    }
+    publishAll();
+    return toState(studio);
+  });
+  app.post<{ Params: { id: string } }>('/api/rivalry/challenges/:id', async (request, reply) => {
+    const studio = ownerStudio(request.headers.cookie);
+    if (!studio) return reply.code(401).send({ message: 'Open your studio first.' });
+    const parsed = rivalChallengeSchema.safeParse(request.body);
+    if (!parsed.success) return reply.code(422).send({ message: 'Unknown challenge action.' });
+    try {
+      rivalry.respond(studio.id, request.params.id, parsed.data.action);
+      for (const owner of rivalry.current(studio.id)?.owners ?? []) {
+        const participant = byId(owner);
+        if (participant?.world.status === 'running') participant.world.status = 'paused';
+      }
+    } catch (error) {
+      if (error instanceof RivalFailure)
+        return reply.code(error.status).send({ message: error.message });
+      throw error;
+    }
+    publishAll();
+    return toState(studio);
+  });
+  app.post('/api/rivalry/controls', async (request, reply) => {
+    const studio = ownerStudio(request.headers.cookie);
+    if (!studio) return reply.code(401).send({ message: 'Open your studio first.' });
+    const parsed = rivalControlSchema.safeParse(request.body);
+    if (!parsed.success) return reply.code(422).send({ message: 'Unknown rivalry control.' });
+    if (rivalry.current(studio.id)?.id !== parsed.data.matchId)
+      return reply
+        .code(409)
+        .send({ message: 'This match changed. Refresh before controlling it.' });
+    try {
+      rivalry.control(studio.id, parsed.data.action);
+    } catch (error) {
+      if (error instanceof RivalFailure)
+        return reply.code(error.status).send({ message: error.message });
+      throw error;
+    }
+    publishAll();
+    return toState(studio);
+  });
   app.post('/api/demo/controls', async (request, reply) => {
     const studio = ownerStudio(request.headers.cookie);
     if (!studio) return reply.code(401).send({ message: 'Open your local studio first.' });
+    if (rivalry.current(studio.id))
+      return reply
+        .code(409)
+        .send({ message: 'Use the two-streamer match controls during a rivalry.' });
     const parsed = controlSchema.safeParse(request.body);
     if (!parsed.success) return reply.code(422).send({ message: 'Unknown arena control.' });
     if (parsed.data.action === 'rematch') {
@@ -482,10 +646,9 @@ export async function createApp(options: AppOptions = {}) {
         return reply.code(409).send({ message: 'Finish this round before starting a rematch.' });
       // Reset and start in one synchronous operation; concurrent duplicate clicks cannot
       // reset a running round. The latest adopted playbook is pinned by createWorld.
-      studio.world = createWorld(studio.playbook, studio.world.seed);
+      studio.world = trainingWorld(studio);
       studio.world.status = 'running';
-    } else if (parsed.data.action === 'reset')
-      studio.world = createWorld(studio.playbook, studio.world.seed);
+    } else if (parsed.data.action === 'reset') studio.world = trainingWorld(studio);
     else if (studio.world.status !== 'finished')
       studio.world.status = parsed.data.action === 'pause' ? 'paused' : 'running';
     publish(studio);
@@ -525,7 +688,7 @@ export async function createApp(options: AppOptions = {}) {
       return reply.code(429).send({ message: 'A trial is already running. Please wait.' });
     if (studio.playbook.rules.length + candidate.rules.length > 24)
       return reply.code(422).send({ message: 'Playbook limit reached.' });
-    const source = snapshot(createWorld(studio.playbook, studio.world.seed));
+    const source = snapshot(trainingWorld(studio));
     studio.busy = true;
     try {
       const result = await new Promise<Pick<Trial, 'baseline' | 'candidateBranch'>>(
@@ -622,6 +785,7 @@ export async function createApp(options: AppOptions = {}) {
           id: studio.id,
           token: studio.token,
           overlayKey: studio.overlayKey,
+          ...(studio.channel ? { channel: studio.channel } : {}),
           playbook,
         });
       if (trial.source) {
@@ -643,8 +807,9 @@ export async function createApp(options: AppOptions = {}) {
         }
       } else await persist();
       studio.playbook = playbook;
+      rivalry.adopted(studio.id);
       trial.adopted = true;
-      publish(studio);
+      publishAll();
       return toState(studio);
     } finally {
       studio.adopting = false;
@@ -670,11 +835,15 @@ export async function createApp(options: AppOptions = {}) {
       ? null
       : setInterval(() => {
           for (const studio of studios.values())
-            if (studio.world.status === 'running') {
+            if (!rivalry.current(studio.id) && studio.world.status === 'running') {
               studio.world = step(studio.world);
               if (studio.world.tick % 2 === 0 || studio.world.status === 'finished')
                 publish(studio);
             }
+          for (const owner of rivalry.tick()) {
+            const studio = byId(owner);
+            if (studio) publish(studio);
+          }
         }, 50);
   clock?.unref();
   const tokenChecks = setInterval(() => {

@@ -196,7 +196,6 @@ export class TwitchOAuth {
     const id = boundedString(data.user_id, 32);
     const login = boundedString(data.login, 25);
     if (!/^\d+$/.test(id) || !/^[a-z0-9_]+$/.test(login)) throw new TwitchFailure('reconnect');
-    if (login !== this.config!.channel) throw new TwitchFailure('wrong-channel');
     return { id, login, scopes: data.scopes as string[] };
   }
   private async revoke(access: string) {
@@ -212,7 +211,7 @@ export class TwitchOAuth {
       return false;
     }
   }
-  async complete(pending: Pending, code: string) {
+  async complete(pending: Pending, code: string, expectedChannelId?: string) {
     if (!this.config || !this.current(pending)) throw new TwitchFailure('reconnect');
     const tokens = await this.token({
       code,
@@ -221,6 +220,8 @@ export class TwitchOAuth {
     });
     try {
       const identity = await this.identity(tokens.access);
+      if (expectedChannelId && identity.id !== expectedChannelId)
+        throw new TwitchFailure('wrong-channel');
       if (!this.current(pending)) throw new TwitchFailure('reconnect');
       this.sessions.set(pending.owner, {
         tokens,
@@ -346,6 +347,20 @@ export class TwitchOAuth {
         throw new TwitchFailure('reconnect');
       }),
     );
+  }
+  /** Transfer a verified reconnect into the canonical local channel studio. */
+  moveOwner(from: string, to: string) {
+    if (from === to) return;
+    const session = this.sessions.get(from);
+    if (!session) throw new TwitchFailure('reconnect');
+    const previous = this.sessions.get(to);
+    if (previous && previous.identity.id !== session.identity.id)
+      throw new TwitchFailure('wrong-channel');
+    this.sessions.delete(from);
+    this.changed(from);
+    this.sessions.set(to, session);
+    this.notices.delete(to);
+    this.changed(to);
   }
   owners() {
     return [...this.sessions.keys()];

@@ -6,6 +6,8 @@ import { TwitchOAuth } from '../../apps/server/src/twitch.js';
 import { MockEventSocket, chatNotification, subscriptionResponse } from './twitch-fixtures.js';
 import { SAMPLE_LESSONS, type ChatEventType } from '@chorusborn/contracts';
 const sockets: MockEventSocket[] = [];
+const sessions = new Map<string, MockEventSocket>();
+const channelSockets = new Map<string, MockEventSocket>();
 
 const oauth = new TwitchOAuth(
   {
@@ -20,23 +22,45 @@ const oauth = new TwitchOAuth(
       const url = String(input);
       if (url === 'https://id.twitch.tv/oauth2/token') {
         const body = new URLSearchParams(init?.body as URLSearchParams);
-        if (body.get('code') !== 'browser-test-code') return Response.json({}, { status: 400 });
+        if (
+          !['browser-test-code', 'browser-rival-code', 'browser-rival-host-code'].includes(
+            body.get('code') ?? '',
+          )
+        )
+          return Response.json({}, { status: 400 });
         return Response.json({
-          access_token: 'browser-test-access',
+          access_token:
+            body.get('code') === 'browser-rival-code'
+              ? 'browser-rival-access'
+              : body.get('code') === 'browser-rival-host-code'
+                ? 'browser-rival-host-access'
+                : 'browser-test-access',
           refresh_token: 'browser-test-refresh',
         });
       }
-      if (url === 'https://id.twitch.tv/oauth2/validate')
+      if (url === 'https://id.twitch.tv/oauth2/validate') {
+        const rival =
+          (init?.headers as Record<string, string>)?.Authorization === 'OAuth browser-rival-access';
+        const host =
+          (init?.headers as Record<string, string>)?.Authorization ===
+          'OAuth browser-rival-host-access';
         return Response.json({
           client_id: 'browser-test-client',
-          user_id: '123456',
-          login: 'developersimiyu',
+          user_id: rival ? '654321' : host ? '112233' : '123456',
+          login: rival ? 'fixture_guest' : host ? 'fixture_host' : 'developersimiyu',
           scopes: ['user:read:chat'],
           expires_in: 3600,
         });
+      }
       if (url === 'https://id.twitch.tv/oauth2/revoke') return new Response(null, { status: 200 });
-      if (url === 'https://api.twitch.tv/helix/eventsub/subscriptions')
+      if (url === 'https://api.twitch.tv/helix/eventsub/subscriptions') {
+        const body = JSON.parse(String(init?.body));
+        channelSockets.set(
+          body.condition.broadcaster_user_id,
+          sessions.get(body.transport.session_id)!,
+        );
         return subscriptionResponse(String(init?.body));
+      }
       throw new Error('Unexpected browser-test provider request.');
     },
   },
@@ -62,7 +86,9 @@ const app = await createApp({
   socketFactory: (url) => {
     const socket = new MockEventSocket(url);
     sockets.push(socket);
-    queueMicrotask(() => socket.welcome());
+    const session = `fixture-session-${sockets.length}`;
+    sessions.set(session, socket);
+    queueMicrotask(() => socket.welcome(session));
     return socket;
   },
 });
@@ -87,17 +113,26 @@ app.addHook('onClose', async () => {
 });
 
 // Test-process-only ingress. No equivalent route or runtime toggle exists in the app.
-app.post<{ Body: { type?: ChatEventType; event?: Record<string, unknown>; duplicate?: boolean } }>(
-  '/__test__/event',
-  async (request) => {
-    const socket = sockets.findLast((candidate) => !candidate.closed);
-    if (!socket) throw new Error('Connect the fixture channel first.');
-    const packet = chatNotification(request.body.type, request.body.event);
-    socket.emit(packet);
-    if (request.body.duplicate) socket.emit(packet);
-    return { accepted: true };
-  },
-);
+app.post<{
+  Body: {
+    type?: ChatEventType;
+    event?: Record<string, unknown>;
+    duplicate?: boolean;
+    channelId?: string;
+  };
+}>('/__test__/event', async (request) => {
+  const channelId = request.body.channelId ?? '123456';
+  const socket = channelSockets.get(channelId);
+  if (!socket || socket.closed) throw new Error('Connect the fixture channel first.');
+  const packet = chatNotification(request.body.type, {
+    broadcaster_user_id: channelId,
+    ...request.body.event,
+  });
+  packet.payload.subscription!.condition = { broadcaster_user_id: channelId, user_id: channelId };
+  socket.emit(packet);
+  if (request.body.duplicate) socket.emit(packet);
+  return { accepted: true };
+});
 await app.listen({ host: '127.0.0.1', port: 3101 });
 console.log('Browser tests: isolated in-memory studios and MOCK Twitch provider.');
 for (const signal of ['SIGINT', 'SIGTERM'] as const)

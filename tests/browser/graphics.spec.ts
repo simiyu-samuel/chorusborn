@@ -8,6 +8,7 @@ test('renders the shared 3D scene, keeps visual settings out of game state, and 
   await page.goto('/');
   const view = page.locator('.game-view');
   await expect(view).toHaveAttribute('data-renderer', 'webgl', { timeout: 30_000 });
+  await page.locator('.game-viewport').scrollIntoViewIfNeeded();
   await expect(page.locator('.game-marker').first()).toBeInViewport();
   await expect(page.locator('.home-marker').last()).toBeInViewport();
   const before = (await page.request.get('/api/demo/state')).json();

@@ -190,11 +190,17 @@ export function Garden({ world }: { world: World }) {
       <Stones items={walls.blocks} />
       <Stones items={walls.caps} />
       <Stones items={walls.moss} shadow={false} />
-      <mesh position={[16.5, 0.012, 9.5]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh
+        position={[world.arena.coreSpawn.x / 1000, 0.012, world.arena.coreSpawn.y / 1000]}
+        rotation={[-Math.PI / 2, 0, 0]}
+      >
         <ringGeometry args={[1.88, 1.96, 48]} />
         <meshLambertMaterial color="#887b64" />
       </mesh>
-      <mesh position={[16.5, 0.016, 9.5]} rotation={[-Math.PI / 2, 0, Math.PI / 4]}>
+      <mesh
+        position={[world.arena.coreSpawn.x / 1000, 0.016, world.arena.coreSpawn.y / 1000]}
+        rotation={[-Math.PI / 2, 0, Math.PI / 4]}
+      >
         <ringGeometry args={[0.72, 0.81, 4]} />
         <meshLambertMaterial color="#8e8168" />
       </mesh>

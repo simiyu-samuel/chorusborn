@@ -10,8 +10,8 @@
   authorization. Local commits are authorized.
 - The local fixture, Twitch OAuth/EventSub, durable proposal queue, and bounded Groq
   compiler exist. Real proposals can be reviewed, proved in the declared opening fixture,
-  and adopted with source attribution. PostgreSQL, rival channels, and full-suite evaluation
-  remain unimplemented. No claims of broad model accuracy or tactic superiority.
+  and adopted with source attribution. Local two-channel challenges, canonical channel books, and shared matches are implemented.
+  A real second-broadcaster demonstration, PostgreSQL and full-suite evaluation remain pending. No claims of broad model accuracy or tactic superiority.
   Twitch tokens are memory-only for now; restart requires reconnecting. Keep status honest.
 - Keep the ambitious core: Twitch teaching, evidence-backed lessons, deterministic
   branching replay, persistent playbooks, real attribution, and rival matches.

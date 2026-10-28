@@ -141,13 +141,20 @@ export type ActorMetrics = {
   ruleUses: Record<string, number>;
 };
 export type World = {
-  engineVersion: 'core-run/0.1.1';
+  engineVersion: 'core-run/0.2.0';
   codecVersion: 1;
   seed: number;
   tick: number;
   status: 'running' | 'paused' | 'finished';
   winner: ActorId | 'draw' | null;
-  arena: { id: string; width: number; height: number; walls: Point[]; hazards: Point[] };
+  arena: {
+    id: string;
+    width: number;
+    height: number;
+    walls: Point[];
+    hazards: Point[];
+    coreSpawn: Point;
+  };
   champions: [Champion, Champion];
   core: Point & { carrier: ActorId | null; unheldSince: number };
   decoys: (Point & { owner: ActorId; expiresAt: number })[];
@@ -233,6 +240,36 @@ export type ChatIntake = {
 };
 export const intakeControlSchema = z.strictObject({ action: z.enum(['pause', 'resume', 'retry']) });
 export const proposalControlSchema = z.strictObject({ action: z.literal('reject') });
+export type ChannelIdentity = { id: string; login: string };
+export type RivalChallenge = {
+  id: string;
+  from: ChannelIdentity;
+  toLogin: string;
+  expiresAt: number;
+};
+export type RivalMatchView = {
+  id: string;
+  self: ActorId;
+  participants: [ChannelIdentity, ChannelIdentity];
+  ready: [boolean, boolean];
+  verified: [boolean, boolean];
+};
+export type RivalryState = {
+  incoming: RivalChallenge[];
+  outgoing: RivalChallenge | null;
+  match: RivalMatchView | null;
+};
+export const rivalInviteSchema = z.strictObject({
+  opponentLogin: z.string().regex(/^[a-z0-9_]{1,25}$/),
+});
+export const rivalChallengeSchema = z.strictObject({
+  action: z.enum(['accept', 'decline', 'cancel']),
+});
+export const rivalControlSchema = z.strictObject({
+  action: z.enum(['ready', 'pause', 'leave']),
+  matchId: z.string().uuid(),
+});
+
 export type TwitchConnection = {
   configured: boolean;
   status: 'disconnected' | 'authenticated' | 'reconnect-required' | 'validation-unavailable';
@@ -242,7 +279,10 @@ export type TwitchConnection = {
   chat: ChatStatus;
 };
 export type StudioState = {
-  mode: 'local-fixture';
+  mode: 'local-fixture' | 'rivalry';
+  championName: string;
+  selfActor: ActorId;
+  rivalry: RivalryState;
   connected: boolean;
   twitch: TwitchConnection;
   intake: ChatIntake;

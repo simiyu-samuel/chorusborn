@@ -428,6 +428,94 @@ verified match/replay/authority boundaries, fixed pause/reset presentation and t
 and recorded limits. The feature commit supplies this revision; submission still needs the
 verified main Codex session ID.
 
+## 2026-10-28 — Canonical streamer champions and two-community rivalry
+
+**Completed**
+
+- Connected champion display names now come from Twitch's verified lowercase username.
+  Mica/Rook remain visual-kit/fallback identities. Updated scoreboard, arena/compatibility
+  labels, core/capture cues, result text, own-champion cards and rule descriptions; side B's
+  private receipts/stats/portrait reference its own actor, and rivalry overlays can credit actual
+  execution by either community.
+- Removed the global single-channel sign-in restriction while preserving client/scope/token
+  validation. Persisted one canonical channel binding with its local book. Same-channel fresh
+  browsers rejoin it; another account cannot claim its champion. Legacy books with trusted
+  source channel IDs migrate only to that verified owner. Binding is serialized, and ownership
+  is checked before an OAuth session becomes active. Rejected account switching preserves the
+  original session; later adoptions retain channel metadata.
+- Added a process-local rivalry coordinator and strict targeted challenge, accept/decline/cancel,
+  ready/pause/leave routes. Only the invited verified owner can accept. Both coaches must ready
+  to start/resume/rematch; readiness is tied to policy hashes and a matching active match ID.
+  Either verified participant can pause or end the rivalry. Lost OAuth pauses play and clears
+  readiness. Each community keeps its own EventSub intake, compiler/proof/adoption path and book.
+- Both studios and their existing read-only overlays observe one authoritative world. The clock
+  advances it once; both policies are copied at start/rematch and remain pinned through pauses.
+  Mid-round adoption queues a later book. Private queues, proposals and rule source joins are
+  excluded from peer/public match DTOs; overlay keys have no coaching authority.
+- Added the neutral rivalry opening: both home spawns, no fixture carrier or opening decoy,
+  equal base stats and a core equidistant from the homes. Engine `core-run/0.2.0` serializes
+  required bounded `arena.coreSpawn`, used by capture/idle resets and visible center marks.
+  Existing training defaults stay the same. Old full checkpoints are rejected; local books
+  remain compatible. Neutral opening is not a claim of tournament balance or mirrored evaluation.
+- Added the responsive rivalry panel, owner/peer readiness/verification states, persistent
+  streamer names, name-aware lesson descriptions and a clear local/remote setup boundary.
+  Recorded architecture/ownership/consent in ADR 020 and the new rivalry guide.
+
+**Verification**
+
+- Final `npm run check` passes formatting, TypeScript, **86 tests across 15 files**, and the
+  production web build. New simulation checks cover neutral distances, pinned independent
+  policies, actual actor-B rule execution/credit, complete restore and neutral reset positions.
+  Coordinator checks cover ownership, wrong/uninvited/expired/duplicate acceptance, one shared
+  clock, locked books, mutual start/pause/rematch, adoption invalidation and OAuth loss/recovery.
+- New API integration checks run two independent mocked OAuth identities and separate scoped
+  EventSub transports through own-channel ingress, compile/prove/adopt, accepted shared match,
+  read-only overlay, cross-channel rejection and disconnect pause. Reconnect/restart checks
+  cover canonical book recovery and legacy ownership migration without empty-book replacement.
+  A migration test caught the need to resolve old trusted source-channel records when the saved
+  ownership field is absent; it now recovers that book and rejects a foreign claimant.
+- A new two-context browser flow uses **fixture_host / fixture_guest** mock identities, keeping
+  them separate from the earlier single-channel fixture. It verifies isolated queues, second-
+  channel compile/proof/adoption, invitation acceptance, mutual readiness, shared world/ID/score,
+  pause, actor-B identity/book, read-only overlay, mobile overflow and ending the match. Its first
+  run caught a test-origin mistake: relative API requests used the harness's `127.0.0.1` base
+  after OAuth moved the pages to `localhost`, returning unrelated anonymous studios. Use the
+  canonical absolute origin and assert match identity/mode before comparing world state.
+- The broad ten-flow browser run passed eight checks, including the new rivalry and the normal
+  full sixty-second round/rematch/result flow. Updated the graphics test to scroll the arena
+  into view after the new panel changed page height, and synchronized the existing community-
+  proof assertion with the actual successful API response. Both targeted reruns pass, so all
+  **ten browser flows** have passed across these verification runs. Runtime limits and gameplay
+  assertions were not weakened. These are provider fixtures, not second-human live evidence.
+- Inspected the two-streamer mock overlay and 390px coach capture. Restored the real local dev
+  server after its previous process exited, reconnected **developersimiyu**, verified **Chat live**
+  and the retained **v3 / three-rule** playbook, and created a real **local pending challenge to
+  serleusler** from the authenticated studio. The other broadcaster has not authorized/accepted.
+  Captures stay ignored; no Twitch chat post or model compilation was made for this feature.
+- The main web chunk is about 300KB minified/93KB gzip; shared Three/R3F/rig remains about
+  916KB/243KB gzip, with the existing Vite size warning. No sustained OBS, retention, model
+  accuracy, tactic superiority or independent audience benchmark is claimed.
+
+**Boundaries and next work**
+
+This implements the local S09 flow; it does not complete real two-community release evidence.
+Serleusler must authorize its own account and accept/ready. Local tests can use separate browser
+profiles on one computer. A remote streamer cannot reach this localhost server; shared HTTPS
+hosting, production origin/session controls and durable persistence are a separate deployment
+milestone. Tokens/challenges/readiness/matches are memory-only; restart requires reconnecting
+and re-challenging. Existing proof trials remain training-fixture comparisons, not current-rival
+branches. Full evaluation/holdouts, rollback/history, balanced mirrored match series, durable
+recovery, tactical jump/dodge rules and measured OBS/audience validation remain open. No hosting,
+paid resource, third-party message or hackathon submission was created.
+
+**Codex contribution**
+
+Codex implemented canonical ownership/migration, verified account naming, the two-community
+coordinator/API/UI, neutral deterministic scenario and identity-aware presentation; tested the
+independent authority/teaching and shared-match boundaries; repaired browser synchronization;
+and documented the limits. The feature commit supplies this revision. The main build session
+ID still needs verification before submission.
+
 ## Future entry template
 
 For each completed milestone, record date, feature/acceptance IDs, commit reference, meaningful checks and outcomes, screenshots/replay/evaluation references where appropriate, remaining limitations, and how Codex contributed. Never include secrets or full private session transcripts. Store bulky recordings outside Git and link final authorized artifacts when available.

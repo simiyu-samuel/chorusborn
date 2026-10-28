@@ -74,6 +74,26 @@ describe('read-only game presentation', () => {
     expect(newSoundEvents({ ...before, tick: 1 }, next)).toEqual([]);
     expect(newSoundEvents(before, { ...next, status: 'paused' })).toEqual([]);
   });
+  it('can credit either community from actual execution while keeping the fixture default on side A', () => {
+    const world = createWorld();
+    world.tick = 12;
+    world.decisions = [
+      {
+        tick: 12,
+        actorId: 'b',
+        ruleId: 'peer-rule',
+        label: 'Return',
+        author: 'Other community',
+        goal: 'return_home',
+        executed: true,
+        abilityExecuted: false,
+      },
+    ];
+    expect(visibleLesson(world)).toBeUndefined();
+    expect(visibleLesson(world, 'both')?.author).toBe('Other community');
+    world.decisions[0]!.executed = false;
+    expect(visibleLesson(world, 'both')).toBeUndefined();
+  });
   it('bounds effects to real event ticks and credits only actual executed viewer rules', () => {
     const world = createWorld();
     world.tick = 30;

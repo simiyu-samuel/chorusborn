@@ -1,0 +1,184 @@
+.rivalry-panel {
+  margin-bottom: 24px;
+  padding: 22px;
+  border: 1px solid #b8df8f29;
+  border-radius: 12px;
+  background: linear-gradient(125deg, #1c2824, #131d20);
+}
+.rivalry-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.rivalry-heading .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #c0dfa0;
+}
+.rivalry-heading h2 {
+  font-size: 20px;
+  margin: 9px 0;
+  color: #edf0e2;
+}
+.rivalry-badge {
+  font-size: 8px;
+  letter-spacing: 1.4px;
+  color: #b8cbad;
+  border: 1px solid #b8df8f29;
+  padding: 7px;
+  border-radius: 4px;
+}
+.rivalry-explainer {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #a0ae9f;
+  margin: 0 0 18px;
+}
+.rivalry-invite {
+  display: flex;
+  align-items: end;
+  gap: 14px;
+}
+.rivalry-invite label {
+  display: grid;
+  gap: 7px;
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  color: #c9d7bf;
+}
+.rivalry-invite input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border-radius: 5px;
+  border: 1px solid #afc69e33;
+  background: #10191b;
+  color: #edf0e2;
+  font: inherit;
+  font-size: 13px;
+}
+.rivalry-roster {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 12px 0 16px;
+}
+.rivalry-side {
+  display: grid;
+  gap: 7px;
+  padding: 15px;
+  border-radius: 8px;
+  background: #a88adc10;
+  border: 1px solid #bca0e733;
+  min-width: 0;
+}
+.rivalry-side strong {
+  font-size: 17px;
+  color: #ccb3f2;
+  overflow-wrap: anywhere;
+}
+.rivalry-side.team-b {
+  background: #ddb16a0e;
+  border-color: #e4ad5a33;
+}
+.rivalry-side.team-b strong {
+  color: #e7bc7d;
+}
+.rivalry-side span {
+  font-size: 10px;
+  color: #afbdac;
+}
+.rivalry-side small {
+  font-size: 10px;
+  color: #d3e5bd;
+}
+.rivalry-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.rivalry-actions > span {
+  font-size: 11px;
+  color: #9eaf9a;
+}
+.rivalry-incoming {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 14px 0;
+  border-top: 1px solid #b8df8f22;
+}
+.rivalry-incoming strong {
+  font-size: 13px;
+  color: #e1e9d6;
+  overflow-wrap: anywhere;
+}
+.rivalry-incoming p,
+.rivalry-local-note {
+  font-size: 10px;
+  line-height: 1.7;
+  color: #8e9f8a;
+}
+.rivalry-local-note {
+  margin: 15px 0 0;
+}
+.rivalry-panel button:focus-visible,
+.rivalry-panel input:focus-visible {
+  outline: 2px solid #bfe38f;
+  outline-offset: 3px;
+}
+.team-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.team-label > span {
+  min-width: 0;
+}
+.game-marker strong {
+  max-width: 190px;
+  overflow-wrap: anywhere;
+}
+.home-marker {
+  max-width: 190px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .rivalry-panel {
+    padding: 16px;
+  }
+  .rivalry-heading h2 {
+    font-size: 17px;
+  }
+  .rivalry-badge {
+    display: none;
+  }
+  .rivalry-invite,
+  .rivalry-incoming {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .rivalry-roster {
+    gap: 8px;
+  }
+  .rivalry-side {
+    padding: 10px;
+  }
+  .rivalry-side strong {
+    font-size: 13px;
+  }
+  .rivalry-actions > span {
+    width: 100%;
+  }
+  .rivalry-invite button {
+    align-self: flex-start;
+  }
+}
+
+.champion-profile h2 {
+  overflow-wrap: anywhere;
+}

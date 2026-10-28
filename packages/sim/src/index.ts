@@ -16,7 +16,7 @@ import {
   type StrikeEvent,
 } from '@chorusborn/contracts';
 
-export const ENGINE_VERSION = 'core-run/0.1.1' as const;
+export const ENGINE_VERSION = 'core-run/0.2.0' as const;
 export const TICKS_PER_SECOND = 20;
 export const MATCH_TICKS = 60 * TICKS_PER_SECOND;
 const HOME_A = { x: 2500, y: 9500 };
@@ -109,6 +109,7 @@ export function createWorld(playbook = createPlaybook(), seed = 42): World {
       height: 18,
       walls,
       hazards: [7, 8, 9, 22, 23, 24].flatMap((x) => [8, 9].map((y) => ({ x, y }))),
+      coreSpawn: copy(CENTER),
     },
     champions: [a, b],
     core: { ...CENTER, carrier: 'a', unheldSince: 0 },
@@ -138,7 +139,14 @@ export function restore(input: Snapshot): World {
     !Number.isInteger(world.tick) ||
     world.tick < 0 ||
     world.tick > MATCH_TICKS ||
-    world.champions.length !== 2
+    world.champions.length !== 2 ||
+    !world.arena.coreSpawn ||
+    !Number.isInteger(world.arena.coreSpawn.x) ||
+    !Number.isInteger(world.arena.coreSpawn.y) ||
+    world.arena.coreSpawn.x < 0 ||
+    world.arena.coreSpawn.x >= world.arena.width * 1000 ||
+    world.arena.coreSpawn.y < 0 ||
+    world.arena.coreSpawn.y >= world.arena.height * 1000
   )
     throw new Error('Incomplete snapshot.');
   for (const actor of world.champions) {
@@ -430,7 +438,7 @@ export function step(input: World): World {
       }
     }
     if (world.core.carrier === null && world.tick - world.core.unheldSince >= 200)
-      world.core = { ...CENTER, carrier: null, unheldSince: world.tick };
+      world.core = { ...world.arena.coreSpawn, carrier: null, unheldSince: world.tick };
   }
   for (const actor of world.champions) {
     if (world.core.carrier === actor.id) {
@@ -440,7 +448,7 @@ export function step(input: World): World {
       if (actor.health > 0 && distance(actor, actor.home) <= 750) {
         actor.score += 1;
         event('capture', actor, `${actor.name} brought the core home`);
-        world.core = { ...CENTER, carrier: null, unheldSince: world.tick };
+        world.core = { ...world.arena.coreSpawn, carrier: null, unheldSince: world.tick };
         world.decoys = [];
         for (const unit of world.champions) {
           unit.x = unit.home.x;
@@ -520,7 +528,14 @@ export function createCombatStudy(): CombatStudy {
     addLesson(createPlaybook(), candidate(false), { author: 'Combat study' }),
     42,
   );
-  world.arena = { id: 'sparring-v1', width: 32, height: 18, walls: [], hazards: [] };
+  world.arena = {
+    id: 'sparring-v1',
+    width: 32,
+    height: 18,
+    walls: [],
+    hazards: [],
+    coreSpawn: { x: 25000, y: 9500 },
+  };
   world.champions[0].home = { x: 14500, y: 9500 };
   world.champions[1].home = { x: 15500, y: 9500 };
   world.champions.forEach((c) => {
@@ -551,4 +566,23 @@ export function createCombatStudy(): CombatStudy {
     frames,
     strikes,
   };
+}
+
+/** Two independently owned policies on a neutral opening, with no fixture carrier/decoy advantage. */
+export function createRivalWorld(
+  participants: [{ name: string; playbook: Playbook }, { name: string; playbook: Playbook }],
+  seed = 42,
+): World {
+  const world = createWorld(participants[0].playbook, seed);
+  world.arena.id = `relay-duel-${seed >>> 0}`;
+  world.arena.coreSpawn = { x: 16000, y: 9500 };
+  world.core = { ...world.arena.coreSpawn, carrier: null, unheldSince: 0 };
+  world.decoys = [];
+  for (const [i, actor] of world.champions.entries()) {
+    actor.name = participants[i]!.name;
+    actor.playbook = copy(participants[i]!.playbook);
+    actor.x = actor.home.x;
+    actor.y = actor.home.y;
+  }
+  return world;
 }

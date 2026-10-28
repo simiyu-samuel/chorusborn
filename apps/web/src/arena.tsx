@@ -86,7 +86,7 @@ export function Arena({
   label?: string;
   interactive?: boolean;
   animate?: boolean;
-  mode?: 'training' | 'replay';
+  mode?: 'training' | 'replay' | 'rivalry';
   suspended?: boolean;
 }) {
   const [available, setAvailable] = useState(canUseWebGL),
@@ -98,8 +98,8 @@ export function Arena({
   const unavailable = useCallback(() => setAvailable(false), []),
     renderReady = useCallback(() => setReady(true), []);
   const capture = recentEvents(world, 20).findLast((e) => e.type === 'capture');
-  const lesson = visibleLesson(world);
-  const summary = `${label}. Mica ${world.champions[0].score}, Rook ${world.champions[1].score}. ${world.status}. ${world.core.carrier === null ? 'Core available.' : `${world.core.carrier === 'a' ? 'Mica' : 'Rook'} carrying core.`}`;
+  const lesson = visibleLesson(world, mode === 'rivalry' ? 'both' : 'a');
+  const summary = `${label}. ${world.champions[0].name} ${world.champions[0].score}, ${world.champions[1].name} ${world.champions[1].score}. ${world.status}. ${world.core.carrier === null ? 'Core available.' : `${world.champions.find((c) => c.id === world.core.carrier)?.name} carrying core.`}`;
   const fallback = (
     <div className="graphics-fallback">
       <ArenaFallback world={world} label={label} reducedMotion={reducedMotion} />
@@ -190,7 +190,9 @@ export function Arena({
           <div className="garden-wordmark" aria-hidden="true">
             <span>CORE RUN</span>
             <strong>Relay Garden</strong>
-            <small>Carrier dilemma · seed {world.seed}</small>
+            <small>
+              {mode === 'rivalry' ? 'Neutral opening' : 'Carrier dilemma'} · seed {world.seed}
+            </small>
           </div>
           <div className="game-mode-tag">
             {mode === 'replay'
@@ -198,8 +200,8 @@ export function Arena({
               : world.status === 'finished'
                 ? 'ROUND COMPLETE'
                 : world.status === 'paused'
-                  ? 'TRAINING · PAUSED'
-                  : 'TRAINING · LIVE'}
+                  ? `${mode === 'rivalry' ? 'RIVALRY' : 'TRAINING'} · PAUSED`
+                  : `${mode === 'rivalry' ? 'RIVALRY' : 'TRAINING'} · LIVE`}
           </div>
         </div>
         {mode !== 'replay' && !suspended ? <RoundResult world={world} /> : null}
@@ -217,10 +219,10 @@ export function Arena({
             </small>
             <strong>
               {capture
-                ? `${capture.actorId === 'a' ? 'Mica' : 'Rook'} brings it home`
+                ? `${world.champions.find((c) => c.id === capture.actorId)?.name} brings it home`
                 : world.core.carrier === null
                   ? 'The core is waiting'
-                  : `${world.core.carrier === 'a' ? 'Mica' : 'Rook'} · ${intentCue(world, world.core.carrier)}`}
+                  : `${world.champions.find((c) => c.id === world.core.carrier)?.name} · ${intentCue(world, world.core.carrier)}`}
             </strong>
           </div>
         </div>
@@ -229,6 +231,9 @@ export function Arena({
             <i />
             <span>
               Lesson used <b>{lesson.author}</b>
+              {mode === 'rivalry'
+                ? ` · ${world.champions.find((c) => c.id === lesson.actorId)?.name}`
+                : ''}
             </span>
           </div>
         ) : (

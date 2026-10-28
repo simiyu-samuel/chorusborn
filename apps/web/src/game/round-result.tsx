@@ -30,7 +30,7 @@ export function RoundResult({ world }: { world: World }) {
           <h3>{result.title}</h3>
           <p>
             Relay Garden · {result.seconds}s played · Playbook v
-            {world.champions[0].playbook.version}
+            {world.champions[0].playbook.version} / v{world.champions[1].playbook.version}
           </p>
         </div>
         <div

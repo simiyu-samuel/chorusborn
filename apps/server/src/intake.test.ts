@@ -61,7 +61,7 @@ async function boot(chatStorePath: string | null = null) {
     (await app.inject({ url: '/api/demo/state', headers: { cookie } })).json();
   const authorize = async () => {
     const initial = await app.inject('/api/demo/state');
-    const cookie = initial.headers['set-cookie']!.toString().split(';')[0]!;
+    let cookie = initial.headers['set-cookie']!.toString().split(';')[0]!;
     const start = await app.inject({ url: '/auth/twitch/start', headers: { cookie } });
     const nonce = new URL(start.headers.location!).searchParams.get('state')!;
     const callback = await app.inject({
@@ -69,6 +69,7 @@ async function boot(chatStorePath: string | null = null) {
       headers: { cookie },
     });
     expect(callback.headers.location).toContain('twitch=connected');
+    cookie = callback.headers['set-cookie']!.toString().split(';')[0]!;
     await vi.waitFor(async () => expect((await state(cookie)).intake.status).toBe('live'));
     return cookie;
   };
@@ -103,10 +104,11 @@ describe('real intake boundaries with a fixture transport', () => {
       (await app.inject({ method: 'POST', url: '/__test__/event', payload: {} })).statusCode,
     ).toBe(404);
   });
-  it('shares one socket per verified reader, hides queues without OAuth, and disconnects the final reader', async () => {
+  it('rejoins one canonical channel studio across browsers and disconnects its shared authority', async () => {
     const { app, sockets, authorize, state } = await boot();
     const one = await authorize(),
       two = await authorize();
+    expect(one).toBe(two);
     expect(sockets).toHaveLength(1);
     sockets[0]!.emit(chatNotification());
     await vi.waitFor(async () => expect((await state(two)).intake.proposals).toHaveLength(1));
@@ -117,13 +119,6 @@ describe('real intake boundaries with a fixture transport', () => {
       payload: {},
     });
     expect((await state(one)).intake.proposals).toEqual([]);
-    expect(sockets[0]!.closed).toBe(false);
-    await app.inject({
-      method: 'POST',
-      url: '/api/twitch/disconnect',
-      headers: { cookie: two },
-      payload: {},
-    });
     expect(sockets[0]!.closed).toBe(true);
     expect((await state(two)).intake.proposals).toEqual([]);
   });

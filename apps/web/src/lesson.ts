@@ -16,11 +16,14 @@ const operators = {
   gt: 'is above',
   gte: 'is at least',
 };
-export function describeCondition(condition: Condition): string {
+export function describeCondition(condition: Condition, championName = 'Mica'): string {
   if (typeof condition.value === 'boolean') {
     const positive = condition.op === 'eq' ? condition.value : !condition.value;
-    return booleans[condition.fact as keyof typeof booleans][positive ? 0 : 1]!;
+    return booleans[condition.fact as keyof typeof booleans][positive ? 0 : 1]!.replace(
+      'Mica',
+      championName,
+    );
   }
   const health = condition.fact === 'self.healthBps';
-  return `${health ? 'Mica’s health' : 'Opponent distance'} ${operators[condition.op as keyof typeof operators]} ${condition.value / (health ? 100 : 1000)}${health ? '%' : ' tiles'}`;
+  return `${health ? `${championName}’s health` : 'Opponent distance'} ${operators[condition.op as keyof typeof operators]} ${condition.value / (health ? 100 : 1000)}${health ? '%' : ' tiles'}`;
 }

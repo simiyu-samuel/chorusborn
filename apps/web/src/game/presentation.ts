@@ -47,10 +47,10 @@ export function newSoundEvents(previous: World | null, next: World): GameEvent[]
 export function eventKey(event: GameEvent) {
   return `${event.tick}:${event.actorId}:${event.type}`;
 }
-export function visibleLesson(world: World) {
+export function visibleLesson(world: World, actorId: ActorId | 'both' = 'a') {
   return world.decisions.findLast(
     (decision) =>
-      decision.actorId === 'a' &&
+      (actorId === 'both' || decision.actorId === actorId) &&
       decision.ruleId &&
       (decision.executed || decision.abilityExecuted) &&
       decision.tick <= world.tick &&

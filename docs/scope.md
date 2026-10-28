@@ -1,6 +1,6 @@
 # Release scope and acceptance
 
-Status: **release scope planned; first local fixture implemented**. Local engine/replay/coach foundations, real Twitch intake, and Groq compilation through adoption exist. Broader evaluation, production persistence, rivalry, and the complete requirements below still need implementation and release evidence. See [build log](build-log.md). The five-day build target sequences work; it does not justify removing the signature experience.
+Status: **release scope planned; first local fixture implemented**. Local engine/replay/coach foundations, real Twitch intake, and Groq compilation through adoption exist. Local two-channel rivalry now exists with independent mock-account evidence; a real second-broadcaster demonstration, broader evaluation, production persistence, and the complete requirements below still need release evidence. See [rivalry](rivalry.md). See [build log](build-log.md). The five-day build target sequences work; it does not justify removing the signature experience.
 
 ## Submission release requirements
 

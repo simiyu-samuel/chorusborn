@@ -171,7 +171,7 @@ describe('Twitch OAuth HTTP flow', () => {
     [{ client_id: 'another-client' }, 'failed'],
     [{ scopes: [] }, 'failed'],
     [{ user_id: null }, 'failed'],
-    [{ login: 'another_channel' }, 'wrong-channel'],
+    [{ login: 'invalid-login' }, 'failed'],
   ])(
     'rejects invalid provider identity %j and revokes the unused token',
     async (override, result) => {

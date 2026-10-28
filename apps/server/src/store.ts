@@ -1,9 +1,15 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import type { Playbook } from '@chorusborn/contracts';
+import type { Playbook, ChannelIdentity } from '@chorusborn/contracts';
 
-export type StoredStudio = { id: string; token: string; overlayKey: string; playbook: Playbook };
+export type StoredStudio = {
+  id: string;
+  token: string;
+  overlayKey: string;
+  playbook: Playbook;
+  channel?: ChannelIdentity;
+};
 
 // A small, explicitly local fixture store. Production PostgreSQL is a separate milestone.
 export class LocalStore {
@@ -22,12 +28,20 @@ export class LocalStore {
           typeof item.id !== 'string' ||
           typeof item.token !== 'string' ||
           typeof item.overlayKey !== 'string' ||
+          (item.channel !== undefined &&
+            (!item.channel ||
+              typeof item.channel.id !== 'string' ||
+              typeof item.channel.login !== 'string' ||
+              !/^\d{1,32}$/.test(item.channel.id) ||
+              !/^[a-z0-9_]{1,25}$/.test(item.channel.login))) ||
           !item.playbook ||
           !Number.isInteger(item.playbook.version) ||
           !Array.isArray(item.playbook.rules)
         )
           throw new Error('Invalid local studio record.');
       }
+      const ids = parsed.filter((item) => item.channel).map((item) => item.channel.id);
+      if (new Set(ids).size !== ids.length) throw new Error('Duplicate channel ownership.');
       this.records = parsed;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;

@@ -1,6 +1,6 @@
 # System architecture
 
-Status: target production architecture. The local build implements `apps/web`, `apps/server`, `packages/contracts`, and `packages/sim`, plus Twitch OAuth, EventSub lifecycle, and a durable local teaching queue. Tokens remain memory-only. It uses local file stores instead of PostgreSQL and a shared Three.js/React Three Fiber scene with an SVG compatibility view; a bounded Groq compiler now handles explicit coach requests. Production services remain pending. See ADR 013–019 in [decisions](decisions.md).
+Status: target production architecture. The local build implements `apps/web`, `apps/server`, `packages/contracts`, and `packages/sim`, plus Twitch OAuth, EventSub lifecycle, and a durable local teaching queue. Tokens remain memory-only. It uses local file stores instead of PostgreSQL and a shared Three.js/React Three Fiber scene with an SVG compatibility view; a bounded Groq compiler now handles explicit coach requests. Production services remain pending. See ADR 013–020 in [decisions](decisions.md).
 
 ## Architectural principle
 
@@ -154,7 +154,7 @@ sent as simulation commands. The scene chunk is separate from the primary studio
 
 ## Combat study and trace patch
 
-`core-run/0.1.1` emits legal `strike` contacts with attacker/target, positions and post-shield
+The trace introduced in `core-run/0.1.1` emits legal `strike` contacts with attacker/target, positions and post-shield
 attack damage. Gameplay rules remain unchanged; complete earlier-version snapshots are rejected
 because the event trace/hash changes. Local stored playbooks are compatible.
 
@@ -174,3 +174,13 @@ retains its separate complete-replay sampler. Match/replay poses never look ahea
 into the engine. Subframe pose time is bounded to two ticks; paused snapshots sample exactly.
 Animation enablement is separate from accessibility reduction so paused branch contacts retain
 their chosen pose. SVG fallback and portraits use an original matching `FighterGlyph`.
+
+## Local two-community coordinator
+
+`Rivalries` coordinates ephemeral invitation, mutual readiness and one shared server-owned world
+for two canonical channel studios. The live clock advances that match once, then publishes to
+both participants and their existing overlays. Separate channel queues and private books remain
+under verified OAuth; world-level source joins are redacted from the peer/public match DTO.
+Canonical channel bindings and books persist locally, while tokens/challenges/matches do not.
+Engine 0.2.0 snapshots include `arena.coreSpawn` to keep neutral rivalry resets deterministic.
+See [rivalry](rivalry.md) for authorization, consent, migration and deployment boundaries.

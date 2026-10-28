@@ -93,7 +93,7 @@ export function ArenaFallback({
       className="arena-svg"
       viewBox="0 0 1200 660"
       aria-hidden="true"
-      aria-label={`${label}. Mica ${world.champions[0].score}, Rook ${world.champions[1].score}. ${world.status}.`}
+      aria-label={`${label}. ${world.champions[0].name} ${world.champions[0].score}, ${world.champions[1].name} ${world.champions[1].score}. ${world.status}.`}
     >
       <defs>
         <pattern id={`${prefix}-grid`} width="1" height="1" patternUnits="userSpaceOnUse">
@@ -157,10 +157,17 @@ export function ArenaFallback({
             />
           </g>
         ))}
-        <circle cx="16.5" cy="9.5" r="2" fill="none" stroke="#627458" strokeWidth=".06" />
         <circle
-          cx="16.5"
-          cy="9.5"
+          cx={world.arena.coreSpawn.x / 1000}
+          cy={world.arena.coreSpawn.y / 1000}
+          r="2"
+          fill="none"
+          stroke="#627458"
+          strokeWidth=".06"
+        />
+        <circle
+          cx={world.arena.coreSpawn.x / 1000}
+          cy={world.arena.coreSpawn.y / 1000}
           r="1.7"
           fill="none"
           stroke="#627458"
@@ -240,7 +247,8 @@ export function ArenaFallback({
           />
         ))}
       <text x="110" y="600" fill="#627265" fontSize="10" letterSpacing="2.5">
-        CARRIER DILEMMA / SEED {world.seed}
+        {world.arena.id.startsWith('relay-duel-') ? 'NEUTRAL RIVALRY' : 'CARRIER DILEMMA'} / SEED{' '}
+        {world.seed}
       </text>
       <text x="1090" y="600" textAnchor="end" fill="#627265" fontSize="10" letterSpacing="2.5">
         FIRST TO 3 CAPTURES

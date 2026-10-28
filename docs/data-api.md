@@ -153,3 +153,13 @@ Engine 0.1.1's `strike` event records `tick`, `actorId`, `targetId`, integer `fr
 `damage` after shield reduction, `shielded`, and a display `text`. Damage is an attack contribution
 under existing overkill accounting. Event history remains bounded to forty entries in each world;
 the study separately collects every strike over its fixed interval.
+
+## Local rivalry and canonical ownership (implemented)
+
+See [rivalry](rivalry.md) for the exact challenge/accept/ready controls and authority contract.
+The local studio store optionally binds a verified channel ID/login to its saved book. Fresh
+browsers verifying the same user rejoin that canonical studio; a different user cannot take it
+over. Both coaches receive the same match world with private source joins redacted, alongside
+only their own unredacted book/queue. Overlay reads expose world/mode only. Match controls
+require the expected match ID and current participant OAuth. This is not the durable production
+match/checkpoint/outbox design above.

@@ -138,8 +138,15 @@ test('coach connects through a cross-site OAuth callback and disconnects with a 
   ).toBeVisible();
   await queue.getByRole('button', { name: 'Compile lesson', exact: true }).click();
   await expect(queue.getByText('MOCK compiler result for browser flow.')).toBeVisible();
-  await expect(queue.getByText('Mica is carrying the core', { exact: false })).toBeVisible();
+  await expect(
+    queue.getByText('developersimiyu is carrying the core', { exact: false }),
+  ).toBeVisible();
+  const communityProof = page.waitForResponse(
+    (response) =>
+      response.url().endsWith('/api/demo/trials') && response.request().method() === 'POST',
+  );
   await queue.getByRole('button', { name: 'Prove community lesson' }).click();
+  expect((await communityProof).ok()).toBe(true);
   const proof = page.getByRole('dialog');
   await expect(proof.getByText('Taught by <b>Viewer One</b>', { exact: false })).toBeVisible();
   await proof.getByRole('button', { name: 'Adopt for next round' }).click();

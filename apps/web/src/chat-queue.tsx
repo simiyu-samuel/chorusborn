@@ -212,7 +212,14 @@ export function ChatQueue({ state, connect, command, prove }: Props) {
                             {proposal.compilation.result.candidate.rules.map((rule, index) => (
                               <li key={index}>
                                 <strong>{rule.label}</strong>
-                                <p>When {rule.when.all.map(describeCondition).join(' AND ')}</p>
+                                <p>
+                                  When{' '}
+                                  {rule.when.all
+                                    .map((condition) =>
+                                      describeCondition(condition, state.championName),
+                                    )
+                                    .join(' AND ')}
+                                </p>
                                 <p>
                                   Do {rule.intent.goal.replaceAll('_', ' ')} · {rule.intent.route}{' '}
                                   route ·{' '}
