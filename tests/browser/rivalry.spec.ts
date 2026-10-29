@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { expect, test } from '../support/browser-fixture.js';
 const authorize = async (page: Page, rival: boolean) => {
   await page.route('**/auth/twitch/start', async (route) => {
     const response = await route.fetch({ maxRedirects: 0 });

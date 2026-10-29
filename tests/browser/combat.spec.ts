@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../support/browser-fixture.js';
 
 test('shows recorded acrobatics, preserves damage timing and scrubs without touching the live studio', async ({
   page,

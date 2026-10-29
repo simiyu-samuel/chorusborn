@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../support/browser-fixture.js';
 import { writeFile } from 'node:fs/promises';
 
 test('renders the shared 3D scene, keeps visual settings out of game state, and handles context loss', async ({

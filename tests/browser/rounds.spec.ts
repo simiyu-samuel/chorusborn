@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../support/browser-fixture.js';
 import type { StudioState } from '@chorusborn/contracts';
 
 test('finishes a real fixture round, broadcasts its result and starts one rematch with the queued playbook', async ({

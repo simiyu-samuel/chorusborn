@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../support/browser-fixture.js';
 import type { Trial } from '@chorusborn/contracts';
 import { liveFighterPose } from '../../apps/web/src/game/combat-motion.js';
 

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../support/browser-fixture.js';
 
 test('coach tests both neutral initiatives, reorders priorities and keeps the active round locked', async ({
   page,

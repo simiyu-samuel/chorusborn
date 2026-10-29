@@ -15,7 +15,7 @@ export default defineConfig({
     launchOptions: { executablePath: process.env.CHROMIUM_PATH || undefined },
   },
   webServer: {
-    command: 'npm run test:serve',
+    command: 'npm run dev -w @chorusborn/web -- --mode browser-test',
     url: 'http://127.0.0.1:5273',
     reuseExistingServer: false,
     timeout: 30_000,

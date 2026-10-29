@@ -938,6 +938,36 @@ the saved hosted connection narrative and separate live app link. Corrected the
 remaining queue storage/budget labels to avoid implying cloud calls reset at a
 server restart. A subsequent production error/fatal scan returned zero records.
 
+## October 29, 2026 — repair GitHub browser-suite isolation
+
+The owner flagged failed workflow checks. Inspected run
+[40826021160](https://github.com/simiyu-samuel/chorusborn/actions/runs/40826021160):
+`npm run check` passed (including all 102 unit tests and the production build),
+but the full browser run passed 11/14 and failed mocked OAuth onboarding followed
+by two studio-connection scenarios. Prior release verification covered selected
+browser flows; a successful Vercel deployment did not establish successful CI.
+
+The shared browser harness retained every previous test's studios, OAuth state
+and sockets. Fresh browser contexts, development-mode initial requests and the
+canonical-localhost OAuth visit accumulated sessions against the real 20-studio
+local admission limit. Extracted the mock app factory and gave every test an
+automatic test-scoped app fixture; Vite remains shared and the suite retains one
+worker for its fixed callback/proxy ports. All existing browser assertions remain
+in place. Added a regression that fills all 20 slots, verifies the next request is
+429, then verifies a following scenario can connect with an empty playbook. Added
+seven-day CI failure trace/screenshot artifacts using the official upload action.
+No production capacity, authorization, retry count or timeout was relaxed.
+
+Local validation: types, formatting and diff checks passed; both admission/isolation
+regressions passed (16 seconds). All three previously failed browser scenarios
+passed with system Chromium (2.2 minutes). An initial full-suite local reproduction
+was deliberately interrupted after five passes while the graphics-heavy rivalry
+scenario ran; it is not counted as a passing suite. The fix must also be verified
+by the complete GitHub workflow before reporting CI success. Browser/provider
+checks remain mock-based and do not touch real Twitch accounts or model keys.
+Codex investigated the run logs, implemented the harness fix and regression checks,
+and kept all generated evidence outside Git.
+
 ## Future entry template
 
 For each completed milestone, record date, feature/acceptance IDs, commit reference, meaningful checks and outcomes, screenshots/replay/evaluation references where appropriate, remaining limitations, and how Codex contributed. Never include secrets or full private session transcripts. Store bulky recordings outside Git and link final authorized artifacts when available.

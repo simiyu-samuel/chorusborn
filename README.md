@@ -33,7 +33,7 @@ npm run build
 npm start               # serve the built frontend and API at http://127.0.0.1:3001
 ```
 
-If Chromium is already installed, set `CHROMIUM_PATH` to its executable for browser checks. CI installs its own matching browser. Browser checks use separate ports **5273/3101**, isolated browser contexts, in-memory studios and mocked providers. They never load `.env` or authorize/disconnect a real account, and can run alongside the normal dev server. Font assets are bundled locally; no external font request is needed.
+If Chromium is already installed, set `CHROMIUM_PATH` to its executable for browser checks. CI installs its own matching browser. Browser checks use separate ports **5273/3101**, isolated browser contexts and a fresh in-memory server/provider fixture for every test. The suite runs with one worker because its proxy and OAuth callback use fixed ports. This keeps studio admission, OAuth, chat and game state from leaking across scenarios. CI retains failed test traces/screenshots for seven days. Tests never load `.env` or authorize/disconnect a real account, and can run alongside the normal dev server. Font assets are bundled locally; no external font request is needed.
 
 ## Game presentation
 

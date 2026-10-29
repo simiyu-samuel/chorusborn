@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../support/browser-fixture.js';
 
 test('coach proves, adopts, starts a pinned round and shares a read-only overlay', async ({
   page,

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../support/browser-fixture.js';
 
 test('a viewer learns and copies a command without signing in or calling the coach API', async ({
   page,
