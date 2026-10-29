@@ -4,6 +4,10 @@ Status: **saved Devpost draft, not submitted**. The pitch, project story, techno
 tags and repository link were saved and verified at
 [Chorusborn on Devpost](https://devpost.com/software/chorusborn) on October 28, 2026.
 The current narrative is preserved in [devpost-story.md](devpost-story.md).
+On October 29 the story and required technical answers were saved in first-person
+individual voice, the solo contribution description was added, and the generated
+3:2 thumbnail was uploaded. Public text is preserved in
+[additional information](devpost-additional-info.md).
 
 The local compiler, rivalry and viewer guide are implemented. A real two-account
 local match and proof review have been observed. Vercel deployment and isolated durable-runtime recovery checks are complete.
@@ -32,9 +36,13 @@ The assigned domain `chorusborn.vercel.app` is live and verified; its app link a
 hosting narrative were saved to Devpost. Hosted developersimiyu OAuth/EventSub also
 succeeded after the owner registered the production callback.
 
-The additional-info form remains unfinished: no personal eligibility declarations,
-subjective survey answers, unverified session ID or demo video were invented. The
-final hackathon submission has not been performed.
+The three requested additional-info fields are saved: the verified main Codex
+session ID, technology requirement explanation and Twitch user journey. The ID
+was checked against this active chat's runtime metadata and the app's thread list,
+then entered in Devpost; it is omitted from the public repository copy. Submitter
+Type is Individual and the public creator list shows Simiyu Samuel alone. Existing
+country, survey and eligibility selections were left as provided. No demo video
+was invented and the final hackathon submission has not been performed.
 
 ## Demonstration storyboard — target 2:45
 
@@ -58,7 +66,7 @@ Editing can compress elapsed time; label cuts/time compression. Never present a 
 - [ ] Working project is available for judging, with test credentials/instructions provided through an appropriate private channel if needed.
 - [ ] Public YouTube video is under three minutes and shows Twitch functionality and actual Codex use.
 - [ ] Description contains only implemented features and supported claims, in English or with required translation.
-- [ ] Main build-thread Codex session ID is obtained through Codex and checked; do not invent it.
+- [x] Main build-thread Codex session ID is verified against current Codex runtime/thread metadata and saved in Devpost.
 - [ ] All release evidence is linked from the build log and corresponds to the submitted revision.
 - [ ] Submission deadline/timezone and video/repository permissions are checked again before submit.
 - [ ] Final Devpost entry is actually submitted; a saved draft alone is not completion.
@@ -75,8 +83,10 @@ Published submission deadline: November 2, 2026 at 14:00 PST = November 3 at 01:
 | Remote repository URL | [simiyu-samuel/chorusborn](https://github.com/simiyu-samuel/chorusborn) |
 | Live application URL | [chorusborn.vercel.app](https://chorusborn.vercel.app) — production READY |
 | Public demo video URL | Pending |
-| Main build session ID | Pending verification |
-| Release commit/tag | Hosted runtime `535f669`; recovery/copy follow-up `7c2ca14`; later copy-only commits are recorded in Git history |
+| Main build session ID | Verified and saved in the private Devpost field; omitted from this public register |
+| Thumbnail | [Promotional key art](media/chorusborn-devpost-thumbnail.png), uploaded; [generation record](media/chorusborn-devpost-thumbnail.prompt.md) |
+| Contribution and technical answers | [Individual submission text](devpost-additional-info.md), saved and browser-verified |
+| Release commit/tag | Hosted application `c080fd0`; complete GitHub workflow passed 102 unit and 18 browser tests |
 | Devpost draft URL | [Chorusborn](https://devpost.com/software/chorusborn); incomplete, not submitted |
 
 The owner authorized repository pushes, Vercel hosting and updating the Devpost project. The app is deployed and the project draft is updated. Demo publication and final hackathon submission remain pending.

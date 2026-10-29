@@ -997,6 +997,34 @@ The complete GitHub workflow remains the release check for all existing flows.
 Codex traced the actual artifact, fixed layout sizing and strengthened coverage;
 no original failing overflow assertion was removed or threshold relaxed.
 
+## October 29, 2026 — individual Devpost answers and thumbnail
+
+At the owner's request, filled and saved the three technical fields on Devpost:
+verified main Codex session ID, technology requirement and Twitch user journey.
+Verified the ID against two current runtime variables and the app's active thread
+metadata; did not guess or include private session transcripts. Kept the identifier
+out of public source documents. Existing Submitter Type was Individual, and the
+public creator list contained only Simiyu Samuel. Rewrote the project story in
+first-person singular and saved a solo creator/developer contribution describing
+product/game design, implementation with Codex, Twitch, compiler/replays, graphics,
+testing, CI and hosting. Preserved existing personal/survey/eligibility selections.
+
+Generated original 1536×1024, 3:2 opaque promotional key art using the built-in image
+generation tool. Verified title/tagline, dimensions and 2,230,593-byte PNG size;
+copied the asset and exact prompt record into `docs/media`. Uploaded through the
+visible Devpost thumbnail label/file chooser and verified its new hosted preview.
+The first file-input attempt could not target the hidden input; the documented
+visible-label flow succeeded. Reopened the saved form and public preview to verify
+answers, singular story and persisted creator credit. Screenshots are ignored
+local artifacts. Updated the public copy to the completed 102-unit/18-browser CI
+evidence for the hosted `c080fd0` application revision.
+
+No application source changed. Validation covers text consistency, local links,
+PNG format/size, diff whitespace and visible persisted browser state. The final
+terms checkbox and Submit project action were not used; the video and final entry
+remain release work. Codex drafted, generated, uploaded and verified these materials
+under the owner's direction.
+
 ## Future entry template
 
 For each completed milestone, record date, feature/acceptance IDs, commit reference, meaningful checks and outcomes, screenshots/replay/evaluation references where appropriate, remaining limitations, and how Codex contributed. Never include secrets or full private session transcripts. Store bulky recordings outside Git and link final authorized artifacts when available.
