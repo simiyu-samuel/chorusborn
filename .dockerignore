@@ -1,0 +1,14 @@
+.git
+.env
+.env.*
+.vercel
+.agents
+.claude
+node_modules
+**/node_modules
+**/dist
+.local
+data
+recordings
+test-results
+playwright-report

@@ -33,6 +33,7 @@ import {
   snapshot,
   step,
   hash,
+  ENGINE_VERSION,
 } from '@chorusborn/sim';
 import { Rivalries, RivalFailure } from './rivalry.js';
 import { LocalStore, type StoredStudio } from './store.js';
@@ -43,11 +44,20 @@ import { PROMPT_HASH, CompileFailure, type LessonCompiler } from './compiler.js'
 import type { SocketFactory } from './eventsub.js';
 
 type Studio = StoredStudio & {
+  touchedAt: number;
   world: World;
   trial: Trial | null;
   busy: boolean;
   adopting: boolean;
   clients: Set<WebSocket>;
+};
+export type AppCheckpoint = {
+  version: 1;
+  engine: typeof ENGINE_VERSION;
+  studios: StoredStudio[];
+  arenas: { id: string; world: World; trial: Trial | null; touchedAt?: number }[];
+  chat: ReturnType<ChatStore['checkpoint']>;
+  rivalry: ReturnType<Rivalries['checkpoint']>;
 };
 type AppOptions = {
   storePath?: string | null;
@@ -57,6 +67,9 @@ type AppOptions = {
   chatStorePath?: string | null;
   socketFactory?: SocketFactory;
   compiler?: LessonCompiler;
+  publicOrigin?: string;
+  initialCheckpoint?: AppCheckpoint;
+  publish?: (id: string, coach: unknown, overlay: unknown) => void;
 };
 const projectRoot = fileURLToPath(new URL('../../../', import.meta.url));
 const cookies = (value: string | undefined) =>
@@ -101,6 +114,13 @@ const trustedOrigin = (value: string | undefined, configuredWebOrigin?: string) 
 };
 
 export async function createApp(options: AppOptions = {}) {
+  if (options.publicOrigin && new URL(options.publicOrigin).origin !== options.publicOrigin)
+    throw new Error('Configure an exact public origin.');
+  if (
+    options.initialCheckpoint &&
+    (options.initialCheckpoint.version !== 1 || options.initialCheckpoint.engine !== ENGINE_VERSION)
+  )
+    throw new Error('Incompatible arena checkpoint; explicit migration is required.');
   const app = Fastify({
     logger: options.logger
       ? { serializers: { req: (req) => ({ method: req.method, url: req.url?.split('?')[0] }) } }
@@ -111,6 +131,7 @@ export async function createApp(options: AppOptions = {}) {
     options.storePath === undefined ? `${projectRoot}.local/studios.json` : options.storePath,
   );
   await store.load();
+  if (options.initialCheckpoint) store.records = structuredClone(options.initialCheckpoint.studios);
   const chatStore = new ChatStore(
     options.chatStorePath !== undefined
       ? options.chatStorePath
@@ -121,6 +142,7 @@ export async function createApp(options: AppOptions = {}) {
           : `${projectRoot}.local/chat.json`,
   );
   await chatStore.load();
+  if (options.initialCheckpoint) chatStore.restore(options.initialCheckpoint.chat);
   let intake: TwitchIntake;
   const studios = new Map<string, Studio>();
   const twitch = options.twitch ?? new TwitchOAuth(null);
@@ -134,6 +156,7 @@ export async function createApp(options: AppOptions = {}) {
   });
   const hydrate = (record: StoredStudio): Studio => ({
     ...record,
+    touchedAt: Date.now(),
     world: createWorld(record.playbook),
     trial: null,
     busy: false,
@@ -143,6 +166,13 @@ export async function createApp(options: AppOptions = {}) {
   for (const record of store.records) {
     const studio = hydrate(record);
     if (studio.channel) studio.world.champions[0].name = studio.channel.login;
+    const saved = options.initialCheckpoint?.arenas.find((arena) => arena.id === studio.id);
+    if (saved) {
+      studio.touchedAt = saved.touchedAt ?? Date.now();
+      studio.world = structuredClone(saved.world);
+      if (studio.world.status === 'running') studio.world.status = 'paused';
+      studio.trial = structuredClone(saved.trial);
+    }
     studios.set(record.token, studio);
   }
   const byId = (id: string) => [...studios.values()].find((studio) => studio.id === id);
@@ -155,6 +185,7 @@ export async function createApp(options: AppOptions = {}) {
       ? { studioId: studio.id, channel: identity.channel, playbook: studio.playbook }
       : null;
   });
+  if (options.initialCheckpoint) rivalry.restore(options.initialCheckpoint.rivalry);
   const worldFor = (studio: Studio) => rivalry.current(studio.id)?.world ?? studio.world;
   const trainingWorld = (studio: Studio) => {
     const world = createWorld(studio.playbook, studio.world.seed);
@@ -200,6 +231,15 @@ export async function createApp(options: AppOptions = {}) {
       )
         studio.trial = null;
     }
+    options.publish?.(
+      studio.id,
+      { type: 'state', state: toState(studio) },
+      {
+        type: 'overlay',
+        world: overlayWorld(worldFor(studio)),
+        mode: rivalry.current(studio.id) ? 'rivalry' : 'local-fixture',
+      },
+    );
     for (const client of studio.clients) {
       if (client.readyState !== 1) continue;
       if (client.bufferedAmount > 1_000_000) {
@@ -278,7 +318,11 @@ export async function createApp(options: AppOptions = {}) {
     );
     return operation;
   };
-  const ownerStudio = (cookie: string | undefined) => studios.get(cookies(cookie).cb_session ?? '');
+  const ownerStudio = (cookie: string | undefined) => {
+    const studio = studios.get(cookies(cookie).cb_session ?? '');
+    if (studio) studio.touchedAt = Date.now();
+    return studio;
+  };
   const overlayStudio = (id: string, key: string) =>
     [...studios.values()].find((studio) => studio.id === id && safeEqual(studio.overlayKey, key));
   intake = new TwitchIntake(
@@ -294,12 +338,14 @@ export async function createApp(options: AppOptions = {}) {
 
   app.addHook('onRequest', async (request, reply) => {
     const host = request.headers.host?.split(':')[0];
-    if (
-      !host ||
-      !['localhost', '127.0.0.1'].includes(host) ||
-      !trustedOrigin(request.headers.origin, twitch.config?.webOrigin)
-    )
-      return reply.code(403).send({ message: 'This fixture lab accepts loopback requests only.' });
+    const accepted = options.publicOrigin
+      ? request.headers.host === new URL(options.publicOrigin).host &&
+        (!request.headers.origin || request.headers.origin === options.publicOrigin)
+      : !!host &&
+        ['localhost', '127.0.0.1'].includes(host) &&
+        trustedOrigin(request.headers.origin, twitch.config?.webOrigin);
+    if (!accepted)
+      return reply.code(403).send({ message: 'This studio accepts its configured origin only.' });
     reply.header('X-Content-Type-Options', 'nosniff').header('Referrer-Policy', 'no-referrer');
     if (request.url.startsWith('/api/') || request.url.startsWith('/auth/'))
       reply.header('Cache-Control', 'no-store');
@@ -310,20 +356,32 @@ export async function createApp(options: AppOptions = {}) {
       return reply.code(415).send({ message: 'JSON requests are required.' });
   });
   await app.register(websocket);
-  app.get('/health/live', async () => ({ status: 'ok', mode: 'local-fixture' }));
+  app.get('/health/live', async () => ({
+    status: 'ok',
+    mode: options.publicOrigin ? 'vercel-authority' : 'local-fixture',
+  }));
   app.get('/health/ready', async () => ({
     status: 'ok',
     twitch: twitch.config ? 'oauth-and-eventsub-configured' : 'not-configured',
     compiler: options.compiler ? 'groq-configured' : 'not-configured',
-    persistence: options.storePath === null ? 'memory' : 'local-file',
+    persistence: options.publicOrigin
+      ? 'encrypted-redis-checkpoint'
+      : options.storePath === null
+        ? 'memory'
+        : 'local-file',
   }));
   app.get('/api/demo/state', async (request, reply) => {
     let studio = ownerStudio(request.headers.cookie);
     if (!studio) {
-      if (studios.size >= 20)
+      if (options.publicOrigin) {
+        // Only disposable, unverified demos expire. Verified channel books are retained.
+        for (const [token, guest] of studios)
+          if (!guest.channel && Date.now() - guest.touchedAt > 20 * 60_000) studios.delete(token);
+        store.records = store.records.filter((record) => studios.has(record.token));
+      }
+      if (studios.size >= (options.publicOrigin ? 50 : 20))
         return reply.code(429).send({
-          message:
-            'Local studio capacity reached. Restart with a fresh local store to clear sessions.',
+          message: 'Studio capacity reached. Try again later or contact the host.',
         });
       const record: StoredStudio = {
         id: randomUUID(),
@@ -338,35 +396,40 @@ export async function createApp(options: AppOptions = {}) {
     // Lax permits Twitch's top-level GET callback; mutation origin/JSON checks remain enforced.
     reply.header(
       'Set-Cookie',
-      `cb_session=${studio.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800`,
+      `cb_session=${studio.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800${options.publicOrigin ? '; Secure' : ''}`,
     );
     return toState(studio);
   });
   app.get('/auth/twitch/start', async (request, reply) => {
     const studio = ownerStudio(request.headers.cookie);
     if (!studio)
-      return reply
-        .code(401)
-        .send({ message: 'Open the studio on localhost before connecting Twitch.' });
+      return reply.code(401).send({ message: 'Open the studio before connecting Twitch.' });
     if (!twitch.config)
       return reply.code(503).send({
         message: 'Add Twitch client credentials to the local .env and restart the server.',
       });
     if (
-      request.headers.host?.split(':')[0] !== 'localhost' ||
+      (options.publicOrigin
+        ? request.headers.host !== new URL(options.publicOrigin).host
+        : request.headers.host?.split(':')[0] !== 'localhost') ||
       request.headers['sec-fetch-site'] === 'cross-site'
     )
-      return reply.code(403).send({ message: 'Start Twitch sign-in from your localhost studio.' });
+      return reply.code(403).send({ message: 'Start Twitch sign-in from this studio.' });
     return reply.redirect(twitch.begin(studio.id));
   });
   app.get<{ Querystring: { state?: string; code?: string; error?: string } }>(
     '/auth/twitch/callback',
     async (request, reply) => {
       const studio = ownerStudio(request.headers.cookie);
-      if (!studio || !twitch.config || request.headers.host?.split(':')[0] !== 'localhost')
+      if (
+        !studio ||
+        !twitch.config ||
+        (options.publicOrigin
+          ? request.headers.host !== new URL(options.publicOrigin).host
+          : request.headers.host?.split(':')[0] !== 'localhost')
+      )
         return reply.code(400).send({
-          message:
-            'This sign-in has no matching localhost studio. Reopen the studio and connect again.',
+          message: 'This sign-in has no matching studio. Reopen the studio and connect again.',
         });
       const pending = twitch.consume(studio.id, request.query.state);
       if (!pending)
@@ -389,7 +452,7 @@ export async function createApp(options: AppOptions = {}) {
         const canonical = await bindChannel(studio);
         reply.header(
           'Set-Cookie',
-          `cb_session=${canonical.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800`,
+          `cb_session=${canonical.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800${options.publicOrigin ? '; Secure' : ''}`,
         );
         publishAll();
         return finish('connected');
@@ -406,14 +469,14 @@ export async function createApp(options: AppOptions = {}) {
   );
   app.post('/api/twitch/disconnect', async (request, reply) => {
     const studio = ownerStudio(request.headers.cookie);
-    if (!studio) return reply.code(401).send({ message: 'Open your local studio first.' });
+    if (!studio) return reply.code(401).send({ message: 'Open your studio first.' });
     const { revoked } = await twitch.disconnect(studio.id);
     publish(studio);
     return { state: toState(studio), revoked };
   });
   app.post('/api/twitch/intake', async (request, reply) => {
     const studio = ownerStudio(request.headers.cookie);
-    if (!studio) return reply.code(401).send({ message: 'Open your local studio first.' });
+    if (!studio) return reply.code(401).send({ message: 'Open your studio first.' });
     if (twitch.publicState(studio.id).status !== 'authenticated')
       return reply
         .code(403)
@@ -425,7 +488,7 @@ export async function createApp(options: AppOptions = {}) {
   });
   app.post<{ Params: { id: string } }>('/api/twitch/proposals/:id', async (request, reply) => {
     const studio = ownerStudio(request.headers.cookie);
-    if (!studio) return reply.code(401).send({ message: 'Open your local studio first.' });
+    if (!studio) return reply.code(401).send({ message: 'Open your studio first.' });
     if (twitch.publicState(studio.id).status !== 'authenticated')
       return reply
         .code(403)
@@ -452,7 +515,7 @@ export async function createApp(options: AppOptions = {}) {
     '/api/twitch/proposals/:id/compile',
     async (request, reply) => {
       const studio = ownerStudio(request.headers.cookie);
-      if (!studio) return reply.code(401).send({ message: 'Open your local studio first.' });
+      if (!studio) return reply.code(401).send({ message: 'Open your studio first.' });
       const queue = intake.view(studio.id);
       if (!queue.channelId)
         return reply.code(403).send({ message: 'Connect and verify Twitch first.' });
@@ -643,7 +706,7 @@ export async function createApp(options: AppOptions = {}) {
   });
   app.post('/api/demo/controls', async (request, reply) => {
     const studio = ownerStudio(request.headers.cookie);
-    if (!studio) return reply.code(401).send({ message: 'Open your local studio first.' });
+    if (!studio) return reply.code(401).send({ message: 'Open your studio first.' });
     if (rivalry.current(studio.id))
       return reply
         .code(409)
@@ -705,7 +768,7 @@ export async function createApp(options: AppOptions = {}) {
   });
   app.post('/api/demo/trials', async (request, reply) => {
     const studio = ownerStudio(request.headers.cookie);
-    if (!studio) return reply.code(401).send({ message: 'Open your local studio first.' });
+    if (!studio) return reply.code(401).send({ message: 'Open your studio first.' });
     const parsed = trialRequestSchema.safeParse(request.body);
     const sample =
       parsed.success && 'sampleId' in parsed.data
@@ -818,14 +881,14 @@ export async function createApp(options: AppOptions = {}) {
   });
   app.get<{ Params: { id: string } }>('/api/demo/trials/:id', async (request, reply) => {
     const studio = ownerStudio(request.headers.cookie);
-    if (!studio) return reply.code(401).send({ message: 'Open your local studio first.' });
+    if (!studio) return reply.code(401).send({ message: 'Open your studio first.' });
     if (studio.trial?.id !== request.params.id)
       return reply.code(404).send({ message: 'This trial is no longer in the local session.' });
     return studio.trial;
   });
   app.post('/api/demo/adoptions', async (request, reply) => {
     const studio = ownerStudio(request.headers.cookie);
-    if (!studio) return reply.code(401).send({ message: 'Open your local studio first.' });
+    if (!studio) return reply.code(401).send({ message: 'Open your studio first.' });
     const parsed = adoptRequestSchema.safeParse(request.body);
     if (!parsed.success) return reply.code(422).send({ message: 'Invalid adoption request.' });
     const trial = studio.trial;
@@ -937,5 +1000,20 @@ export async function createApp(options: AppOptions = {}) {
     for (const studio of studios.values()) for (const client of studio.clients) client.close();
     await Promise.all([...workers].map((worker) => worker.terminate()));
   });
-  return app;
+  return Object.assign(app, {
+    checkpoint: (): AppCheckpoint =>
+      structuredClone({
+        version: 1,
+        engine: ENGINE_VERSION,
+        studios: store.records,
+        arenas: [...studios.values()].map(({ id, world, trial, touchedAt }) => ({
+          id,
+          world,
+          trial,
+          touchedAt,
+        })),
+        chat: chatStore.checkpoint(),
+        rivalry: rivalry.checkpoint(),
+      }),
+  });
 }

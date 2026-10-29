@@ -1206,8 +1206,10 @@ export function App() {
               </button>
             )}
             <p className="settings-note">
-              Requests chat-read access only. No chat messages are sent. This local build keeps
-              Twitch tokens in server memory; restart requires sign-in again.
+              Requests chat-read access only. No chat messages are sent.{' '}
+              {['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname)
+                ? 'This local build keeps Twitch tokens in server memory; restart requires sign-in again.'
+                : 'Hosted sessions are encrypted in private storage and revalidated on recovery. Recovered matches pause before play resumes.'}
             </p>
           </section>
           <div className="build-status">

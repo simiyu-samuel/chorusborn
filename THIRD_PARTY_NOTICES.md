@@ -677,3 +677,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## ioredis 6.0.0 (server only)
+
+Declared license: MIT. The original copyright and license are distributed in the
+installed package and preserved in the container image. Used for encrypted private
+Redis coordination, blocking queue consumption and real-time pub/sub. This client
+is not included in the browser bundle.

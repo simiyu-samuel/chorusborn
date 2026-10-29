@@ -34,3 +34,8 @@ recordings/
 Thumbs.db
 *.swp
 .idea/
+
+# Marketplace-provisioned local agent guidance
+.agents/skills/upstash-redis-js/
+.agents/skills/upstash-ratelimit-js/
+skills-lock.json

@@ -790,6 +790,120 @@ scenario/holdout suite. QR sharing awaits a usable hosted origin. Codex implemen
 sharing/reminder components, source/metric-derived stage helper, accessibility/fallback handling,
 regression checks and documentation/ADR 023. This entry is committed with that source increment.
 
+## 2026-10-28 — Vercel project setup and saved Devpost story
+
+**Completed**
+
+- The owner authorized Vercel hosting and updating the Devpost project, then chose
+  an all-Vercel redesign rather than a separate persistent game host. Recorded
+  ADR 024 and the proposed gateway/daemon/private-store boundaries, fenced lease,
+  idempotent commands and paused checkpoint recovery in `docs/vercel-deployment.md`.
+  These are design requirements, not implemented production recovery.
+- Created and inspected `samueldevke/chorusborn` with the official Vercel CLI
+  65.5.0; verified project `prj_65W8NVdJhsZ6b75Jbrv3MPQHK8GT` and linked this
+  checkout to team `team_AxU8HRLWOqoVOuWg7WqNfKle`. The connector's creation request
+  returned 403; its documented CLI fallback succeeded. There is no ready app
+  deployment or live URL yet. The connector did not subsequently resolve the
+  CLI-created project, so the verified CLI target is the operational source.
+- Discovered Marketplace storage products and requested Upstash Redis
+  `chorusborn-state`, production only, `iad1`, Free plan, auto-upgrade/eviction/
+  production-pack disabled. The CLI stopped with
+  `integration_terms_acceptance_required`; no database or provider SDK was
+  provisioned. Opened the terms flow in the in-app browser, which first requires
+  Vercel sign-in, and asked the owner to complete it. No terms were accepted by
+  Codex. The integration remains the concrete blocker to resource-backed work.
+- Saved and verified the Devpost pitch, project story, ten technology tags and
+  public GitHub link at `https://devpost.com/software/chorusborn`. Preserved the
+  exact story in `docs/devpost-story.md` and corrected stale submission planning
+  that still described the compiler/rivalry as unimplemented. The story describes
+  observed local capabilities and explicitly leaves cloud recovery and audience
+  validation pending. No demo video, eligibility statement, subjective survey
+  response or unverified Codex session ID was invented. The entry is still a draft;
+  no final hackathon submission was performed.
+
+**Verification and operational notes**
+
+- Confirmed the saved story and repository link in the public draft preview;
+  captured `.local/screenshots/devpost-story-saved.png` (ignored). A transient
+  browser navigation timeout recovered with a state read; the saved page is open.
+- Inspected official current Vercel Daemon, Container and WebSocket documentation:
+  daemon storage is ephemeral, daemons are beta/production-only, and reconnects can
+  reach another function instance. Did not assume older WebSocket limitations or
+  deploy process-local matches into independent gateways.
+- An automatic approval timeout occurred before the direct CLI fallback started;
+  the one allowed retry succeeded. A separate stalled npm invocation failed with
+  incomplete-cache errors on a nearly full disk. Removed only that invocation's
+  newly created temporary cache; recovered space to about 1.9 GB free. Used the
+  already installed CLI afterward. No project data or unrelated cache was removed.
+- Local project credentials, the CLI-generated environment file and `.vercel`
+  metadata remain ignored. Removed only redundant CLI-added ignore patterns that
+  would have overridden existing example-file exceptions. No application runtime,
+  local Twitch session, book, queue or match was restarted or reset.
+- This increment changes documentation only; reviewed Markdown links, Git diff
+  and secret boundaries. Application tests were not repeated for documentation.
+  Codex handled project setup, browser edits, source/claim checks and design.
+
+**Remaining**
+
+Await owner sign-in/Upstash terms acceptance, then provision and verify the store,
+implement and test the distributed runtime, deploy and check production OAuth/
+chat/rivalry/overlay, and only then add a verified live URL to Devpost. Do not
+represent project creation or the saved story as successful application hosting.
+
+## 2026-10-29 — Verified Vercel runtime candidate
+
+The owner accepted the Upstash terms after the initial setup entry. Provisioning
+succeeded: `chorusborn-state`, Free plan in iad1, connected to production only,
+with automatic upgrades/eviction disabled. The owner separately and explicitly
+approved copying the app's Twitch/Groq credentials and generating an encryption
+key for production Vercel secrets. These were saved without displaying values.
+The initial transfer was rejected by automatic approval review for lack of that
+specific authorization; no transfer was performed until approval arrived.
+
+Implemented the cloud gateway/daemon candidate, encrypted Redis protocol and
+checkpoints, renewable/fenced authority, durable command receipts and expiring
+bounded requests. A checkpoint and command response commit atomically behind the
+lease check. Checkpoints include books, proposals/deduplication, OAuth pending and
+session state, worlds/trials and rivalry. Recovery pauses matches, clears readiness,
+marks interrupted compilation failed and revalidates Twitch sessions. Compiler
+budget reservations persist before provider calls. Gateway streams authorize
+coach cookies/overlay keys, redact spectator data and reconnect after transport
+loss. Exact public-origin checks and Secure cookies support hosted OAuth. The
+local loopback entrypoint remains available. Disposable cloud demos expire after
+20 minutes without an HTTP interaction when admitting visitors; verified channel
+books are retained and cloud admission is capped at 50.
+
+**Verification:** `npm run check` passed 102 tests in 19 files, formatting, types
+and the production frontend build. Added encryption tamper/purpose/namespace,
+HTTPS/preview configuration, paused checkpoint and anonymous-expiry/verified-book
+retention checks. Existing mocked Twitch teach/adopt/moderate/disconnect and
+independent two-streamer rivalry browser regressions both passed with system
+Chromium (3.3 minutes). The first browser attempt could not launch a missing
+Playwright-managed Chromium; the installed executable fixed that environment issue.
+
+Two explicit opt-in tests used the real provisioned Redis store under unique test
+namespaces and temporary keys; neither used production state or real provider
+credentials. The first passed independent gateways, spectator mutation denial,
+proof/adoption, duplicate receipts, paused recovery and fenced stale writes. Its
+initial run exposed a typo in the smoke test's adoption endpoint, corrected to the
+actual API route. The second passed two mocked Twitch identities, independently
+received/compiled/proved/adopted chat lessons, shared rivalry, authenticated Redis
+WebSocket delivery and encrypted session/queue/book/match recovery with revalidation.
+The mock event initially raced EventSub readiness; waiting for confirmed live state
+fixed it. The stream test initially allowed only 1.5 seconds for network delivery;
+it passed after using a 10-second bounded wait. These are fixture/provider checks,
+not a claim of two real hosted communities or demonstrated large-audience capacity.
+
+Added Docker/Vercel source exclusions and scanned intended Git files against local
+app secrets/state key; no matches. Read the Marketplace-installed Upstash skills
+and current Redis TCP/ioredis documentation. Pinned server-only ioredis 6.0.0 and
+recorded its license. The container image, Vercel service/daemon configuration and
+public domain still require remote build/runtime verification. The assigned domain
+is `chorusborn.vercel.app`; hosted Twitch needs its exact callback registered.
+Documentation records the runtime limits, periodic checkpoint gap and external
+provider side-effect uncertainty. No application deployment or final submission
+is claimed by this candidate commit. Codex implemented and verified the candidate.
+
 ## Future entry template
 
 For each completed milestone, record date, feature/acceptance IDs, commit reference, meaningful checks and outcomes, screenshots/replay/evaluation references where appropriate, remaining limitations, and how Codex contributed. Never include secrets or full private session transcripts. Store bulky recordings outside Git and link final authorized artifacts when available.

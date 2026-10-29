@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "gateway": { "root": ".", "runtime": "container", "entrypoint": "Dockerfile" }
+  },
+  "rewrites": [{ "source": "/(.*)", "destination": { "service": "gateway" } }],
+  "daemons": {
+    "arena": {
+      "root": ".",
+      "entrypoint": "Dockerfile",
+      "command": ["node", "--import", "tsx", "apps/server/src/cloud/daemon.ts"],
+      "instances": { "iad1": 1 }
+    }
+  }
+}

@@ -206,7 +206,25 @@ explanation plus coach feedback, not automatic chat replies or a public proposal
 
 The hackathon requires a newly created project, Twitch connection, and Codex use. Four judging criteria carry equal weight. Official pages disagree on judging dates; preserve access through the later period and recheck updates. Sources are recorded in [sources](sources.md). These statements do not establish the entrant's individual eligibility or promise a prize.
 
-Only a preliminary name collision search has been done. Domain/trademark clearance has not. The owner authorized and supplied the GitHub remote, which is now connected. No domain, paid service, deployment, or submission has been created. Do not automatically provision paid resources to resolve an open question.
+Only a preliminary name collision search has been done. Domain/trademark clearance has not. The owner authorized and supplied the GitHub remote, which is now connected. On October 28 the owner authorized Vercel hosting and Devpost project updates; a Vercel project was created and the Devpost draft story saved. No ready application deployment, paid service or final hackathon submission has been created. Do not automatically provision paid resources to resolve an open question.
+
+## ADR 024 — All-Vercel compute with one durable game authority (2026-10-28)
+
+**Status:** runtime candidate implemented and locally verified against provisioned Redis; production verification pending.
+The owner explicitly chose to redesign server state and match coordination for
+Vercel rather than use a separate Render/Railway game server. A container alone
+does not solve process affinity, scale-down or durable state. Current Vercel docs
+support WebSockets and production background daemons, both relevant to this design.
+
+Use Vercel web ingress plus a daemon owning the simulation and EventSub connections,
+with a private Marketplace coordination store, fenced authority lease, idempotent
+commands and paused checkpoint recovery. The owner accepted Upstash integration
+terms; Free Redis in iad1 is provisioned with auto-upgrade disabled. The owner
+explicitly approved storing the existing Twitch/Groq app credentials and an
+encryption key as production-only Vercel secrets; these were saved without printing values. This
+is a revision to the planned PostgreSQL-only deployment baseline (006/008), not
+evidence of production recovery. Affected requirements: S01, S02 and shared-match
+authorization/recovery. Details and required checks are in [the deployment design](vercel-deployment.md).
 
 ## Decision procedure
 

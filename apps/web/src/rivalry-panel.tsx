@@ -210,9 +210,9 @@ export function RivalryPanel({
         </button>
       )}
       <p className="rivalry-local-note">
-        Local preview: use separate browser profiles for the two Twitch accounts on this computer.
-        Remote invitations need a hosted server; this localhost build is not reachable from another
-        streamer’s computer.
+        {['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname)
+          ? 'Local preview: use separate browser profiles for the two Twitch accounts on this computer. Remote invitations need a hosted server.'
+          : 'Share this studio address with your rival. Each streamer signs in to their own Twitch account, accepts the challenge and readies their champion.'}
       </p>
     </section>
   );

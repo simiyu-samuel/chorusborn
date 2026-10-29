@@ -23,7 +23,7 @@ npm run dev
 
 Open **http://127.0.0.1:5173**. The API runs at **http://127.0.0.1:3001**. Choose a sample tactic, select **Prove this lesson**, inspect the replay, then **Adopt for next round**. Reset the arena to load the new playbook and start the round to see actual rule-use receipts.
 
-The fixture requires no Twitch or model credentials. Playbooks are saved in ignored `.local/studios.json`; teaching proposals and ingress receipts use `.local/chat.json`. Active rounds and trial history are held in memory. The server binds to loopback and is not ready for public deployment. Overlay links contain a separate read-only key and work without a coach cookie; they expose no private proposal queue.
+The fixture requires no Twitch or model credentials. Playbooks are saved in ignored `.local/studios.json`; teaching proposals and ingress receipts use `.local/chat.json`. Active rounds and trial history are held in memory. The local entrypoint binds to loopback. A separate cloud gateway/daemon runtime is implemented; its deployment status and limits are in [Vercel deployment](docs/vercel-deployment.md). Overlay links contain a separate read-only key and work without a coach cookie; they expose no private proposal queue.
 
 ```sh
 npm run check            # formatting, types, engine/API tests, production frontend build
@@ -193,3 +193,14 @@ requests. It is not the planned broad compiler evaluation or scenario holdout su
 Keep completed work committed in this repository. Use small, coherent commits; update the relevant plans when decisions change; never commit credentials, private session transcripts, or generated bulk artifacts. Read [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md) before implementation.
 
 Remote repository: [simiyu-samuel/chorusborn](https://github.com/simiyu-samuel/chorusborn). No deployment, paid resource, domain registration, or hackathon submission has been created. A repository license is intentionally undecided until the owner selects one; see [decisions](docs/decisions.md). Third-party asset and dependency notices are recorded in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+## Vercel hosting
+
+The cloud runtime uses a gateway container service and one game daemon, backed by
+private Upstash Redis provisioned through Vercel Marketplace. It supports encrypted
+checkpoints, fenced match ownership, command receipts and paused recovery; see the
+[Vercel deployment guide](docs/vercel-deployment.md) for current evidence and limits.
+The selected production origin is `https://chorusborn.vercel.app`; project creation
+alone does not establish a ready deployment. Local `.env`, playbooks and chat data
+are excluded from the build. Hosted Twitch sign-in needs the production callback
+registered with Twitch. No public demo video or final submission is claimed yet.

@@ -12,7 +12,8 @@
     "@chorusborn/sim": "*",
     "@fastify/static": "10.1.7",
     "@fastify/websocket": "11.3.4",
-    "fastify": "5.12.7"
+    "fastify": "5.12.7",
+    "ioredis": "6.0.0"
   },
   "devDependencies": {
     "@types/ws": "8.18.2"

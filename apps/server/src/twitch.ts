@@ -44,22 +44,28 @@ export function readTwitchConfig(env: NodeJS.ProcessEnv): TwitchConfig | null {
   const webOrigin = env.WEB_ORIGIN ?? 'http://localhost:5173';
   const redirect = new URL(redirectUri);
   const web = new URL(webOrigin);
-  // This milestone is local-only. Never silently use a host supplied by an incoming request.
+  // Origins come only from deployment configuration, never incoming Host/forwarded headers.
+  const local =
+    redirect.origin === 'http://localhost:3001' &&
+    ['http://localhost:5173', 'http://localhost:3001'].includes(web.origin);
+  const hosted =
+    redirect.protocol === 'https:' && web.protocol === 'https:' && redirect.origin === web.origin;
   if (
-    redirect.origin !== 'http://localhost:3001' ||
+    (!local && !hosted) ||
     redirect.pathname !== '/auth/twitch/callback' ||
     redirect.search ||
     redirect.hash ||
     redirect.username ||
     redirect.password ||
-    !['http://localhost:5173', 'http://localhost:3001'].includes(web.origin) ||
     web.pathname !== '/' ||
     web.search ||
     web.hash ||
     web.username ||
     web.password
   )
-    throw new Error('Use the documented localhost Twitch callback and studio origin.');
+    throw new Error(
+      'Use the documented localhost callback or matching explicit HTTPS studio/callback origins.',
+    );
   const channel = (env.TWITCH_CHANNEL ?? 'developersimiyu').trim().toLowerCase();
   if (!/^[a-z0-9_]{1,25}$/.test(channel))
     throw new Error('TWITCH_CHANNEL must be a channel login.');
@@ -95,6 +101,24 @@ export class TwitchOAuth {
   ) {
     this.fetcher = dependencies.fetch ?? fetch;
     this.now = dependencies.now ?? Date.now;
+  }
+  /** Server-only. The cloud adapter encrypts the entire checkpoint before storage. */
+  checkpoint() {
+    return structuredClone({
+      sessions: [...this.sessions],
+      pending: [...this.pending],
+      revisions: [...this.revisions],
+      notices: [...this.notices],
+    });
+  }
+  async restore(data: ReturnType<TwitchOAuth['checkpoint']>) {
+    for (const [id, session] of data.sessions)
+      this.sessions.set(id, { ...session, uncertain: true });
+    for (const [id, pending] of data.pending)
+      if (pending.expiresAt > this.now()) this.pending.set(id, pending);
+    for (const [id, revision] of data.revisions) this.revisions.set(id, revision);
+    for (const [id, notice] of data.notices) this.notices.set(id, notice);
+    await Promise.all([...this.sessions.keys()].map((id) => this.validateDue(id, true)));
   }
   publicState(owner: string): TwitchConnection {
     const session = this.sessions.get(owner);

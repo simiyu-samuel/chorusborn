@@ -1,38 +1,39 @@
 # Hackathon submission and demo plan
 
-Status: **draft submission material**. A working local fixture, Twitch OAuth, EventSub intake, and local teaching queue exist; the language compiler and rivalry are pending. Rewrite the description into verified present tense only after release checks; do not submit planned features as completed work.
+Status: **saved Devpost draft, not submitted**. The pitch, project story, technology
+tags and repository link were saved and verified at
+[Chorusborn on Devpost](https://devpost.com/software/chorusborn) on October 28, 2026.
+The current narrative is preserved in [devpost-story.md](devpost-story.md).
 
-## Intended title and short description
+The local compiler, rivalry and viewer guide are implemented. A real two-account
+local match and proof review have been observed. Remote deployment, durable runtime
+recovery, independent audience/broadcast validation, broader evaluations and the
+final YouTube demo remain release work. Do not mark them complete without evidence.
+
+## Title and elevator pitch
 
 **Chorusborn — Raised by chat. Proven in the arena.**
 
-Planned description: A Twitch experience where communities teach persistent champions, test their tactics in branching replays, and compete against rival communities—with visible credit for the lessons their champions actually use.
+Raised by chat. Proven in the arena. Twitch communities teach rival champions,
+test their tactics in branching replays, and earn credit when their lessons are used.
 
-## Draft project narrative
+## Hosting status
 
-### Inspiration
+The owner chose an all-Vercel runtime, including redesigned durable state and match
+coordination. The CLI created and verified project `chorusborn` under team
+`samueldevke`, project ID `prj_65W8NVdJhsZ6b75Jbrv3MPQHK8GT`, and linked this checkout.
+The cloud runtime candidate is implemented and locally verified; no application deployment is ready yet. See [the deployment design](vercel-deployment.md).
 
-We want viewers' contributions to outlast a single message or vote. A shared champion could give a community something to develop together: recognizable habits, disputed strategies, memorable failures, and victories they watched it prepare for.
+A free Upstash Redis resource named `chorusborn-state` was requested through Vercel
+Marketplace for production in `iad1`, with auto-upgrade, eviction and production-pack
+options disabled. The owner accepted the integration terms, provisioning succeeded,
+and production-only app/encryption secrets were saved with explicit approval.
+The assigned domain is `chorusborn.vercel.app`; do not add it as a working app URL
+on Devpost until the deployment is actually verified.
 
-### What we intend to build
-
-Viewers will submit natural-language lessons through Twitch chat. A teaching agent will translate supported lessons into inspectable game behaviors. The streamer will compare the existing playbook with the proposal from an identical saved game state, review broader trial results, and decide whether to adopt the lesson for future rounds.
-
-The champion's playbook will persist between streams. During live matches, the engine will record which lessons actually execute and use those receipts for contribution credits. Two consenting communities will be able to train independently and bring their champions into the same authoritative match.
-
-### Technical approach
-
-The planned stack shares a deterministic TypeScript simulation between live matches and trial workers. A bounded eve teaching agent will use a configured OpenAI model to propose structured behavior data. The server will validate it, evaluate it, and publish only coach-approved immutable playbooks. The model will not control the live tick or decide match outcomes.
-
-### How we are using Codex
-
-Completed so far: naming exploration, product analysis, official documentation research, product/architecture/contract planning, Git/GitHub setup, the deterministic fixture engine and contract validator, replay workers, atomic local adoption, responsive coach/overlay UI, and automated contract/API/browser verification. See the build log and Git history for evidence.
-
-Planned development contributions to record as they happen: implementation of deterministic game rules, Twitch authentication/EventSub, compiler constraints, branching replay, concurrency/recovery checks, and broadcast UI iteration. Replace this list with actual examples and evidence before submission. A prompt screenshot alone does not prove the system works.
-
-### Challenges, accomplishments, lessons, and next steps
-
-Fill these sections from the real build log after implementation. Expected engineering challenges include replay determinism, proving rather than narrating lesson effects, Twitch reconnect gaps, and readable audience participation. Do not claim those problems have been solved yet.
+The additional-info form remains unfinished: no personal eligibility declarations,
+subjective survey answers, unverified session ID or demo video were invented. The
+final hackathon submission has not been performed.
 
 ## Demonstration storyboard — target 2:45
 
@@ -41,7 +42,7 @@ Fill these sections from the real build log after implementation. Expected engin
 | 0:00–0:12 | Real arena; champion falls for a distraction | "Can chat teach our champion to do better?" |
 | 0:12–0:32 | Actual Twitch viewer sends `!teach`; attributed proposal appears | A real viewer's suggestion enters the system |
 | 0:32–1:05 | Current/candidate replay, shared starting tick, supported lesson highlighted | Show what changed; label illustrative scenario |
-| 1:05–1:25 | Full suite result, a trade-off/negative example, coach adoption | Evidence informs a human decision; no cherry-picked intelligence score |
+| 1:05–1:25 | Labeled scenario result, a trade-off/negative example, coach adoption | Evidence informs a human decision; no cherry-picked intelligence score |
 | 1:25–2:00 | Two real connected channels, accepted rivalry, champion executes adopted tactic | Show persistent strategy and actual rule-use credit |
 | 2:00–2:25 | Genuine Codex session footage/diffs and meaningful verification output | Explain concretely how Codex helped build and debug the system |
 | 2:25–2:45 | Result, playbook/history, product name | End with the community's champion and the next rematch |
@@ -71,10 +72,10 @@ Published submission deadline: November 2, 2026 at 14:00 PST = November 3 at 01:
 | --- | --- |
 | Local repository | `chorusborn/` in the current workspace |
 | Remote repository URL | [simiyu-samuel/chorusborn](https://github.com/simiyu-samuel/chorusborn) |
-| Live application URL | Pending |
+| Live application URL | Pending deployment; Vercel project created and linked |
 | Public demo video URL | Pending |
 | Main build session ID | Pending verification |
-| Release commit/tag | Pending implementation |
-| Final submission URL | Pending |
+| Release commit/tag | Pending hosted release; local implementation is in Git history |
+| Devpost draft URL | [Chorusborn](https://devpost.com/software/chorusborn); incomplete, not submitted |
 
-The owner authorized connecting and pushing this repository. No application deployment, demo publication, or hackathon submission has been performed.
+The owner authorized repository pushes, Vercel hosting and updating the Devpost project. The project draft is updated; application deployment, demo publication and final hackathon submission remain pending.

@@ -55,6 +55,19 @@ export class ChatStore {
     private readonly path: string | null,
     private readonly now: () => number = Date.now,
   ) {}
+  checkpoint() {
+    return structuredClone(this.data);
+  }
+  restore(data: ReturnType<ChatStore['checkpoint']>) {
+    this.data = structuredClone(data);
+    for (const channel of Object.values(this.data))
+      for (const proposal of channel.proposals)
+        if (proposal.compilation?.status === 'running') {
+          proposal.compilation.status = 'failed';
+          proposal.compilation.error =
+            'Compilation interrupted by recovery. Review before retrying.';
+        }
+  }
   async load() {
     if (!this.path) return;
     try {

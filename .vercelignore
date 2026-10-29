@@ -1,0 +1,14 @@
+.env
+.env.*
+.local
+.git
+.agents
+.claude
+node_modules
+**/node_modules
+**/dist
+recordings
+data
+test-results
+playwright-report
+skills-lock.json

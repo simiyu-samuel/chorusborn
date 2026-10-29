@@ -32,6 +32,19 @@ export class Rivalries {
     private readonly participant: (owner: string) => RivalParticipant | null,
     private readonly now = Date.now,
   ) {}
+  checkpoint() {
+    return structuredClone({ challenges: [...this.challenges], matches: [...this.matches] });
+  }
+  restore(data: ReturnType<Rivalries['checkpoint']>) {
+    for (const [id, challenge] of data.challenges)
+      this.challenges.set(id, structuredClone(challenge));
+    for (const [id, saved] of data.matches) {
+      const match = structuredClone(saved);
+      if (match.world.status === 'running') match.world.status = 'paused';
+      match.ready = [null, null];
+      this.matches.set(id, match);
+    }
+  }
   private prune() {
     for (const [id, challenge] of this.challenges)
       if (challenge.expiresAt <= this.now()) this.challenges.delete(id);
