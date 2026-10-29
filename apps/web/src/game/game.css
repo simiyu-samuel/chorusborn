@@ -300,22 +300,49 @@
   max-width: none;
   padding: 18px 32px;
   background: #122124;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.overlay > * {
+  flex-shrink: 0;
+}
+.overlay > .viewer-reminder {
+  width: 100%;
 }
 .overlay .scoreboard {
   height: 86px;
+  flex-basis: 86px;
+  width: 100%;
   max-width: 820px;
+  margin: 0 auto;
 }
 .overlay .game-view {
+  flex: 1 1 0;
+  min-height: 0;
   max-width: 1700px;
-  margin: auto;
+  margin: 0 auto;
   border: 1px solid #c9b68e33;
   border-radius: 9px;
   overflow: hidden;
 }
+.overlay .arena-presentation {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
 .overlay .game-viewport {
-  height: calc(100vh - 360px);
-  min-height: 320px;
+  flex: 1 1 0;
+  height: auto;
+  min-height: 0;
   aspect-ratio: auto;
+}
+.overlay .initiative-cue,
+.overlay .game-lower-third {
+  flex-shrink: 0;
 }
 .overlay .garden-wordmark strong {
   font-size: 36px;

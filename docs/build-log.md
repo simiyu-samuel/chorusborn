@@ -968,6 +968,35 @@ checks remain mock-based and do not touch real Twitch accounts or model keys.
 Codex investigated the run logs, implemented the harness fix and regression checks,
 and kept all generated evidence outside Git.
 
+## October 29, 2026 — rivalry overlay fits its actual content
+
+The full GitHub run for `a4df402`
+([40830853614](https://github.com/simiyu-samuel/chorusborn/actions/runs/40830853614))
+passed the 102 unit tests and all three originally failed browser scenarios. Its
+browser result was 15/16: rivalry exposed a real vertical overflow with the
+initiative strip and wrapped viewer attribution. Downloaded only the generated
+mock CI screenshot/trace artifact. The overlay screenshot showed the lower third
+extending beyond its viewport; the fixed arena-height subtraction did not account
+for conditional content height.
+
+Replaced that fixed subtraction with a viewport-height flex layout: the header,
+guide, scoreboard, initiative and attribution retain their natural heights, and
+the arena fills the remaining space. The rivalry flow now checks 1440×1000,
+1280×720 and 1920×1080, retaining strict overflow/visible-content assertions.
+Added deterministic presentation checks for WebGL and SVG compatibility using a
+paused snapshot with an actual engine-generated taught-rule execution, so wrapped
+attribution is always exercised. This is an explicitly mocked presentation check,
+not a real viewer demonstration. A newly added live-flow attribution assertion was
+too timing-dependent (credits expire after 40 ticks); the local rivalry attempt
+caught that assertion, and the deterministic fixture now covers this condition
+while the live flow checks its always-present lower third.
+
+Local validation: formatting/types passed; both deterministic layout checks passed
+at all three sizes (31 seconds) and require more than 200px of visible arena height.
+The complete GitHub workflow remains the release check for all existing flows.
+Codex traced the actual artifact, fixed layout sizing and strengthened coverage;
+no original failing overflow assertion was removed or threshold relaxed.
+
 ## Future entry template
 
 For each completed milestone, record date, feature/acceptance IDs, commit reference, meaningful checks and outcomes, screenshots/replay/evaluation references where appropriate, remaining limitations, and how Codex contributed. Never include secrets or full private session transcripts. Store bulky recordings outside Git and link final authorized artifacts when available.

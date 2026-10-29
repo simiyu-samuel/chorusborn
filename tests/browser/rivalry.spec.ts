@@ -144,9 +144,24 @@ test('two independently signed-in streamers teach their own champions and share 
     await expect(
       overlay.getByRole('complementary', { name: 'How viewers participate' }),
     ).toBeVisible();
-    expect(await overlay.evaluate(() => document.documentElement.scrollHeight > innerHeight)).toBe(
-      false,
-    );
+    // A rivalry adds both an initiative strip and attributed lesson credit. The
+    // arena must fit the remaining space after those variable-height elements.
+    for (const viewport of [
+      { width: 1440, height: 1000 },
+      { width: 1280, height: 720 },
+      { width: 1920, height: 1080 },
+    ]) {
+      await overlay.setViewportSize(viewport);
+      expect(
+        await overlay.evaluate(() => ({
+          horizontal: document.documentElement.scrollWidth > innerWidth,
+          vertical: document.documentElement.scrollHeight > innerHeight,
+        })),
+      ).toEqual({ horizontal: false, vertical: false });
+      await expect(overlay.locator('.initiative-cue')).toBeInViewport();
+      await expect(overlay.locator('.game-lower-third')).toBeInViewport();
+      expect((await overlay.locator('.game-viewport').boundingBox())!.height).toBeGreaterThan(200);
+    }
     expect(
       (
         await spectator.request.post('http://localhost:5273/api/rivalry/controls', {
