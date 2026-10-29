@@ -76,7 +76,7 @@ Published submission deadline: November 2, 2026 at 14:00 PST = November 3 at 01:
 | Live application URL | [chorusborn.vercel.app](https://chorusborn.vercel.app) — production READY |
 | Public demo video URL | Pending |
 | Main build session ID | Pending verification |
-| Release commit/tag | Pending hosted release; local implementation is in Git history |
+| Release commit/tag | Hosted runtime `535f669`; recovery/copy follow-up `7c2ca14`; later copy-only commits are recorded in Git history |
 | Devpost draft URL | [Chorusborn](https://devpost.com/software/chorusborn); incomplete, not submitted |
 
 The owner authorized repository pushes, Vercel hosting and updating the Devpost project. The app is deployed and the project draft is updated. Demo publication and final hackathon submission remain pending.

@@ -931,6 +931,13 @@ error/fatal log query returned zero records for the observed 30-minute window.
 Logs and browser screenshots are ignored local artifacts. Codex implemented,
 reviewed, deployed and verified these changes; no final hackathon entry was sent.
 
+Production follow-up: `7c2ca14` deployed READY and public readiness passed. Reloading
+the hosted studio preserved developersimiyu authentication, live EventSub intake,
+book v1 and the finished round/16 lesson uses. The Devpost preview visibly showed
+the saved hosted connection narrative and separate live app link. Corrected the
+remaining queue storage/budget labels to avoid implying cloud calls reset at a
+server restart. A subsequent production error/fatal scan returned zero records.
+
 ## Future entry template
 
 For each completed milestone, record date, feature/acceptance IDs, commit reference, meaningful checks and outcomes, screenshots/replay/evaluation references where appropriate, remaining limitations, and how Codex contributed. Never include secrets or full private session transcripts. Store bulky recordings outside Git and link final authorized artifacts when available.

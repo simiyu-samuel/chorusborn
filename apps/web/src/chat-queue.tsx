@@ -56,7 +56,7 @@ export function ChatQueue({ state, connect, command, prove }: Props) {
                   {twitch.channel!.login}
                   <ArrowUpRight size={12} />
                 </a>{' '}
-                · {queued} waiting · lessons are saved locally
+                · {queued} waiting · lessons are saved to this studio
               </>
             ) : (
               'Connect your broadcaster account to collect real teaching commands.'
@@ -286,7 +286,7 @@ export function ChatQueue({ state, connect, command, prove }: Props) {
           ) : null}
           <p className="chat-compiler-note">
             {state.compiler.configured
-              ? `${state.compiler.model} · ${state.compiler.remainingCalls} model calls left in this server run. Compilation sends lesson text to Groq. Review, prove, then adopt for the next round.`
+              ? `${state.compiler.model} · ${state.compiler.remainingCalls} model calls left in the configured budget. Compilation sends lesson text to Groq. Review, prove, then adopt for the next round.`
               : 'Compiler not configured. Add GROQ_API_KEY to the server .env and restart. Lessons remain saved for review.'}
           </p>
         </>
