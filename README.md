@@ -200,7 +200,7 @@ The cloud runtime uses a gateway container service and one game daemon, backed b
 private Upstash Redis provisioned through Vercel Marketplace. It supports encrypted
 checkpoints, fenced match ownership, command receipts and paused recovery; see the
 [Vercel deployment guide](docs/vercel-deployment.md) for current evidence and limits.
-The selected production origin is `https://chorusborn.vercel.app`; project creation
-alone does not establish a ready deployment. Local `.env`, playbooks and chat data
-are excluded from the build. Hosted Twitch sign-in needs the production callback
-registered with Twitch. No public demo video or final submission is claimed yet.
+The production site is [chorusborn.vercel.app](https://chorusborn.vercel.app).
+Hosted sample proof/adoption, a streamed round/overlay and real developersimiyu
+OAuth/EventSub connection have been observed. Local `.env`, playbooks and chat data
+are excluded from the build. The production Twitch callback is registered. No public demo video or final submission is claimed yet.

@@ -1,6 +1,6 @@
 # System architecture
 
-Status: target production architecture. The local build implements `apps/web`, `apps/server`, `packages/contracts`, and `packages/sim`, plus Twitch OAuth, EventSub lifecycle, and a durable local teaching queue. Local tokens remain memory-only; the separate cloud runtime encrypts session and arena checkpoints in private Redis. It uses local file stores instead of PostgreSQL and a shared Three.js/React Three Fiber scene with an SVG compatibility view; a bounded Groq compiler now handles explicit coach requests. The Vercel gateway/daemon candidate is locally verified; production deployment and hosted Twitch authorization remain pending. See ADR 013–024 in [decisions](decisions.md).
+Status: target production architecture. The local build implements `apps/web`, `apps/server`, `packages/contracts`, and `packages/sim`, plus Twitch OAuth, EventSub lifecycle, and a durable local teaching queue. Local tokens remain memory-only; the separate cloud runtime encrypts session and arena checkpoints in private Redis. It uses local file stores instead of PostgreSQL and a shared Three.js/React Three Fiber scene with an SVG compatibility view; a bounded Groq compiler now handles explicit coach requests. The Vercel gateway/daemon candidate is locally verified; the deployment and real developersimiyu hosted OAuth/EventSub are observed, while independent remote rivalry remains pending. See ADR 013–024 in [decisions](decisions.md).
 
 ## Architectural principle
 
@@ -74,7 +74,7 @@ These folders are a plan, not existing application code. Do not create empty pac
 
 October 28 hosting decision: the owner selected an all-Vercel runtime. The project
 is linked, Redis is provisioned and the distributed gateway/game-worker candidate
-is implemented with isolated real-store verification. Production deployment remains pending. See the [Vercel design](vercel-deployment.md)
+is implemented with isolated real-store verification. Production health, sample play and real hosted OAuth/EventSub have now been observed. See the [Vercel design](vercel-deployment.md)
 and ADR 024. Do not deploy the current process-local server independently into
 multiple function instances or treat its disk writes as durable cloud storage.
 

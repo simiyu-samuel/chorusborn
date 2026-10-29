@@ -6,9 +6,9 @@ tags and repository link were saved and verified at
 The current narrative is preserved in [devpost-story.md](devpost-story.md).
 
 The local compiler, rivalry and viewer guide are implemented. A real two-account
-local match and proof review have been observed. Remote deployment, durable runtime
-recovery, independent audience/broadcast validation, broader evaluations and the
-final YouTube demo remain release work. Do not mark them complete without evidence.
+local match and proof review have been observed. Vercel deployment and isolated durable-runtime recovery checks are complete.
+Independent audience/broadcast validation, a fresh hosted viewer lesson/rivalry,
+broader evaluations and the final YouTube demo remain release work. Do not mark them complete without evidence.
 
 ## Title and elevator pitch
 
@@ -22,14 +22,15 @@ test their tactics in branching replays, and earn credit when their lessons are 
 The owner chose an all-Vercel runtime, including redesigned durable state and match
 coordination. The CLI created and verified project `chorusborn` under team
 `samueldevke`, project ID `prj_65W8NVdJhsZ6b75Jbrv3MPQHK8GT`, and linked this checkout.
-The cloud runtime candidate is implemented and locally verified; no application deployment is ready yet. See [the deployment design](vercel-deployment.md).
+The cloud runtime candidate is implemented and locally verified; the production app is live at https://chorusborn.vercel.app. See [the deployment design](vercel-deployment.md).
 
 A free Upstash Redis resource named `chorusborn-state` was requested through Vercel
 Marketplace for production in `iad1`, with auto-upgrade, eviction and production-pack
 options disabled. The owner accepted the integration terms, provisioning succeeded,
 and production-only app/encryption secrets were saved with explicit approval.
-The assigned domain is `chorusborn.vercel.app`; do not add it as a working app URL
-on Devpost until the deployment is actually verified.
+The assigned domain `chorusborn.vercel.app` is live and verified; its app link and
+hosting narrative were saved to Devpost. Hosted developersimiyu OAuth/EventSub also
+succeeded after the owner registered the production callback.
 
 The additional-info form remains unfinished: no personal eligibility declarations,
 subjective survey answers, unverified session ID or demo video were invented. The
@@ -72,10 +73,10 @@ Published submission deadline: November 2, 2026 at 14:00 PST = November 3 at 01:
 | --- | --- |
 | Local repository | `chorusborn/` in the current workspace |
 | Remote repository URL | [simiyu-samuel/chorusborn](https://github.com/simiyu-samuel/chorusborn) |
-| Live application URL | Pending deployment; Vercel project created and linked |
+| Live application URL | [chorusborn.vercel.app](https://chorusborn.vercel.app) — production READY |
 | Public demo video URL | Pending |
 | Main build session ID | Pending verification |
 | Release commit/tag | Pending hosted release; local implementation is in Git history |
 | Devpost draft URL | [Chorusborn](https://devpost.com/software/chorusborn); incomplete, not submitted |
 
-The owner authorized repository pushes, Vercel hosting and updating the Devpost project. The project draft is updated; application deployment, demo publication and final hackathon submission remain pending.
+The owner authorized repository pushes, Vercel hosting and updating the Devpost project. The app is deployed and the project draft is updated. Demo publication and final hackathon submission remain pending.

@@ -35,6 +35,8 @@ import { RivalryPanel } from './rivalry-panel.js';
 import { ChatQueue } from './chat-queue.js';
 import { GuideShare, ViewerReminder } from './viewer/reminder.js';
 
+const isLocalStudio = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
+
 async function request<T>(path: string, body?: unknown): Promise<T> {
   const response = await fetch(
     path,
@@ -424,7 +426,7 @@ export function App() {
     } else {
       setConnectionNotice(
         result === 'connected' && state.twitch.status === 'authenticated'
-          ? 'Twitch account verified. Chat intake is connecting; check its live status in the studio.'
+          ? 'Twitch account verified. The lesson queue shows the current chat connection status.'
           : result === 'denied'
             ? 'Twitch sign-in was cancelled. Your local champion is still available.'
             : result === 'wrong-channel'
@@ -575,7 +577,8 @@ export function App() {
         <div className="workspace-switch">
           <span className="workspace-avatar">C</span>
           <span>
-            Creator workspace<small>Local development lab</small>
+            Creator workspace
+            <small>{isLocalStudio ? 'Local development lab' : 'Community champion lab'}</small>
           </span>
           <ChevronRight size={15} />
         </div>
@@ -626,7 +629,7 @@ export function App() {
           <div className="profile">
             <span>LC</span>
             <div>
-              {state?.twitch.channel?.login ?? 'Local coach'}
+              {state?.twitch.channel?.login ?? 'Demo coach'}
               <small>
                 {state?.twitch.status === 'authenticated'
                   ? 'Twitch account verified'
@@ -707,7 +710,7 @@ export function App() {
           <div className="fixture-banner">
             <FlaskConical size={15} />
             <span>
-              <strong>Local replay lab</strong> · Sample tactics and a fixture arena.{' '}
+              <strong>Sample replay lab</strong> · Sample tactics and a fixture arena.{' '}
               {state?.twitch.status === 'authenticated'
                 ? state.intake.status === 'live'
                   ? state.compiler.configured
@@ -1155,7 +1158,7 @@ export function App() {
       ) : null}
       {settings ? (
         <Modal title="A clear view of the build." close={() => setSettings(false)}>
-          <p className="modal-intro">This is the first working local slice of Chorusborn.</p>
+          <p className="modal-intro">This is the working Chorusborn prototype.</p>
           <section className="twitch-connection" aria-label="Twitch connection">
             <div className="detail-heading">
               <Radio size={22} />
@@ -1207,7 +1210,7 @@ export function App() {
             )}
             <p className="settings-note">
               Requests chat-read access only. No chat messages are sent.{' '}
-              {['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname)
+              {isLocalStudio
                 ? 'This local build keeps Twitch tokens in server memory; restart requires sign-in again.'
                 : 'Hosted sessions are encrypted in private storage and revalidated on recovery. Recovered matches pause before play resumes.'}
             </p>
@@ -1223,7 +1226,7 @@ export function App() {
             </p>
             <p>
               <Check size={16} />
-              <span>Coach adoption, pinned rounds, local playbook storage</span>
+              <span>Coach adoption, pinned rounds and persistent playbooks</span>
             </p>
             <p>
               <Radio size={16} />
@@ -1235,9 +1238,10 @@ export function App() {
             </p>
           </div>
           <p className="settings-note">
-            Sample lessons are authored fixtures. Local playbooks are saved on this machine; trials
-            and active rounds are session data. This server is bound to loopback and is not a public
-            production service.
+            Sample lessons are authored fixtures.{' '}
+            {isLocalStudio
+              ? 'This local server saves playbooks on this machine; active rounds and trials are session data.'
+              : 'This hosted prototype saves encrypted playbook, session and arena checkpoints in private storage. Recovery pauses running rounds; recent uncommitted ticks or chat events may be lost.'}
           </p>
           <a
             className="secondary-button"

@@ -12,7 +12,7 @@
   compiler exist. Real proposals can be reviewed, proved in carrier or paired neutral-opening scenarios,
   and adopted with source attribution. Local two-channel challenges, canonical channel books, shared matches with visible tie initiative, and explicit priority reordering are implemented. The anonymous viewer guide, clean guide sharing, overlay teaching reminder and owner-only lesson stages are implemented.
   A real two-account local match and paired neutral proof have been observed. Independent community/broadcast demonstration, PostgreSQL and full-suite evaluation remain pending. No claims of broad model accuracy or tactic superiority.
-  The local entrypoint keeps Twitch tokens in memory. The separate Vercel gateway/daemon candidate uses encrypted Redis checkpoints, a fenced authority lease, command receipts and paused recovery, verified with isolated real-store/mocked-provider checks. Production deployment and hosted Twitch authorization remain pending. Keep status honest.
+  The local entrypoint keeps Twitch tokens in memory. The separate Vercel gateway/daemon candidate uses encrypted Redis checkpoints, a fenced authority lease, command receipts and paused recovery, verified with isolated real-store/mocked-provider checks. The Vercel deployment, hosted sample proof/adoption/round/overlay and real developersimiyu OAuth/EventSub connection have been observed. A fresh hosted viewer lesson, remote rivalry and broad evaluation remain pending. Keep status honest.
 - Keep the ambitious core: Twitch teaching, evidence-backed lessons, deterministic
   branching replay, persistent playbooks, real attribution, and rival matches.
 - AI proposes bounded behavior data. It cannot directly publish a playbook,

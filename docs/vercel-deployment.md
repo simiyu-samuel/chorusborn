@@ -1,8 +1,10 @@
 # Vercel deployment design
 
-Status: runtime candidate implemented and locally verified against the provisioned
-Redis store on October 29, 2026. Production deployment and real hosted Twitch
-authorization are still pending; this document is not a claim of successful hosting.
+Status: deployed to Vercel production on October 29, 2026 at
+[chorusborn.vercel.app](https://chorusborn.vercel.app). Public health, guide, sample
+proof/adoption, live round/overlay and real developersimiyu OAuth/EventSub connection
+have been observed. A fresh hosted viewer lesson and independent remote rivalry
+demonstration remain pending.
 
 ## One authority, distributed ingress
 
@@ -119,9 +121,9 @@ must not upload them or the ignored local credential file as source assets.
 ## Provisioned target and reproducible checks
 
 Project: `samueldevke/chorusborn`, ID `prj_65W8NVdJhsZ6b75Jbrv3MPQHK8GT`.
-Vercel assigned `chorusborn.vercel.app`; availability must be checked after deployment.
+Vercel assigned `chorusborn.vercel.app`; it returned public health/guide responses and the in-app browser connected to its engine.
 The configured callback is `https://chorusborn.vercel.app/auth/twitch/callback` and
-must be registered in the Twitch developer console before hosted sign-in.
+was registered in the Twitch developer console by the owner before hosted sign-in succeeded.
 
 Normal `npm run check` uses no external service. Explicit opt-in checks are:
 

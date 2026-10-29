@@ -55,41 +55,41 @@ export async function startAuthority(
         TWITCH_REDIRECT_URI: `${bus.config.origin}/auth/twitch/callback`,
       }),
     );
-  const nativeCompiler = env.GROQ_API_KEY
-    ? new GroqCompiler(env.GROQ_API_KEY, fetch, 1_000_000)
-    : undefined;
+  const nativeCompiler =
+    options.compiler ??
+    (env.GROQ_API_KEY ? new GroqCompiler(env.GROQ_API_KEY, fetch, 1_000_000) : undefined);
   // Reserve budget durably BEFORE an external call. A crash cannot refund a paid request.
   let spent = 0;
-  const compiler: LessonCompiler | undefined =
-    options.compiler ??
-    (nativeCompiler
-      ? {
-          model: nativeCompiler.model,
-          get remainingCalls() {
-            return Math.max(0, 20 - spent);
-          },
-          async compile(text) {
-            const reserved = Number(
-              await bus.redis.eval(
-                `
+  const compiler: LessonCompiler | undefined = nativeCompiler
+    ? {
+        model: nativeCompiler.model,
+        get remainingCalls() {
+          return Math.max(0, 20 - spent);
+        },
+        async compile(text) {
+          const reserved = Number(
+            await bus.redis.eval(
+              `
         if redis.call('GET',KEYS[1]) ~= ARGV[1] then return -1 end
         local used=tonumber(redis.call('GET',KEYS[2]) or '0');
         if used >= 20 then return -1 end return redis.call('INCR',KEYS[2])`,
-                2,
-                bus.key('lease'),
-                bus.key('compiler-calls'),
-                token,
-              ),
+              2,
+              bus.key('lease'),
+              bus.key('compiler-calls'),
+              token,
+            ),
+          );
+          if (reserved < 0)
+            throw new CompileFailure(
+              'Cloud compiler budget or authority unavailable. Review usage before retrying.',
             );
-            if (reserved < 0)
-              throw new CompileFailure(
-                'Cloud compiler budget or authority unavailable. Review usage before retrying.',
-              );
-            spent = reserved;
-            return nativeCompiler.compile(text);
-          },
-        }
-      : undefined);
+          spent = reserved;
+          // Persist the running proposal/attempt before any external provider side effect.
+          await bus.save(token, snapshot());
+          return nativeCompiler.compile(text);
+        },
+      }
+    : undefined;
   try {
     spent = Number((await bus.redis.get(bus.key('compiler-calls'))) ?? 0);
     const saved = await bus.checkpoint<Checkpoint>();

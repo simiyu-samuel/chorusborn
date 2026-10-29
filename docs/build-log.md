@@ -904,6 +904,33 @@ Documentation records the runtime limits, periodic checkpoint gap and external
 provider side-effect uncertainty. No application deployment or final submission
 is claimed by this candidate commit. Codex implemented and verified the candidate.
 
+## October 29, 2026 — production hosting and Twitch authorization
+
+Deployed `535f669` to Vercel production at `https://chorusborn.vercel.app`.
+The public readiness endpoint and guide responded successfully. In the in-app
+browser, an authored sample passed proof/adoption, persisted as book v1, completed
+a streamed 60-second round (1–0, 16 recorded lesson uses), and appeared in the
+read-only overlay. This is sample evidence, not a claim of learned superiority.
+After the owner registered the exact production callback, real Twitch OAuth
+authenticated developersimiyu and EventSub reported live chat intake. No real
+viewer message or model request was generated during this verification.
+
+Saved the live URL, hosting narrative and verified Twitch connection to the
+Devpost draft. The demo video, fresh hosted community demonstration and final
+submission remain unfinished. Corrected hosted UI text that still described a
+loopback-only server, and now checkpoint the running compilation attempt before
+the provider call; injected test compilers exercise that same durable wrapper.
+
+Validation: the isolated real-Redis two-community smoke check passed again after
+the compiler refinement. Formatting and types passed. The latest full unit run
+passed 100 tests but two strategy-control tests hit their 15-second timeout while
+other integration/browser work ran concurrently; both passed unchanged when
+rerun serially (2/2). The earlier complete 102-test run passed. The final frontend
+build passed, with the existing large Three.js bundle warning. A production
+error/fatal log query returned zero records for the observed 30-minute window.
+Logs and browser screenshots are ignored local artifacts. Codex implemented,
+reviewed, deployed and verified these changes; no final hackathon entry was sent.
+
 ## Future entry template
 
 For each completed milestone, record date, feature/acceptance IDs, commit reference, meaningful checks and outcomes, screenshots/replay/evaluation references where appropriate, remaining limitations, and how Codex contributed. Never include secrets or full private session transcripts. Store bulky recordings outside Git and link final authorized artifacts when available.
