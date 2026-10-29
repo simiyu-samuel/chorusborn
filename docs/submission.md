@@ -44,17 +44,16 @@ Type is Individual and the public creator list shows Simiyu Samuel alone. Existi
 country, survey and eligibility selections were left as provided. No demo video
 was invented and the final hackathon submission has not been performed.
 
-## Demonstration storyboard — target 2:45
+## Demonstration script — target 2:50
 
-| Time | On-screen evidence | Message |
-| --- | --- | --- |
-| 0:00–0:12 | Real arena; champion falls for a distraction | "Can chat teach our champion to do better?" |
-| 0:12–0:32 | Actual Twitch viewer sends `!teach`; attributed proposal appears | A real viewer's suggestion enters the system |
-| 0:32–1:05 | Current/candidate replay, shared starting tick, supported lesson highlighted | Show what changed; label illustrative scenario |
-| 1:05–1:25 | Labeled scenario result, a trade-off/negative example, coach adoption | Evidence informs a human decision; no cherry-picked intelligence score |
-| 1:25–2:00 | Two real connected channels, accepted rivalry, champion executes adopted tactic | Show persistent strategy and actual rule-use credit |
-| 2:00–2:25 | Genuine Codex session footage/diffs and meaningful verification output | Explain concretely how Codex helped build and debug the system |
-| 2:25–2:45 | Result, playbook/history, product name | End with the community's champion and the next rematch |
+Use the [timed narration and screen cue sheet](demo-recording-script.md) while
+recording. A [clean voiceover copy](demo-voiceover.txt) is ready for a teleprompter
+or paragraph-by-paragraph audio recording. It covers real Twitch intake, a reviewed
+community lesson, an explicitly authored replay scenario, coach adoption, two-channel
+rivalry, the read-only overlay and genuine Codex development evidence in individual
+voice. The target leaves ten seconds below the three-minute limit; the creator's
+timed rehearsal and final edit determine actual duration. Recording and publication
+remain pending.
 
 Editing can compress elapsed time; label cuts/time compression. Never present a fixture as real chat, a prerecorded match as a live response, or a manually chosen result as an evaluation outcome. Avoid copyrighted music and unlicensed assets. Capture permissions for identifiable people included in published footage.
 
@@ -83,6 +82,7 @@ Published submission deadline: November 2, 2026 at 14:00 PST = November 3 at 01:
 | Remote repository URL | [simiyu-samuel/chorusborn](https://github.com/simiyu-samuel/chorusborn) |
 | Live application URL | [chorusborn.vercel.app](https://chorusborn.vercel.app) — production READY |
 | Public demo video URL | Pending |
+| Recording script | [Timed cue sheet](demo-recording-script.md) and [clean narration](demo-voiceover.txt), prepared; video not yet recorded |
 | Main build session ID | Verified and saved in the private Devpost field; omitted from this public register |
 | Thumbnail | [Promotional key art](media/chorusborn-devpost-thumbnail.png), uploaded; [generation record](media/chorusborn-devpost-thumbnail.prompt.md) |
 | Contribution and technical answers | [Individual submission text](devpost-additional-info.md), saved and browser-verified |

@@ -1025,6 +1025,28 @@ terms checkbox and Submit project action were not used; the video and final entr
 remain release work. Codex drafted, generated, uploaded and verified these materials
 under the owner's direction.
 
+## October 29, 2026 — solo demo voiceover and screen cue sheet
+
+Prepared an eight-part, first-person voiceover and matching recording directions
+for the owner to narrate and screen-record. The 329-word narration targets a 2:50
+final cut (about 152–158 spoken seconds at 130–125 words/minute, before pauses).
+The cue sheet maps each passage to exact controls and footage: hosted Twitch
+connection, an actual `!teach` message, compiled proposal, an explicitly authored
+carrier scenario with two replay branches, coach adoption, real execution credit,
+independent two-channel readiness/shared overlay, and real Codex/code/CI evidence.
+It uses the actual recorded result rather than prescribing a win, labels match
+cuts and broadcaster-authored test messages, and avoids claiming universal tactic
+superiority. The owner still needs to rehearse the live integration and coordinate
+the second account before capturing those segments.
+
+Saved `docs/demo-voiceover.txt` for clean narration/teleprompter use and
+`docs/demo-recording-script.md` for capture/edit cues. Updated the submission plan
+to use these artifacts. Verification checked narration/cue-sheet text equality,
+word count, time ranges, local links, UI labels and whitespace. No application code
+changed, no voice/audio/video was generated, and no recording, YouTube publication
+or final submission is claimed. Codex drafted and cross-checked the script against
+the implemented flow and known verification boundaries.
+
 ## Future entry template
 
 For each completed milestone, record date, feature/acceptance IDs, commit reference, meaningful checks and outcomes, screenshots/replay/evaluation references where appropriate, remaining limitations, and how Codex contributed. Never include secrets or full private session transcripts. Store bulky recordings outside Git and link final authorized artifacts when available.

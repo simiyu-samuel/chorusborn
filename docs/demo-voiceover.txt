@@ -1,0 +1,15 @@
+What if Twitch chat could teach a champion how to fight, and test its ideas before the next round? I'm Simiyu Samuel, and this is Chorusborn: raised by chat, proven in the arena.
+
+Each streamer connects their Twitch account and gets a champion named after their channel. Their community becomes the coaching staff. In Core Run, champions compete to capture a core and bring it home.
+
+Here's a lesson sent through Twitch chat: "When carrying the core, head home and use shield when ready." EventSub brings it into this channel's review queue, with its author attached. I compile it into a proposed rule using OpenAI's GPT-OSS model, served by Groq.
+
+Before accepting it, I can test it. These replay branches begin from the same authored scenario. One uses the current playbook; the other adds the proposed lesson. I can scrub through their actions and compare the results. This tests a specific situation, not a promise that the tactic always wins.
+
+I adopt the lesson for the next round. The current match keeps its locked playbook. When the new rule actually executes, Chorusborn credits the person who taught it.
+
+Now two streamers can challenge each other. Both must agree and ready their champions, and their communities' playbooks meet in one shared arena. The first to three captures wins, with a sixty-second limit. Streamers show this read-only overlay in OBS, while viewers keep teaching through chat. Win or lose, there's something concrete to discuss, revise, and try in the rematch.
+
+I built this solo with OpenAI Codex. It helped me develop the simulation, Twitch integration, lesson compiler, replays, character animations, and deployment. When equal core claims exposed unfair behavior, I used Codex to debug the engine and add regression tests. The complete checks now pass a hundred and two unit tests and eighteen browser tests.
+
+Chorusborn turns a chat message into a testable tactic, and a community into a champion's coaching staff. Try the prototype at chorusborn dot vercel dot app.
