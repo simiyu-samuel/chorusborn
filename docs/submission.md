@@ -55,6 +55,11 @@ voice. The target leaves ten seconds below the three-minute limit; the creator's
 timed rehearsal and final edit determine actual duration. Recording and publication
 remain pending.
 
+The [OBS setup and recording guide](obs-recording-guide.md) provides settings,
+audio/capture setup, four scenes mapped to the script, pause–switch–resume steps,
+hotkeys, Linux caveats, practice checks and export instructions. These are prepared
+directions, not evidence that OBS has been configured or the video recorded.
+
 Editing can compress elapsed time; label cuts/time compression. Never present a fixture as real chat, a prerecorded match as a live response, or a manually chosen result as an evaluation outcome. Avoid copyrighted music and unlicensed assets. Capture permissions for identifiable people included in published footage.
 
 ## Submission checklist
@@ -83,6 +88,7 @@ Published submission deadline: November 2, 2026 at 14:00 PST = November 3 at 01:
 | Live application URL | [chorusborn.vercel.app](https://chorusborn.vercel.app) — production READY |
 | Public demo video URL | Pending |
 | Recording script | [Timed cue sheet](demo-recording-script.md) and [clean narration](demo-voiceover.txt), prepared; video not yet recorded |
+| OBS guide | [Setup, scenes and recording workflow](obs-recording-guide.md), prepared; local OBS practice check pending |
 | Main build session ID | Verified and saved in the private Devpost field; omitted from this public register |
 | Thumbnail | [Promotional key art](media/chorusborn-devpost-thumbnail.png), uploaded; [generation record](media/chorusborn-devpost-thumbnail.prompt.md) |
 | Contribution and technical answers | [Individual submission text](devpost-additional-info.md), saved and browser-verified |

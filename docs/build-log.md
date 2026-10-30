@@ -1047,6 +1047,31 @@ changed, no voice/audio/video was generated, and no recording, YouTube publicati
 or final submission is claimed. Codex drafted and cross-checked the script against
 the implemented flow and known verification boundaries.
 
+## October 30, 2026 — OBS recording setup and script cues
+
+Added a beginner OBS guide for the owner's demo: suggested 1080p/30 capture,
+MKV/H.264 output, one microphone, four scenes, dedicated browser/window capture,
+the private read-only overlay, an end card, optional hotkeys and a practice take.
+Documented pause/unpause versus stop/start, browser tabs versus separate windows,
+Studio Mode Preview/Program, Linux capture/hotkey differences, and remux/edit/export.
+Mapped all eight script sections to their OBS scene and recording action without
+changing the 329-word first-person narration or 2:50 timeline.
+
+Consulted the official OBS quick start, source/window/browser/audio guides,
+recording/remux guide, overview and current source labels/warnings. Checked the
+official issue tracker for the reported Wayland hotkey limitation; the guide calls
+for testing rather than assuming it affects this machine. Emphasized that pausing
+OBS does not pause Chorusborn and that a full real round should be recorded before
+cutting highlights. Linked the guide from the script, documentation map and
+submission register.
+
+Verification checked narration equality, word count, contiguous time ranges,
+relative links, fenced blocks and diff whitespace. No application code changed;
+application suites were not rerun for this documentation-only increment. OBS has
+not been configured or tested on the owner's computer by this change. The actual
+recording, export, YouTube publication and final submission remain pending.
+Codex researched and wrote the guide and integrated it into the existing script.
+
 ## Future entry template
 
 For each completed milestone, record date, feature/acceptance IDs, commit reference, meaningful checks and outcomes, screenshots/replay/evaluation references where appropriate, remaining limitations, and how Codex contributed. Never include secrets or full private session transcripts. Store bulky recordings outside Git and link final authorized artifacts when available.

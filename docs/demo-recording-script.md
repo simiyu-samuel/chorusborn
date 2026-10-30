@@ -12,6 +12,29 @@ time and place it over the matching clips. Keep this cue sheet on a second scree
 or outside the area being captured. The spoken script is also suitable for a
 teleprompter; the directions are for you, not for the audience.
 
+## OBS setup and controls
+
+Start with the [complete OBS recording guide](obs-recording-guide.md). It covers
+video/audio settings, Linux capture options, four scenes, private overlay setup,
+hotkeys, a practice recording and MP4 export. Each passage below names its scene.
+These are recording directions; do not read them in the voiceover.
+
+The scene names are **01 Demo browser**, **02 Arena**, **03 Codex build** and
+**04 End card**. With Studio Mode off, clicking a scene switches the recorded
+layout. The demo-browser source follows tabs in its selected window; it does not
+follow you to another window automatically.
+
+Between passages: finish speaking → **Pause Recording** → confirm paused →
+prepare the next tab/scene → check preview → **Unpause Recording** → confirm
+resumed → continue. Use **High Quality, Medium File Size**, rather than
+**Same as stream**, so pausing is available. Assign and test hotkeys as described
+in the guide; they are not assumed to work globally on every Linux setup.
+
+**Pausing OBS leaves Twitch and the game running.** Record the rivalry round
+continuously and trim highlights afterward. The pause button keeps the same
+file open; **Stop Recording** ends the take. Raw footage may exceed three minutes;
+the finished export must stay below the limit.
+
 ## Before recording
 
 1. Open [the hosted studio](https://chorusborn.vercel.app),
@@ -47,6 +70,8 @@ teleprompter; the directions are for you, not for the audience.
 
 ## 0:00–0:15 — the hook
 
+**OBS:** `02 Arena`. Use footage from the complete recorded round.
+
 **Show:** A short clip of the actual arena: core contest, a confirmed hit, shield,
 or delivery. Then show the Chorusborn name. Use game footage for the action; the
 generated thumbnail may be a title card but is not a gameplay screenshot.
@@ -57,6 +82,9 @@ generated thumbnail may be a title card but is not a gameplay screenshot.
 
 ## 0:15–0:33 — who uses it
 
+**OBS:** `01 Demo browser`: studio, then viewer guide tab. Pause for preparation
+between clips if needed; resume before demonstrating the next action.
+
 **Show:** The hosted studio, **Connected as developersimiyu**, then the champion's
 channel name and arena. Briefly show the viewer guide's teaching examples.
 Sign in before this take; the OAuth login itself does not need the full screen time.
@@ -66,6 +94,9 @@ Sign in before this take; the OAuth login itself does not need the full screen t
 **Small caption:** One streamer. One champion. A community of coaches.
 
 ## 0:33–0:55 — real Twitch teaching
+
+**OBS:** `01 Demo browser`: Twitch chat tab → studio tab. Record the command and
+its arrival. Resume before clicking **Compile lesson**; cut provider waits later.
 
 **Show:** The exact `!teach` command in Twitch chat, then that same message and its
 actual author in Chorusborn's **Live lesson queue**. Click **Compile lesson** and
@@ -79,6 +110,8 @@ for the actual Twitch message.
 **Small caption:** Twitch chat → EventSub → proposed rule
 
 ## 0:55–1:22 — the signature replay test
+
+**OBS:** `01 Demo browser`: keep the proof view and both replay labels readable.
 
 **Show:** Choose **Carrier dilemma · starts with the core**, then use
 **Prove community lesson** on the actual compiled proposal. Show both branches,
@@ -94,6 +127,9 @@ and spoken scenario description must match the footage.
 
 ## 1:22–1:39 — coach approval and attribution
 
+**OBS:** `01 Demo browser` for adoption, then the studio arena or `02 Arena` for
+the later credit. Keep recording through the actual rule execution.
+
 **Show:** Click **Adopt for next round**, show the adoption confirmation and updated
 playbook version. Use a brief later clip of that rule actually executing and its
 real author credit. If the current round is running, adoption must not change its
@@ -107,6 +143,9 @@ are brief and are not continuously visible.
 **Small caption:** Proposed → tested → adopted → used
 
 ## 1:39–2:09 — two communities, one match
+
+**OBS:** `01 Demo browser` for challenge/readiness, then `02 Arena`. Resume before
+both coaches ready. Record the entire match without pausing; edit it into this slot.
 
 **Show:** In **Streamer vs streamer**, enter `serleusler` and **Send challenge**.
 Capture the invited streamer's acceptance and both **Ready for rivalry** actions.
@@ -122,6 +161,9 @@ is not a second community. A win is not necessary to demonstrate the product.
 
 ## 2:09–2:38 — show how Codex built it
 
+**OBS:** `03 Codex build`, then `01 Demo browser` on the GitHub checks tab. Prepare
+safe content while paused and resume before showing each piece of evidence.
+
 **Show:** This real build chat, then a relevant implementation/diff, then the green
 workflow. Good evidence: the explicit tie-initiative/possession repair, Twitch
 EventSub code, or the recent test-isolation and overlay fixes. Keep the chat and
@@ -136,6 +178,9 @@ changes alter the suite before recording, use the then-verified counts in both
 voiceover and captions.
 
 ## 2:38–2:50 — close on the product
+
+**OBS:** Actual result in `02 Arena` or the studio, then `04 End card`. Finish
+speaking, hold the card briefly, then **Stop Recording**.
 
 **Show:** Actual match result or playbook, then a clean end card with the name,
 live URL and repository. Hold the URL visibly for the last few seconds; the spoken
@@ -155,6 +200,8 @@ Built by Simiyu Samuel with OpenAI Codex
 
 ## Final recording pass
 
+- Play a short OBS test first: check microphone, framing, pause/resume and scene changes.
+- Remux MKV to MP4 if needed; remuxing does not edit or shorten the recording.
 - Time the exported video, including title/end cards; keep it below 3:00.
 - Make chat text, author attribution, proposed rules and replay labels readable.
 - Preserve labels for authored scenarios, broadcaster test messages and match cuts.

@@ -35,3 +35,6 @@ The local sign-in-free viewer guide is at `/guide`; the [UX specification](ux.md
 The [Vercel deployment design](vercel-deployment.md) records the selected cloud
 topology and required recovery checks. The [saved Devpost story](devpost-story.md)
 contains the verified present-tense narrative; the entry remains a draft.
+
+Demo recording: [timed screen/voiceover cue sheet](demo-recording-script.md),
+[clean narration](demo-voiceover.txt), and [OBS setup and recording guide](obs-recording-guide.md).
